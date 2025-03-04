@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ChevronDownIcon } from "@radix-ui/react-icons";
 
 interface SidebarProps {
   className?: string;
@@ -92,14 +93,16 @@ export default function Sidebar({ className }: SidebarProps) {
             <AccordionTrigger 
               className={cn(
                 "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                activeItem === "tradingview" && "bg-black text-white"
+                activeItem === "tradingview" && "bg-black text-white",
+                !open && "justify-center"
               )}
               onClick={() => handleItemClick("tradingview")}
             >
-              <div className="flex items-center space-x-3">
+              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center")}>
                 <LineChart className="h-5 w-5" />
                 {open && <span>TradingView</span>}
               </div>
+              {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
             {open && (
               <AccordionContent>
@@ -138,14 +141,16 @@ export default function Sidebar({ className }: SidebarProps) {
             <AccordionTrigger 
               className={cn(
                 "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                activeItem === "scalping" && "bg-black text-white"
+                activeItem === "scalping" && "bg-black text-white",
+                !open && "justify-center"
               )}
               onClick={() => handleItemClick("scalping")}
             >
-              <div className="flex items-center space-x-3">
+              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center")}>
                 <Zap className="h-5 w-5" />
                 {open && <span>Scalping Tool</span>}
               </div>
+              {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
             {open && (
               <AccordionContent>
@@ -166,14 +171,16 @@ export default function Sidebar({ className }: SidebarProps) {
             <AccordionTrigger 
               className={cn(
                 "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                activeItem === "copytrading" && "bg-black text-white"
+                activeItem === "copytrading" && "bg-black text-white",
+                !open && "justify-center"
               )}
               onClick={() => handleItemClick("copytrading")}
             >
-              <div className="flex items-center space-x-3">
+              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center")}>
                 <Copy className="h-5 w-5" />
                 {open && <span>Copy Trading</span>}
               </div>
+              {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
             {open && (
               <AccordionContent>
@@ -200,14 +207,16 @@ export default function Sidebar({ className }: SidebarProps) {
             <AccordionTrigger 
               className={cn(
                 "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                activeItem === "strategy" && "bg-black text-white"
+                activeItem === "strategy" && "bg-black text-white",
+                !open && "justify-center"
               )}
               onClick={() => handleItemClick("strategy")}
             >
-              <div className="flex items-center space-x-3">
+              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center")}>
                 <LineChart className="h-5 w-5" />
                 {open && <span>Strategy</span>}
               </div>
+              {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
             {open && (
               <AccordionContent>
