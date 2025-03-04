@@ -11,6 +11,7 @@ import {
   CreditCard,
   ChevronLeft,
   Menu,
+  KeyIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -71,6 +72,14 @@ export default function Sidebar({ className }: SidebarProps) {
           </div>
         )}
 
+        <a
+          href="/connect/broker"
+          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+        >
+          <KeyIcon className="h-5 w-5" />
+          {open && <span>Broker Auth</span>}
+        </a>
+
         <Accordion type="single" collapsible className="w-full space-y-2">
           <AccordionItem value="tradingview" className="border-none">
             <AccordionTrigger className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors">
@@ -82,12 +91,7 @@ export default function Sidebar({ className }: SidebarProps) {
             {open && (
               <AccordionContent>
                 <div className="pl-11 space-y-2">
-                  <a
-                    onClick={() => window.location.href = "/connect/tradingview"}
-                    className="block py-2 hover:text-primary transition-colors cursor-pointer"
-                  >
-                    Broker Auth
-                  </a>
+                 
                   <a
                     href="#"
                     className="block py-2 hover:text-primary transition-colors"
@@ -127,12 +131,7 @@ export default function Sidebar({ className }: SidebarProps) {
             {open && (
               <AccordionContent>
                 <div className="pl-11 space-y-2">
-                  <a
-                    onClick={() => window.location.href = "/connect/scalping"}
-                    className="block py-2 hover:text-primary transition-colors cursor-pointer"
-                  >
-                    Broker Auth
-                  </a>
+                  
                   <a
                     href="#"
                     className="block py-2 hover:text-primary transition-colors"
@@ -154,12 +153,7 @@ export default function Sidebar({ className }: SidebarProps) {
             {open && (
               <AccordionContent>
                 <div className="pl-11 space-y-2">
-                  <a
-                    onClick={() => window.location.href = "/connect/copytrading"}
-                    className="block py-2 hover:text-primary transition-colors cursor-pointer"
-                  >
-                    Broker Authentication
-                  </a>
+                  
                   <a
                     href="#"
                     className="block py-2 hover:text-primary transition-colors"
