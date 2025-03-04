@@ -95,14 +95,14 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       
       setAdmin(null);
       localStorage.removeItem("adminUser");
-      router.push("/login");
+      router.push("/");
       return true;
     } catch (error) {
       console.error("Admin logout error:", error);
       // Even if there's an error, we should still clear local state
       setAdmin(null);
       localStorage.removeItem("adminUser");
-      router.push("/login");
+      router.push("/");
       return true;
     } finally {
       setIsLoading(false);
