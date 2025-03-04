@@ -17,11 +17,11 @@ export default function Navbar() {
 
   return (
     <header className="border-b bg-white">
-    <div className="container flex h-16 items-center mx-auto justify-between">
-      <Link href="/" className="text-xl font-bold">
+    <div className="container flex h-14 sm:h-16 items-center mx-auto justify-between px-2 sm:px-4">
+      <Link href="/" className="text-lg sm:text-xl font-bold">
         AlgoZ
       </Link>
-      <NavigationMenu>
+      <NavigationMenu className="hidden md:flex">
         <NavigationMenuList>
           <NavigationMenuItem>
             <NavigationMenuTrigger>Products</NavigationMenuTrigger>
@@ -145,12 +145,12 @@ export default function Navbar() {
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <Link href="/login">
-          <Button variant="ghost">Log In</Button>
+          <Button variant="ghost" className="text-xs sm:text-sm py-1 sm:py-2 h-8 sm:h-10">Log In</Button>
         </Link>
         <Link href="/signup">
-          <Button className="bg-black hover:bg-gray-800 text-white">Sign Up</Button>
+          <Button className="bg-black hover:bg-gray-800 text-white text-xs sm:text-sm py-1 sm:py-2 h-8 sm:h-10">Sign Up</Button>
         </Link>
       </div>
     </div>

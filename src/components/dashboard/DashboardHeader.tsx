@@ -27,23 +27,23 @@ export function DashboardHeader() {
   const pathname = usePathname()
 
   return (
-    <header className="sticky top-0 z-50 w-screen border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center justify-between w-full px-4">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-14 items-center justify-between w-full px-2 sm:px-4">
         <div className="flex items-center">
-          <SidebarTrigger className="md:hidden mr-2" />
-          <Link href="/" className="flex items-center space-x-2 ml-2">
-            <span className="font-bold">AlgoZ</span>
+          <SidebarTrigger className="md:hidden mr-1 sm:mr-2" />
+          <Link href="/" className="flex items-center space-x-1 sm:space-x-2 ml-1 sm:ml-2">
+            <span className="font-bold text-sm sm:text-base">AlgoZ</span>
           </Link>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm">
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center gap-1 sm:gap-2 rounded-full bg-muted px-2 sm:px-3 py-1 text-xs sm:text-sm">
             <span>{user?.balance || 0}</span>
           </div>
           
-          <div className="text-right mr-2">
-            <div className="font-medium">{user?.fullName || user?.username || "Guest"}</div>
-            <div className="text-sm text-muted-foreground">
+          <div className="text-right mr-1 sm:mr-2 hidden sm:block">
+            <div className="font-medium text-sm sm:text-base">{user?.fullName || user?.username || "Guest"}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">
               Client #{user?._id?.substring(0, 5) || ""}
             </div>
           </div>

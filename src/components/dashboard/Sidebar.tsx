@@ -68,10 +68,10 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <a
           href="#"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className="flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors"
         >
-          <LayoutDashboard className="h-5 w-5" />
-          {open && <span>Dashboard</span>}
+          <LayoutDashboard className="h-5 w-5 min-w-5" />
+          {open && <span className="ml-3 text-sm md:text-base">Dashboard</span>}
         </a>
 
         {open && (
@@ -82,25 +82,26 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <a
           href="/connect/broker"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className="flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors"
         >
-          <KeyIcon className="h-5 w-5" />
-          {open && <span>Broker Auth</span>}
+          <KeyIcon className="h-5 w-5 min-w-5" />
+          {open && <span className="ml-3 text-sm md:text-base">Broker Auth</span>}
         </a>
 
         <Accordion type="single" collapsible className="w-full space-y-2">
           <AccordionItem value="tradingview" className="border-none">
             <AccordionTrigger 
               className={cn(
-                "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
                 activeItem === "tradingview" && "bg-black text-white",
-                !open && "justify-center"
+                !open && "justify-center",
+                open && "space-x-3"
               )}
               onClick={() => handleItemClick("tradingview")}
             >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center")}>
-                <LineChart className="h-5 w-5" />
-                {open && <span>TradingView</span>}
+              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                <LineChart className="h-5 w-5 min-w-5" />
+                {open && <span className="text-sm md:text-base">TradingView</span>}
               </div>
               {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
@@ -140,15 +141,16 @@ export default function Sidebar({ className }: SidebarProps) {
           <AccordionItem value="scalping" className="border-none">
             <AccordionTrigger 
               className={cn(
-                "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
                 activeItem === "scalping" && "bg-black text-white",
-                !open && "justify-center"
+                !open && "justify-center",
+                open && "space-x-3"
               )}
               onClick={() => handleItemClick("scalping")}
             >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center")}>
-                <Zap className="h-5 w-5" />
-                {open && <span>Scalping Tool</span>}
+              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                <Zap className="h-5 w-5 min-w-5" />
+                {open && <span className="text-sm md:text-base">Scalping Tool</span>}
               </div>
               {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
@@ -170,15 +172,16 @@ export default function Sidebar({ className }: SidebarProps) {
           <AccordionItem value="copytrading" className="border-none">
             <AccordionTrigger 
               className={cn(
-                "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
                 activeItem === "copytrading" && "bg-black text-white",
-                !open && "justify-center"
+                !open && "justify-center",
+                open && "space-x-3"
               )}
               onClick={() => handleItemClick("copytrading")}
             >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center")}>
-                <Copy className="h-5 w-5" />
-                {open && <span>Copy Trading</span>}
+              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                <Copy className="h-5 w-5 min-w-5" />
+                {open && <span className="text-sm md:text-base">Copy Trading</span>}
               </div>
               {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
@@ -206,15 +209,16 @@ export default function Sidebar({ className }: SidebarProps) {
           <AccordionItem value="strategy" className="border-none">
             <AccordionTrigger 
               className={cn(
-                "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
                 activeItem === "strategy" && "bg-black text-white",
-                !open && "justify-center"
+                !open && "justify-center",
+                open && "space-x-3"
               )}
               onClick={() => handleItemClick("strategy")}
             >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center")}>
-                <LineChart className="h-5 w-5" />
-                {open && <span>Strategy</span>}
+              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                <LineChart className="h-5 w-5 min-w-5" />
+                {open && <span className="text-sm md:text-base">Strategy</span>}
               </div>
               {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
@@ -246,18 +250,18 @@ export default function Sidebar({ className }: SidebarProps) {
         </Accordion>
         <a
           href="#pricing"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className="flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors"
         >
-          <Bot className="h-5 w-5" />
-          {open && <span>Bot</span>}
+          <Bot className="h-5 w-5 min-w-5" />
+          {open && <span className="ml-3 text-sm md:text-base">Bot</span>}
         </a>
 
         <a
           href="#bot"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className="flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors"
         >
-          <CreditCard className="h-5 w-5" />
-          {open && <span>Pricing</span>}
+          <CreditCard className="h-5 w-5 min-w-5" />
+          {open && <span className="ml-3 text-sm md:text-base">Pricing</span>}
         </a>
 
         {open && (
@@ -268,18 +272,18 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <a
           href="#"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className="flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors"
         >
-          <HeadphonesIcon className="h-5 w-5" />
-          {open && <span>Contact Us</span>}
+          <HeadphonesIcon className="h-5 w-5 min-w-5" />
+          {open && <span className="ml-3 text-sm md:text-base">Contact Us</span>}
         </a>
 
         <a
           href="#"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className="flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors"
         >
-          <HelpCircle className="h-5 w-5" />
-          {open && <span>FAQ</span>}
+          <HelpCircle className="h-5 w-5 min-w-5" />
+          {open && <span className="ml-3 text-sm md:text-base">FAQ</span>}
         </a>
       </nav>
     </div>

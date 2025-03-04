@@ -47,13 +47,13 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
         className
       )}
     >
-      <div className="flex justify-between items-center p-4">
-        {open && <span className="font-bold">Admin Panel</span>}
+      <div className="flex justify-between items-center p-3 sm:p-4">
+        {open && <span className="font-bold text-sm sm:text-base">Admin Panel</span>}
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="h-8 w-8 rounded-full"
+          className="h-7 w-7 sm:h-8 sm:w-8 rounded-full"
         >
           {open ? <ChevronLeft className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
