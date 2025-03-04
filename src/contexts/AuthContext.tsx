@@ -12,6 +12,7 @@ type User = {
   avatar?: string;
   coverImage?: string;
   isAdmin?: boolean;
+  balance?: number;
 } | null;
 
 type AuthContextType = {

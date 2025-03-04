@@ -3,7 +3,6 @@
 import React from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import Sidebar from "@/components/dashboard/Sidebar";
-import PricingSection from "@/components/dashboard/PricingSection";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function DashboardPage() {
@@ -37,8 +36,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <PricingSection />
-          
           </main>
         </div>
       </div>

@@ -23,7 +23,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader() {
   const { theme, setTheme } = useTheme()
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
   const pathname = usePathname()
 
   return (
@@ -38,30 +38,33 @@ export function DashboardHeader() {
         
         <div className="flex items-center space-x-4">
           <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm">
-            <span>1,000</span>
+            <span>{user?.balance || 0}</span>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
-          </Button>
+          
           <div className="text-right mr-2">
-            <div className="font-medium">Den</div>
+            <div className="font-medium">{user?.fullName || user?.username || "Guest"}</div>
             <div className="text-sm text-muted-foreground">
-              Client #123
+              Client #{user?._id?.substring(0, 5) || ""}
             </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Avatar className="h-8 w-8 cursor-pointer">
+                {user?.avatar && <AvatarImage src={user.avatar} alt={user.fullName || user.username} />}
                 <AvatarFallback className="bg-primary text-primary-foreground">
-                  {"J"}
+                  {(user?.fullName || user?.username || "U").charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => logout()}>
+              <DropdownMenuItem onClick={async () => {
+                try {
+                  await logout();
+                } catch (error) {
+                  console.error("Error during logout:", error);
+                }
+              }}>
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
