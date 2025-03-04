@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   Menu,
   KeyIcon,
+  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -234,9 +235,16 @@ export default function Sidebar({ className }: SidebarProps) {
             )}
           </AccordionItem>
         </Accordion>
-
         <a
           href="#pricing"
+          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+        >
+          <Bot className="h-5 w-5" />
+          {open && <span>Bot</span>}
+        </a>
+
+        <a
+          href="#bot"
           className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
         >
           <CreditCard className="h-5 w-5" />
