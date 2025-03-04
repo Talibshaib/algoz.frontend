@@ -36,25 +36,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          // Verify the token is still valid by making a request to get current user
-          const response = await fetch(`${API_URL}/users/current-user`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            credentials: "include" // Important for cookies
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            setUser(data.data);
-          } else {
-            // Token is invalid or expired
-            localStorage.removeItem("user");
-            setUser(null);
-          }
+        // Always verify the token is still valid by making a request to get current user
+        // regardless of localStorage state
+        const response = await fetch(`${API_URL}/users/current-user`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include" // Important for cookies
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.data);
+          // Update localStorage with the latest user data
+          localStorage.setItem("user", JSON.stringify(data.data));
+        } else {
+          // Token is invalid or expired
+          localStorage.removeItem("user");
+          setUser(null);
         }
       } catch (error) {
         console.error("Auth check error:", error);
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     
     checkAuthStatus();
-  }, [API_URL]);
+  }, []);
 
   // Real login function that calls the backend API
   const login = async (emailOrUsername: string, password: string) => {

@@ -16,7 +16,7 @@ export default function DashboardLayout({
   useEffect(() => {
     // If authentication check is complete and user is not logged in, redirect to login
     if (!isLoading && !user) {
-      router.push("/login")
+      router.replace("/login")
     }
   }, [user, isLoading, router])
 
