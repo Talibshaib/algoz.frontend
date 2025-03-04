@@ -30,6 +30,12 @@ interface SidebarProps {
 
 export default function Sidebar({ className }: SidebarProps) {
   const { open, toggleSidebar, isMobile } = useSidebar();
+  const [activeItem, setActiveItem] = React.useState<string | null>(null);
+  
+  const handleItemClick = (itemName: string) => {
+    setActiveItem(itemName);
+  };
+  
   return (
     <div
       className={cn(
@@ -82,7 +88,13 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <Accordion type="single" collapsible className="w-full space-y-2">
           <AccordionItem value="tradingview" className="border-none">
-            <AccordionTrigger className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors">
+            <AccordionTrigger 
+              className={cn(
+                "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                activeItem === "tradingview" && "bg-black text-white"
+              )}
+              onClick={() => handleItemClick("tradingview")}
+            >
               <div className="flex items-center space-x-3">
                 <LineChart className="h-5 w-5" />
                 {open && <span>TradingView</span>}
@@ -122,7 +134,13 @@ export default function Sidebar({ className }: SidebarProps) {
           </AccordionItem>
 
           <AccordionItem value="scalping" className="border-none">
-            <AccordionTrigger className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors">
+            <AccordionTrigger 
+              className={cn(
+                "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                activeItem === "scalping" && "bg-black text-white"
+              )}
+              onClick={() => handleItemClick("scalping")}
+            >
               <div className="flex items-center space-x-3">
                 <Zap className="h-5 w-5" />
                 {open && <span>Scalping Tool</span>}
@@ -144,7 +162,13 @@ export default function Sidebar({ className }: SidebarProps) {
           </AccordionItem>
 
           <AccordionItem value="copytrading" className="border-none">
-            <AccordionTrigger className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors">
+            <AccordionTrigger 
+              className={cn(
+                "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                activeItem === "copytrading" && "bg-black text-white"
+              )}
+              onClick={() => handleItemClick("copytrading")}
+            >
               <div className="flex items-center space-x-3">
                 <Copy className="h-5 w-5" />
                 {open && <span>Copy Trading</span>}
@@ -172,7 +196,13 @@ export default function Sidebar({ className }: SidebarProps) {
           </AccordionItem>
 
           <AccordionItem value="strategy" className="border-none">
-            <AccordionTrigger className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors">
+            <AccordionTrigger 
+              className={cn(
+                "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                activeItem === "strategy" && "bg-black text-white"
+              )}
+              onClick={() => handleItemClick("strategy")}
+            >
               <div className="flex items-center space-x-3">
                 <LineChart className="h-5 w-5" />
                 {open && <span>Strategy</span>}

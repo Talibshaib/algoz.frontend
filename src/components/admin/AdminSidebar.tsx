@@ -33,6 +33,11 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ className }: AdminSidebarProps) {
   const { open, toggleSidebar } = useSidebar();
   const { logout } = useAdminAuth();
+  const [activeItem, setActiveItem] = React.useState<string | null>(null);
+  
+  const handleItemClick = (itemName: string) => {
+    setActiveItem(itemName);
+  };
 
   return (
     <div
@@ -56,7 +61,11 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
       <nav className="p-4 space-y-2">
         <Link
           href="/admin"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className={cn(
+            "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+            activeItem === "dashboard" && "bg-black text-white"
+          )}
+          onClick={() => handleItemClick("dashboard")}
         >
           <Home className="h-5 w-5" />
           {open && <span>Dashboard</span>}
@@ -64,7 +73,11 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
 
         <Link
           href="/admin/users"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className={cn(
+            "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+            activeItem === "users" && "bg-black text-white"
+          )}
+          onClick={() => handleItemClick("users")}
         >
           <Users className="h-5 w-5" />
           {open && <span>User Management</span>}
@@ -72,7 +85,13 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
 
         <Accordion type="single" collapsible className="w-full space-y-2">
           <AccordionItem value="analytics" className="border-none">
-            <AccordionTrigger className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors">
+            <AccordionTrigger 
+              className={cn(
+                "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                activeItem === "analytics" && "bg-black text-white"
+              )}
+              onClick={() => handleItemClick("analytics")}
+            >
               <div className="flex items-center space-x-3">
                 <BarChart3 className="h-5 w-5" />
                 {open && <span>Analytics</span>}
@@ -107,7 +126,11 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
 
         <Link
           href="/admin/payments"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className={cn(
+            "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+            activeItem === "payments" && "bg-black text-white"
+          )}
+          onClick={() => handleItemClick("payments")}
         >
           <CreditCard className="h-5 w-5" />
           {open && <span>Payments</span>}
@@ -115,7 +138,11 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
 
         <Link
           href="/admin/notifications"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className={cn(
+            "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+            activeItem === "notifications" && "bg-black text-white"
+          )}
+          onClick={() => handleItemClick("notifications")}
         >
           <Bell className="h-5 w-5" />
           {open && <span>Notifications</span>}
@@ -123,7 +150,11 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
 
         <Link
           href="/admin/settings"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className={cn(
+            "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+            activeItem === "settings" && "bg-black text-white"
+          )}
+          onClick={() => handleItemClick("settings")}
         >
           <Settings className="h-5 w-5" />
           {open && <span>Settings</span>}
@@ -137,7 +168,11 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
 
         <Link
           href="/admin/help"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className={cn(
+            "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+            activeItem === "help" && "bg-black text-white"
+          )}
+          onClick={() => handleItemClick("help")}
         >
           <HelpCircle className="h-5 w-5" />
           {open && <span>Help & Support</span>}
@@ -145,7 +180,11 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
 
         <button
           onClick={logout}
-          className="flex w-full items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors text-left"
+          className={cn(
+            "flex w-full items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors text-left",
+            activeItem === "logout" && "bg-black text-white"
+          )}
+          onMouseDown={() => handleItemClick("logout")}
         >
           <LogOut className="h-5 w-5" />
           {open && <span>Logout</span>}
