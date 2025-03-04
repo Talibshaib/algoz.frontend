@@ -26,7 +26,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState("");
   const router = useRouter();
   
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
   // Check if admin is logged in on initial load
   useEffect(() => {
