@@ -58,13 +58,7 @@ export function DashboardHeader() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={async () => {
-                try {
-                  await logout();
-                } catch (error) {
-                  console.error("Error during logout:", error);
-                }
-              }}>
+              <DropdownMenuItem onClick={() => logout()}>
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
