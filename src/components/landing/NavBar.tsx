@@ -1,9 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import type React from "react"
 import "../../app/globals.css"
 import Link from "next/link"
 import { Button } from "@nextui-org/react"
+import { Menu } from "lucide-react"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,8 +14,14 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
+import MobileNav from "./MobileNav"
 
 export default function Navbar() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
+  const toggleMobileNav = () => {
+    setMobileNavOpen(!mobileNavOpen)
+  }
 
   return (
     <header className="border-b bg-white">
@@ -21,6 +29,15 @@ export default function Navbar() {
       <Link href="/" className="text-lg sm:text-xl font-bold">
         AlgoZ
       </Link>
+      
+      {/* Mobile menu button */}
+      <button 
+        className="md:hidden p-2 rounded-full hover:bg-gray-100"
+        onClick={toggleMobileNav}
+      >
+        <Menu size={24} />
+      </button>
+      
       <NavigationMenu className="hidden md:flex">
         <NavigationMenuList>
           <NavigationMenuItem>
@@ -145,7 +162,7 @@ export default function Navbar() {
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="hidden md:flex items-center gap-2 sm:gap-4">
         <Link href="/login">
           <Button variant="ghost" className="text-xs sm:text-sm py-1 sm:py-2 h-8 sm:h-10">Log In</Button>
         </Link>
@@ -154,6 +171,9 @@ export default function Navbar() {
         </Link>
       </div>
     </div>
+    
+    {/* Mobile Navigation */}
+    <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
   </header>
   )
 }
