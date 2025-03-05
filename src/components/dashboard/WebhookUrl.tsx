@@ -15,12 +15,12 @@ const WebhookUrl = () => {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
-    }
-  }, [user, authLoading, router]);
+  // Remove the redundant redirect - the dashboard layout already handles this
+  // useEffect(() => {
+  //   if (!authLoading && !user) {
+  //     router.replace("/login");
+  //   }
+  // }, [user, authLoading, router]);
 
   useEffect(() => {
     const fetchWebhookUrl = async () => {
