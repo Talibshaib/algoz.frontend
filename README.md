@@ -1,37 +1,88 @@
-Hello
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AlgoZ - Advanced Algorithmic Trading Platform
+
+## Overview
+
+AlgoZ is a powerful algorithmic trading platform designed to automate trading strategies across multiple financial markets. Our platform connects to various brokers and exchanges, allowing traders to execute strategies based on technical indicators, market data, and custom algorithms.
+
+## Features
+
+### Trading Capabilities
+- **TradingView Integration**: Execute trades directly from TradingView charts using webhooks
+- **Scalping Tools**: High-frequency trading tools optimized for short-term positions
+- **Copy Trading**: Follow and automatically replicate trades from successful traders
+- **Strategy Builder**: Create custom trading strategies using Pine Script, MQL, and AFL
+
+### Platform Benefits
+- **Broker Authentication**: Secure connection to multiple brokers and exchanges
+- **Real-time Analytics**: Monitor performance metrics and trading history
+- **Risk Management**: Set stop-loss, take-profit, and position sizing rules
+- **Automated Execution**: Run strategies 24/7 without manual intervention
+
+## Technology Stack
+
+### Frontend
+- Next.js (React framework)
+- TypeScript
+- Tailwind CSS
+- Radix UI components
+
+### Backend
+- Node.js
+- Express.js
+- MongoDB
+- JWT authentication
+- WebSocket for real-time data
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js (v16+)
+- MongoDB
+- API keys for supported brokers
 
+### Installation
+
+1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/yourusername/algo_Z.git
+cd algo_Z
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install backend dependencies
+```bash
+cd backend
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Install frontend dependencies
+```bash
+cd ../frontend
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Set up environment variables
+   - Create `.env` files in both frontend and backend directories
+   - Configure database connection, API keys, and authentication settings
 
-## Learn More
+5. Start development servers
+```bash
+# In backend directory
+npm run dev
 
-To learn more about Next.js, take a look at the following resources:
+# In frontend directory
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+6. Access the application at `http://localhost:3000`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+For production deployment instructions, please refer to the [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) file.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Support
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For technical support or feature requests, please contact our support team at support@algoz.com or visit the FAQ section in the application.
+
+## License
+
+Copyright © 2023 AlgoZ. All rights reserved.
