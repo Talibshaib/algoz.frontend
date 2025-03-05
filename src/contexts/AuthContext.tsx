@@ -43,8 +43,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
+        // Keep the user logged in from localStorage while we verify with the server
+        // This prevents flashing of login page during API verification
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) {
+          // If we have a user in localStorage, keep them logged in while we verify
+          setUser(JSON.parse(savedUser));
+          // Set isLoading to false immediately to prevent redirect
+          setIsLoading(false);
+        }
+
         // Always verify the token is still valid by making a request to get current user
-        // regardless of localStorage state
         const response = await fetch(`${API_URL}/users/current-user`, {
           method: "GET",
           headers: {
@@ -68,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem("user");
         setUser(null);
       } finally {
+        // Ensure isLoading is set to false in all cases
         setIsLoading(false);
       }
     };
