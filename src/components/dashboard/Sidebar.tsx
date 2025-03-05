@@ -109,7 +109,7 @@ export default function Sidebar({ className }: SidebarProps) {
                 <div className="pl-11 space-y-2">
                  
                   <a
-                    href="#"
+                    href="/dashboard/webhook"
                     className="block py-2 hover:text-primary transition-colors"
                   >
                     Webhook URL
