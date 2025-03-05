@@ -6,12 +6,21 @@ import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { API_URL } from "@/constants/URI";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 const WebhookUrl = () => {
   const [webhookUrl, setWebhookUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/login");
+    }
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     const fetchWebhookUrl = async () => {
@@ -43,8 +52,11 @@ const WebhookUrl = () => {
       }
     };
     
-    fetchWebhookUrl();
-  }, [user]);
+    // Only fetch if user is authenticated
+    if (user && !authLoading) {
+      fetchWebhookUrl();
+    }
+  }, [user, authLoading]);
 
   const handleRegenerateWebhook = async () => {
     setIsLoading(true);
@@ -101,6 +113,15 @@ const WebhookUrl = () => {
         });
       });
   };
+
+  // Show loading state while authentication is in progress
+  if (authLoading) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="animate-pulse h-10 bg-muted rounded-md mb-4"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
