@@ -103,7 +103,6 @@ export default function Sidebar({ className }: SidebarProps) {
                 <LineChart className="h-5 w-5 min-w-5" />
                 {open && <span className="text-sm md:text-base">TradingView</span>}
               </div>
-              {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
             {open && (
               <AccordionContent>
@@ -152,7 +151,6 @@ export default function Sidebar({ className }: SidebarProps) {
                 <Zap className="h-5 w-5 min-w-5" />
                 {open && <span className="text-sm md:text-base">Scalping Tool</span>}
               </div>
-              {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
             {open && (
               <AccordionContent>
@@ -183,7 +181,6 @@ export default function Sidebar({ className }: SidebarProps) {
                 <Copy className="h-5 w-5 min-w-5" />
                 {open && <span className="text-sm md:text-base">Copy Trading</span>}
               </div>
-              {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
             {open && (
               <AccordionContent>
@@ -220,7 +217,6 @@ export default function Sidebar({ className }: SidebarProps) {
                 <LineChart className="h-5 w-5 min-w-5" />
                 {open && <span className="text-sm md:text-base">Strategy</span>}
               </div>
-              {open && <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
             </AccordionTrigger>
             {open && (
               <AccordionContent>
