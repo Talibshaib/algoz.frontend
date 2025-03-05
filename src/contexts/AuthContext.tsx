@@ -27,7 +27,14 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User>(null);
+  // Initialize user state from localStorage if available
+  const [user, setUser] = useState<User>(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem("user");
+      return savedUser ? JSON.parse(savedUser) : null;
+    }
+    return null;
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const router = useRouter();
