@@ -47,9 +47,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // This prevents flashing of login page during API verification
         const savedUser = localStorage.getItem("user");
         if (savedUser) {
-          // If we have a user in localStorage, keep them logged in while we verify
-          setUser(JSON.parse(savedUser));
-          // Don't set isLoading to false yet - we'll do that after API verification
+          try {
+            // If we have a user in localStorage, keep them logged in while we verify
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+            // Don't set isLoading to false yet - we'll do that after API verification
+          } catch (parseError) {
+            console.error("Error parsing saved user data:", parseError);
+            localStorage.removeItem("user");
+          }
         }
 
         // Always verify the token is still valid by making a request to get current user
