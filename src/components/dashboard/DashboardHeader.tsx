@@ -47,25 +47,25 @@ export function DashboardHeader() {
               Client #{user?._id?.substring(0, 5) || ""}
             </div>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Avatar className="h-8 w-8 cursor-pointer">
-                {user?.avatar && <AvatarImage src={user.avatar} alt={user.fullName || user.username} />}
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {(user?.fullName || user?.username || "U").charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                                logout();
-                                window.location.href = '/';
-                              }}>
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              {user?.avatar && <AvatarImage src={user.avatar} alt={user.fullName || user.username} />}
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {(user?.fullName || user?.username || "U").charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                logout();
+                window.location.href = '/';
+              }}
+              className="text-sm font-medium"
+            >
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
     </header>

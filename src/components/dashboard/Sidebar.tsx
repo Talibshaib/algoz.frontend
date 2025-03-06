@@ -362,7 +362,7 @@ export default function Sidebar({ className }: SidebarProps) {
         </Accordion>
 
         <a
-          href="/pricing"
+          href="/dashboard/pricing"
           className="flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors"
         >
           <CreditCard className="h-5 w-5 min-w-5" />
