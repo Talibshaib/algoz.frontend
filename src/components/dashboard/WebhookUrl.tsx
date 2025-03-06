@@ -15,13 +15,7 @@ const WebhookUrl = () => {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  // Remove the redundant redirect - the dashboard layout already handles this
-  // useEffect(() => {
-  //   if (!authLoading && !user) {
-  //     router.replace("/login");
-  //   }
-  // }, [user, authLoading, router]);
-
+  // Removed redundant redirect - the dashboard layout already handles this
   useEffect(() => {
     const fetchWebhookUrl = async () => {
       if (!user) return;
@@ -39,7 +33,8 @@ const WebhookUrl = () => {
         });
         
         if (!response.ok) {
-          throw new Error("Failed to fetch webhook URL");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to fetch webhook URL");
         }
         
         const data = await response.json();
@@ -52,9 +47,13 @@ const WebhookUrl = () => {
       }
     };
     
-    // Only fetch if user is authenticated
+    // Only fetch if user is authenticated and not in loading state
     if (user && !authLoading) {
       fetchWebhookUrl();
+    } else if (!authLoading && !user) {
+      // If not loading and no user, we shouldn't be here
+      // Dashboard layout should handle redirect, but just in case
+      setIsLoading(false);
     }
   }, [user, authLoading]);
 
@@ -72,7 +71,8 @@ const WebhookUrl = () => {
       });
       
       if (!response.ok) {
-        throw new Error("Failed to regenerate webhook URL");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to regenerate webhook URL");
       }
       
       const data = await response.json();
@@ -123,6 +123,12 @@ const WebhookUrl = () => {
     );
   }
 
+  // If not authenticated and not loading, we shouldn't be here
+  // Dashboard layout should handle redirect, but just in case
+  if (!user && !authLoading) {
+    return null;
+  }
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">TradingView Webhook URL</h1>
@@ -147,6 +153,7 @@ const WebhookUrl = () => {
               size="icon" 
               onClick={copyToClipboard}
               title="Copy to clipboard"
+              disabled={!webhookUrl}
             >
               <Copy className="h-4 w-4" />
             </Button>

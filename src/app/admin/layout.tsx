@@ -20,11 +20,21 @@ export default function AdminLayout({
     }
   }, [admin, isLoading, router])
 
-  // Show nothing while checking authentication or redirecting
-  if (isLoading || !admin) {
+  // Show loading state while checking authentication
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <p className="text-lg">Checking admin privileges...</p>
+      </div>
+    )
+  }
+  
+  // If not loading and no admin, the useEffect will handle the redirect
+  // We still need to render something while the redirect happens
+  if (!admin) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <p className="text-lg">Redirecting to login...</p>
       </div>
     )
   }

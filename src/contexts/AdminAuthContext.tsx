@@ -44,8 +44,12 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error("Admin auth check error:", error);
-        localStorage.removeItem("adminUser");
-        setAdmin(null);
+        // Only clear admin data if there was a stored admin
+        const storedAdmin = localStorage.getItem("adminUser");
+        if (storedAdmin) {
+          localStorage.removeItem("adminUser");
+          setAdmin(null);
+        }
       } finally {
         setIsLoading(false);
       }

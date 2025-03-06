@@ -55,27 +55,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } catch (parseError) {
             console.error("Error parsing saved user data:", parseError);
             localStorage.removeItem("user");
+            setUser(null);
           }
         }
 
         // Always verify the token is still valid by making a request to get current user
-        const response = await fetch(`${API_URL}/users/current-user`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          credentials: "include" // Important for cookies
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data.data);
-          // Update localStorage with the latest user data
-          localStorage.setItem("user", JSON.stringify(data.data));
-        } else {
-          // Only clear user if API verification fails
-          // This prevents the flash of dashboard before redirect
-          if (savedUser) {
+        try {
+          const response = await fetch(`${API_URL}/users/current-user`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            credentials: "include" // Important for cookies
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data.data);
+            // Update localStorage with the latest user data
+            localStorage.setItem("user", JSON.stringify(data.data));
+          } else {
+            // Only clear user if API verification fails
+            // This prevents the flash of dashboard before redirect
+            if (savedUser) {
+              localStorage.removeItem("user");
+              setUser(null);
+            }
+          }
+        } catch (apiError) {
+          console.error("API verification error:", apiError);
+          // Don't clear user data on network errors to allow offline access
+          // Only clear if we're sure the token is invalid
+          if (!(apiError instanceof TypeError) && savedUser) {
             localStorage.removeItem("user");
             setUser(null);
           }

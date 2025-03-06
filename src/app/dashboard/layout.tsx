@@ -40,6 +40,7 @@ export default function DashboardLayout({
     )
   }
 
+  // Only render children when we have a valid user
   return children
 }
 

@@ -16,14 +16,23 @@ export default function LoginPage() {
   const [showSecurityQuestion, setShowSecurityQuestion] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login, error: authError } = useAuth();
-  const { login: adminLogin, error: adminAuthError } = useAdminAuth();
+  const { login, error: authError, user } = useAuth();
+  const { login: adminLogin, error: adminAuthError, admin } = useAdminAuth();
   const router = useRouter();
   
   // Admin credentials
   const ADMIN_EMAIL = "mdtalib23038@gmail.com";
   const ADMIN_PASSWORD = "admin4545";
-
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      router.replace("/dashboard");
+    } else if (admin) {
+      router.replace("/admin");
+    }
+  }, [user, admin, router]);
+  
   // Check if entered credentials match admin credentials
   useEffect(() => {
     if (emailOrUsername === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
@@ -33,7 +42,7 @@ export default function LoginPage() {
       setSecurityAnswer("");
     }
   }, [emailOrUsername, password]);
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -61,7 +70,7 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
-
+  
   return (
     <div className="flex h-screen max-w-screen items-center justify-center">
       <div className="mx-auto grid w-full max-w-[400px] gap-6">
