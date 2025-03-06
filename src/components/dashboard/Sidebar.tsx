@@ -36,6 +36,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   className?: string;
@@ -51,6 +52,7 @@ export default function Sidebar({ className }: SidebarProps) {
   const [userId, setUserId] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [server, setServer] = React.useState("");
+  const { logout } = useAuth(); // Get logout function from AuthContext
 
   const handleItemClick = (itemName: string) => {
     setActiveItem(itemName);
@@ -116,33 +118,40 @@ export default function Sidebar({ className }: SidebarProps) {
             </AccordionTrigger>
             {open && (
               <AccordionContent>
-                <div className="pl-11 space-y-2">
+                <div className="pl-11 space-y-4">
                   <input
                     type="text"
                     placeholder="Search..."
-                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 mb-4"
+                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                   {selectedBroker && (
-                    <Button className="mb-2" onClick={() => setIsApiCredentialsOpen(true)}>Continue</Button>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => setIsApiCredentialsOpen(true)}
+                    >
+                      Continue with {selectedBroker}
+                    </Button>
                   )}
-                  {["Angel One", "Dhan", "Flattrade", "Zerodha", "Fyers", "Finvisia", "Forex", "Delta Exchange", "Kotak", "Upstox", "Metatrader 4", "Metatrader 5"].sort()
-                    .filter((broker) =>
-                      broker.toLowerCase().includes(searchQuery.toLowerCase())
-                    )
-                    .map((broker) => (
-                      <button
-                        key={broker}
-                        className={cn(
-                          "block py-2 hover:text-primary transition-colors w-full text-left",
-                          selectedBroker === broker && "text-primary"
-                        )}
-                        onClick={() => setSelectedBroker(broker)}
-                      >
-                        {broker}
-                      </button>
-                    ))}
+                  <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
+                    {["Angel One", "Dhan", "Flattrade", "Zerodha", "Fyers", "Finvisia", "Forex", "Delta Exchange", "Kotak", "Upstox", "Metatrader 4", "Metatrader 5"].sort()
+                      .filter((broker) =>
+                        broker.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map((broker) => (
+                        <button
+                          key={broker}
+                          className={cn(
+                            "block py-2 px-2 hover:bg-accent hover:text-primary transition-colors w-full text-left rounded-md",
+                            selectedBroker === broker && "bg-accent/50 text-primary font-medium"
+                          )}
+                          onClick={() => setSelectedBroker(broker)}
+                        >
+                          {broker}
+                        </button>
+                      ))}
+                  </div>
                 </div>
               </AccordionContent>
             )}
@@ -377,9 +386,9 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <Accordion type="single" collapsible className="w-full space-y-2">
           <AccordionItem value="contact" className="border-none">
-            <AccordionTrigger
+            <div
               className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors cursor-pointer",
                 activeItem === "contact" && "bg-black text-white",
                 !open && "justify-center",
                 open && "space-x-3"
@@ -390,13 +399,13 @@ export default function Sidebar({ className }: SidebarProps) {
                 <HeadphonesIcon className="h-5 w-5 min-w-5" />
                 {open && <span className="ml-3 text-sm md:text-base">Contact Us</span>}
               </div>
-            </AccordionTrigger>
+            </div>
           </AccordionItem>
 
           <AccordionItem value="faq" className="border-none">
-            <AccordionTrigger
+            <div
               className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors cursor-pointer",
                 activeItem === "faq" && "bg-black text-white",
                 !open && "justify-center",
                 open && "space-x-3"
@@ -407,27 +416,30 @@ export default function Sidebar({ className }: SidebarProps) {
                 <HelpCircle className="h-5 w-5 min-w-5" />
                 {open && <span className="ml-3 text-sm md:text-base">FAQ</span>}
               </div>
-            </AccordionTrigger>
+            </div>
           </AccordionItem>
 
           <AccordionItem value="logout" className="border-none">
-            <AccordionTrigger
+            <div
               className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors cursor-pointer",
                 activeItem === "logout" && "bg-black text-white",
                 !open && "justify-center",
                 open && "space-x-3"
               )}
               onClick={() => {
-                // Perform logout logic here (e.g., clear cookies, local storage)
-                router.push("/");
+                // Logout function is already available from the useAuth hook at component level
+                logout().then(() => {
+                  // Redirect will be handled in the logout function
+                  toast.success("Logged out successfully");
+                });
               }}
             >
               <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
                 <KeyIcon className="h-5 w-5 min-w-5" />
                 {open && <span className="ml-3 text-sm md:text-base">Logout</span>}
               </div>
-            </AccordionTrigger>
+            </div>
           </AccordionItem>
         </Accordion>
       </nav>
