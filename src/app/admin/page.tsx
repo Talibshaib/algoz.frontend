@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { API_URL } from "@/constants/URI";
+import axiosInstance from "@/lib/axios";
 
 // User type definition
 type User = {
@@ -65,20 +66,17 @@ export default function AdminPage() {
         }
 
         // Fetch users from the backend API with credentials
-        const response = await fetch(`${API_URL}/users`, {
-          method: "GET",
+        const response = await axiosInstance.get('/users', {
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${adminToken}`,
-          },
-          credentials: "include",
+          }
         });
 
-        if (!response.ok) {
+        if (response.status !== 200) {
           throw new Error(`Error fetching users: ${response.statusText}`);
         }
 
-        const data = await response.json();
+        const data = response.data;
         // Check the structure of the response data
         console.log("API Response:", data);
 

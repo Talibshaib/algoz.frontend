@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { API_URL } from "@/constants/URI";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import axiosInstance from "@/lib/axios";
 
 const WebhookUrl = () => {
   const [webhookUrl, setWebhookUrl] = useState<string>("");
@@ -24,24 +25,56 @@ const WebhookUrl = () => {
       setError(null);
       
       try {
-        const response = await fetch(`${API_URL}/webhook/url`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          credentials: "include" // Important for cookies
-        });
+        // Enhanced debugging information
+        console.log("Current user:", JSON.stringify(user, null, 2));
+        console.log("Access token available:", !!user.accessToken);
         
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || "Failed to fetch webhook URL");
+        if (!user.accessToken) {
+          console.error("No access token available - user may need to re-login");
+          setError("Authentication error. Please try logging out and back in.");
+          setIsLoading(false);
+          return;
         }
         
-        const data = await response.json();
-        setWebhookUrl(data.data.webhookUrl);
-      } catch (err) {
+        // Explicitly set the Authorization header for this specific request
+        const response = await axiosInstance.get('/webhook/url', {
+          headers: {
+            Authorization: `Bearer ${user.accessToken}`
+          }
+        });
+        
+        console.log("Webhook URL response:", JSON.stringify(response.data, null, 2));
+        
+        // Axios throws errors automatically for non-2xx responses, but we'll keep the error handling pattern
+        // for consistency and to handle specific error messages from the API
+        const data = response.data;
+        if (data.data && data.data.webhookUrl) {
+          setWebhookUrl(data.data.webhookUrl);
+        } else {
+          console.error("Webhook URL not found in response:", data);
+          setError("Invalid response format from server");
+        }
+      } catch (err: any) {
         console.error("Error fetching webhook URL:", err);
-        setError("Failed to load webhook URL. Please try again later.");
+        // Enhanced error reporting
+        if (err.response) {
+          console.error("Error response:", {
+            status: err.response.status,
+            data: err.response.data
+          });
+          
+          // Provide more specific error messages based on status codes
+          if (err.response.status === 401) {
+            setError("Authentication error. Please try logging out and back in.");
+          } else {
+            setError(`Failed to load webhook URL: ${err.response.data?.message || err.message}`);
+          }
+        } else if (err.request) {
+          console.error("No response received:", err.request);
+          setError("Failed to connect to server. Please check your internet connection.");
+        } else {
+          setError("Failed to load webhook URL. Please try again later.");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -62,27 +95,31 @@ const WebhookUrl = () => {
     setError(null);
     
     try {
-      const response = await fetch(`${API_URL}/webhook/regenerate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: "include" // Important for cookies
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to regenerate webhook URL");
+      if (!user || !user.accessToken) {
+        throw new Error("Authentication required");
       }
       
-      const data = await response.json();
-      setWebhookUrl(data.data.webhookUrl);
-      
-      toast.success("Webhook URL Regenerated", {
-        description: "Your webhook URL has been successfully regenerated.",
-        duration: 3000,
+      const response = await axiosInstance.post('/webhook/regenerate', {}, {
+        headers: {
+          Authorization: `Bearer ${user.accessToken}`
+        }
       });
-    } catch (err) {
+      
+      // Axios throws errors automatically for non-2xx responses, but we'll keep the error handling pattern
+      // for consistency and to handle specific error messages from the API
+      const data = response.data;
+      if (data.data && data.data.webhookUrl) {
+        setWebhookUrl(data.data.webhookUrl);
+        
+        toast.success("Webhook URL Regenerated", {
+          description: "Your webhook URL has been successfully regenerated.",
+          duration: 3000,
+        });
+      } else {
+        console.error("Invalid response format:", data);
+        throw new Error("Invalid response format from server");
+      }
+    } catch (err: any) {
       console.error("Error regenerating webhook URL:", err);
       setError("Failed to regenerate webhook URL. Please try again later.");
       

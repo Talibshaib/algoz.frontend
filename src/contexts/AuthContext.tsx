@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { API_URL } from "@/constants/URI";
+import axiosInstance from "@/lib/axios";
 
 type User = {
   _id: string;
@@ -13,6 +14,7 @@ type User = {
   coverImage?: string;
   isAdmin?: boolean;
   balance?: number;
+  accessToken?: string;
 } | null;
 
 type AuthContextType = {
@@ -78,20 +80,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
         
-        const response = await fetch(`${API_URL}/users/current-user`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          credentials: "include",
+        const response = await axiosInstance.get('/users/current-user', {
           signal: controller.signal
         });
         
         clearTimeout(timeoutId);
         
-        if (response.ok) {
+        if (response.status === 200) {
           // Only update user data if verification succeeds
-          const data = await response.json();
+          const data = response.data;
           setUser(data.data);
           localStorage.setItem("user", JSON.stringify(data.data));
         }
@@ -113,27 +110,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      const response = await fetch(`${API_URL}/users/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ 
-          // Send as both email and username, backend will handle which one is provided
-          email: emailOrUsername.includes("@") ? emailOrUsername : undefined,
-          username: !emailOrUsername.includes("@") ? emailOrUsername : undefined,
-          password 
-        }),
-        credentials: "include" // Important for cookies
+      const response = await axiosInstance.post('/users/login', { 
+        // Send as both email and username, backend will handle which one is provided
+        email: emailOrUsername.includes("@") ? emailOrUsername : undefined,
+        username: !emailOrUsername.includes("@") ? emailOrUsername : undefined,
+        password 
       });
       
-      const data = await response.json();
       
-      if (response.ok) {
+      const data = response.data;
+      console.log("Login response data:", data); // Added console log
+      
+      if (response.status === 200) {
         // Make sure we have valid user data before setting it
         if (data.data && data.data.user) {
-          setUser(data.data.user);
-          localStorage.setItem("user", JSON.stringify(data.data.user));
+          // Store both user data and tokens
+          // Create a userData object that includes the user data and accessToken
+          const userData = {
+            ...data.data.user,
+            accessToken: data.data.accessToken
+          };
+          
+          // Update the user state with the complete userData including accessToken
+          setUser(userData);
+          
+          // Store user data and access token in localStorage
+          localStorage.setItem("user", JSON.stringify(userData));
           console.log("document.cookie", document.cookie); // Added console.log to check cookie
           router.push("/dashboard");
           return true;
@@ -167,15 +169,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       formData.append("username", username);
       formData.append("password", password);
       
-      const response = await fetch(`${API_URL}/users/register`, {
-        method: "POST",
-        body: formData,
-        credentials: "include" // Important for cookies
-      });
+      // For FormData, we don't need to set Content-Type as axios will set it automatically
+      const response = await axiosInstance.post('/users/register', formData);
       
-      const data = await response.json();
+      const data = response.data;
       
-      if (response.ok) {
+      if (response.status === 200) {
         // Don't set user or store in localStorage after signup
         // Instead, redirect to landing page for explicit login
         router.push("/");
@@ -196,27 +195,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       setIsLoading(true);
-      
+
+      // Clear local state before calling the API
+      setUser(null);
+      localStorage.removeItem("user");
+
       try {
         // Set a timeout for the fetch request
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
         
-        const response = await fetch(`${API_URL}/users/logout`, {
-          method: "POST",
-          credentials: "include", // Important for cookies
+        const response = await axiosInstance.post('/users/logout', {}, {
           signal: controller.signal
         });
         
         clearTimeout(timeoutId);
-        
-        if (response.ok) {
+
+        if (response.status === 200) {
           // Success case - API call worked
           console.log("Logout successful");
         } else {
           // API returned an error
-          const data = await response.json().catch(() => ({}));
-          console.error("Logout API error:", data.message || "Unknown error");
+          console.error("Logout API error:", response.data?.message || "Unknown error");
+          console.log("Logout API response:", response); // Added console log
         }
       } catch (apiError) {
         // Network error or timeout - just log it
