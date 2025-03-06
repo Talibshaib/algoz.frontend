@@ -24,6 +24,7 @@ type AuthContextType = {
   logout: () => Promise<boolean>;
   isLoading: boolean;
   error: string;
+  refreshToken: () => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,6 +53,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             // If we have a user in localStorage, keep them logged in
             const parsedUser = JSON.parse(savedUser);
+            
+            // Ensure the user object has an accessToken
+            if (!parsedUser.accessToken) {
+              console.error("No access token found in saved user data");
+              localStorage.removeItem("user");
+              setUser(null);
+              setIsLoading(false);
+              return;
+            }
+            
             setUser(parsedUser);
             setIsLoading(false);
             
@@ -89,8 +100,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (response.status === 200) {
           // Only update user data if verification succeeds
           const data = response.data;
-          setUser(data.data);
-          localStorage.setItem("user", JSON.stringify(data.data));
+          if (data.data && data.data.accessToken) {
+            // Make sure we preserve the access token
+            const updatedUser = {
+              ...data.data,
+              accessToken: data.data.accessToken
+            };
+            setUser(updatedUser);
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            console.log("User data refreshed successfully");
+          } else {
+            console.warn("Token verification succeeded but no token in response");
+          }
         }
         // If verification fails, we keep using the localStorage data
         // Only explicit logout will clear the user session
@@ -103,6 +124,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     checkAuthStatus();
   }, []);
+
+  // Function to refresh the token
+  const refreshToken = async () => {
+    try {
+      setIsLoading(true);
+      
+      const response = await axiosInstance.get('/users/refresh-token');
+      
+      if (response.status === 200 && response.data.data && response.data.data.accessToken) {
+        // Update user with new token
+        const currentUser = user ? { ...user } : null;
+        if (currentUser) {
+          currentUser.accessToken = response.data.data.accessToken;
+          setUser(currentUser);
+          localStorage.setItem("user", JSON.stringify(currentUser));
+          console.log("Token refreshed successfully");
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error("Token refresh failed:", error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Real login function that calls the backend API
   const login = async (emailOrUsername: string, password: string) => {
@@ -136,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           // Store user data and access token in localStorage
           localStorage.setItem("user", JSON.stringify(userData));
-          console.log("document.cookie", document.cookie); // Added console.log to check cookie
+          console.log("User data stored in localStorage with token");
           router.push("/dashboard");
           return true;
         } else {
@@ -217,7 +265,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           // API returned an error
           console.error("Logout API error:", response.data?.message || "Unknown error");
-          console.log("Logout API response:", response); // Added console log
         }
       } catch (apiError) {
         // Network error or timeout - just log it
@@ -242,7 +289,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading, error }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, isLoading, error, refreshToken }}>
       {children}
     </AuthContext.Provider>
   );

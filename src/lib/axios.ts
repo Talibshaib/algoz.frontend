@@ -31,7 +31,15 @@ axiosInstance.interceptors.request.use(
             }
           } else {
             console.warn("No accessToken found in user object - user may need to re-login");
-            // Consider redirecting to login page or refreshing the token here
+            // If we're in a browser environment, redirect to login
+            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+              console.log("Redirecting to login due to missing token");
+              // Use a timeout to avoid interrupting the current request
+              setTimeout(() => {
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+              }, 0);
+            }
           }
         } catch (error) {
           console.error('Error parsing user from localStorage:', error);
@@ -39,11 +47,6 @@ axiosInstance.interceptors.request.use(
           localStorage.removeItem('user');
         }
       }
-    }
-    
-    // Don't override explicit Authorization headers if they were set by the component
-    if (config.headers && config.headers.Authorization) {
-      return config;
     }
     
     return config;
@@ -66,7 +69,15 @@ axiosInstance.interceptors.response.use(
       // that falls out of the range of 2xx
       if (error.response.status === 401) {
         console.error('Authentication error: You may need to log in again');
-        // Could add auto-redirect to login page here if needed
+        // Clear user data and redirect to login page
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+          console.log("Redirecting to login due to 401 error");
+          localStorage.removeItem('user');
+          // Use a timeout to avoid interrupting the current request handling
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 0);
+        }
       }
       // Log more detailed error information
       console.error('API Error Response:', {

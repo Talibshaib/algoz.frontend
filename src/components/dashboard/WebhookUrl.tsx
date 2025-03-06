@@ -32,6 +32,9 @@ const WebhookUrl = () => {
           return;
         }
         
+        // Log the token for debugging
+        console.log("Using access token:", user.accessToken.substring(0, 10) + "...");
+        
         // Make API request with explicit Authorization header
         const response = await axiosInstance.get('/webhook/url', {
           headers: {
@@ -41,6 +44,8 @@ const WebhookUrl = () => {
         
         // Process response
         const data = response.data;
+        console.log("Webhook URL response:", data);
+        
         if (data.data && data.data.webhookUrl) {
           setWebhookUrl(data.data.webhookUrl);
         } else {
@@ -53,7 +58,20 @@ const WebhookUrl = () => {
         // Provide specific error messages based on the error type
         if (err.response) {
           if (err.response.status === 401) {
-            setError("Authentication error. Please try logging out and back in.");
+            console.error("Authentication failed with 401 error");
+            // Force re-login by clearing user data
+            localStorage.removeItem("user");
+            setError("Authentication session expired. Please log out and log back in.");
+            
+            // Add a logout button
+            toast.error("Authentication Error", {
+              description: "Your session has expired. Please log out and log back in.",
+              action: {
+                label: "Logout",
+                onClick: () => router.push("/login")
+              },
+              duration: 10000,
+            });
           } else {
             setError(`Failed to load webhook URL: ${err.response.data?.message || err.message}`);
           }
@@ -75,7 +93,7 @@ const WebhookUrl = () => {
       // Dashboard layout should handle redirect, but just in case
       setIsLoading(false);
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, router]);
 
   const handleRegenerateWebhook = async () => {
     if (!user || !user.accessToken) {
@@ -111,6 +129,16 @@ const WebhookUrl = () => {
       // Provide specific error messages based on the error type
       if (err.response && err.response.status === 401) {
         setError("Authentication error. Please try logging out and back in.");
+        // Force re-login by clearing user data
+        localStorage.removeItem("user");
+        toast.error("Authentication Error", {
+          description: "Your session has expired. Please log out and log back in.",
+          action: {
+            label: "Logout",
+            onClick: () => router.push("/login")
+          },
+          duration: 10000,
+        });
       } else {
         setError("Failed to regenerate webhook URL. Please try again later.");
       }
