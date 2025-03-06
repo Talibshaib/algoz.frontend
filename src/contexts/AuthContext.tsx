@@ -51,12 +51,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // If we have a user in localStorage, keep them logged in while we verify
             const parsedUser = JSON.parse(savedUser);
             setUser(parsedUser);
-            // Don't set isLoading to false yet - we'll do that after API verification
+            // Set isLoading to false here to ensure user stays logged in even if API verification fails
+            setIsLoading(false);
           } catch (parseError) {
             console.error("Error parsing saved user data:", parseError);
             localStorage.removeItem("user");
             setUser(null);
+            setIsLoading(false);
           }
+        } else {
+          // No saved user, set loading to false immediately
+          setIsLoading(false);
         }
 
         // Always verify the token is still valid by making a request to get current user
@@ -119,8 +124,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem("user");
           setUser(null);
         }
-      } finally {
-        // Ensure isLoading is set to false only after API verification completes
         setIsLoading(false);
       }
     };
