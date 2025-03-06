@@ -49,8 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (savedUser) {
           // If we have a user in localStorage, keep them logged in while we verify
           setUser(JSON.parse(savedUser));
-          // Set isLoading to false immediately to prevent redirect
-          setIsLoading(false);
+          // Don't set isLoading to false yet - we'll do that after API verification
         }
 
         // Always verify the token is still valid by making a request to get current user
@@ -68,16 +67,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Update localStorage with the latest user data
           localStorage.setItem("user", JSON.stringify(data.data));
         } else {
-          // Token is invalid or expired
-          localStorage.removeItem("user");
-          setUser(null);
+          // Only clear user if API verification fails
+          // This prevents the flash of dashboard before redirect
+          if (savedUser) {
+            localStorage.removeItem("user");
+            setUser(null);
+          }
         }
       } catch (error) {
         console.error("Auth check error:", error);
-        localStorage.removeItem("user");
-        setUser(null);
+        // Only clear user if there was a saved user
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) {
+          localStorage.removeItem("user");
+          setUser(null);
+        }
       } finally {
-        // Ensure isLoading is set to false in all cases
+        // Ensure isLoading is set to false only after API verification completes
         setIsLoading(false);
       }
     };
