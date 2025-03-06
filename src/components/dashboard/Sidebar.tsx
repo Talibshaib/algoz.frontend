@@ -85,7 +85,7 @@ export default function Sidebar({ className }: SidebarProps) {
         </a> */}
 
         <a
-          href="#"
+          href="/dashboard"
           className="flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors"
         >
           <LayoutDashboard className="h-5 w-5 min-w-5" />
