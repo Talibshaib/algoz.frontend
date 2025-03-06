@@ -39,20 +39,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  // Check if user is logged in on initial load
+  // Check if user is logged in on initial load - simplified to prioritize localStorage persistence
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        // Keep the user logged in from localStorage while we verify with the server
-        // This prevents flashing of login page during API verification
+        // Always prioritize the user data from localStorage
+        // This ensures persistent authentication without frequent API checks
         const savedUser = localStorage.getItem("user");
         if (savedUser) {
           try {
-            // If we have a user in localStorage, keep them logged in while we verify
+            // If we have a user in localStorage, keep them logged in
             const parsedUser = JSON.parse(savedUser);
             setUser(parsedUser);
-            // Set isLoading to false here to ensure user stays logged in even if API verification fails
             setIsLoading(false);
+            
+            // Perform a background verification without affecting the user experience
+            // This is just to keep the server-side session in sync
+            backgroundVerifyToken();
           } catch (parseError) {
             console.error("Error parsing saved user data:", parseError);
             localStorage.removeItem("user");
@@ -63,68 +66,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // No saved user, set loading to false immediately
           setIsLoading(false);
         }
-
-        // Always verify the token is still valid by making a request to get current user
-        // But don't clear user session if verification fails due to network issues
-        try {
-          // Set a timeout for the fetch request to prevent long waiting times
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased timeout to 15 seconds
-          
-          const response = await fetch(`${API_URL}/users/current-user`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            credentials: "include", // Important for cookies
-            signal: controller.signal
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (response.ok) {
-            const data = await response.json();
-            setUser(data.data);
-            // Update localStorage with the latest user data
-            localStorage.setItem("user", JSON.stringify(data.data));
-          } else {
-            // Only clear user if API verification fails with an explicit authentication error
-            // This prevents accidental logouts due to temporary server issues
-            if (savedUser) {
-              // Only clear on explicit authentication errors (401/403)
-              if (response.status === 401 || response.status === 403) {
-               console.warn("Authentication token expired or invalid, but not clearing session");
-               // localStorage.removeItem("user");
-               // setUser(null);
-             } else {
-               // For other error types (500, 502, etc), keep the user logged in from localStorage
-               console.warn(`Server returned ${response.status}, keeping user session active`);
-             }
-            }
-          }
-        } catch (error) {
-          const apiError = error as Error;
-          console.error("API verification error:", apiError);
-          // Don't clear user data on any network errors to allow offline access
-          // Keep the user logged in from localStorage
-          if (apiError && apiError.name === "AbortError") {
-            console.log("API request timed out, using cached user data");
-            // Keep the user from localStorage for offline access
-          } else if (apiError instanceof TypeError || (apiError && apiError.name === "NetworkError")) {
-            console.log("Network error detected, keeping user session active");
-            // Keep the user logged in during network issues
-          }
-          // No longer clearing user session for any network-related errors
-        }
       } catch (error) {
         console.error("Auth check error:", error);
-        // Only clear user if there was a saved user and it's not a network error
-        const savedUser = localStorage.getItem("user");
-        if (savedUser && !(error instanceof TypeError)) {
-          localStorage.removeItem("user");
-          setUser(null);
-        }
         setIsLoading(false);
+      }
+    };
+    
+    // Background verification that doesn't affect user experience
+    const backgroundVerifyToken = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        
+        const response = await fetch(`${API_URL}/users/current-user`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          // Only update user data if verification succeeds
+          const data = await response.json();
+          setUser(data.data);
+          localStorage.setItem("user", JSON.stringify(data.data));
+        }
+        // If verification fails, we keep using the localStorage data
+        // Only explicit logout will clear the user session
+      } catch (error) {
+        // Silently handle errors in background verification
+        // This ensures the user experience isn't affected by network issues
+        console.log("Background verification failed, using cached user data");
       }
     };
     
