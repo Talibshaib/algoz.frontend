@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           // Set a timeout for the fetch request to prevent long waiting times
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased timeout to 8 seconds
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased timeout to 15 seconds
           
           const response = await fetch(`${API_URL}/users/current-user`, {
             method: "GET",
@@ -93,13 +93,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (savedUser) {
               // Only clear on explicit authentication errors (401/403)
               if (response.status === 401 || response.status === 403) {
-                console.warn("Authentication token expired or invalid, clearing session");
-                localStorage.removeItem("user");
-                setUser(null);
-              } else {
-                // For other error types (500, 502, etc), keep the user logged in from localStorage
-                console.warn(`Server returned ${response.status}, keeping user session active`);
-              }
+               console.warn("Authentication token expired or invalid, but not clearing session");
+               // localStorage.removeItem("user");
+               // setUser(null);
+             } else {
+               // For other error types (500, 502, etc), keep the user logged in from localStorage
+               console.warn(`Server returned ${response.status}, keeping user session active`);
+             }
             }
           }
         } catch (error) {
@@ -158,6 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (data.data && data.data.user) {
           setUser(data.data.user);
           localStorage.setItem("user", JSON.stringify(data.data.user));
+          console.log("document.cookie", document.cookie); // Added console.log to check cookie
           router.push("/dashboard");
           return true;
         } else {

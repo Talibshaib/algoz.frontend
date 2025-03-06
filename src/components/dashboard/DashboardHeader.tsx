@@ -35,12 +35,12 @@ export function DashboardHeader() {
             <span className="font-bold text-sm sm:text-base">AlgoZ</span>
           </Link>
         </div>
-        
+
         <div className="flex items-center space-x-2 sm:space-x-4">
           <div className="flex items-center gap-1 sm:gap-2 rounded-full bg-muted px-2 sm:px-3 py-1 text-xs sm:text-sm">
             <span>{user?.balance || 0}</span>
           </div>
-          
+
           <div className="text-right mr-1 sm:mr-2 hidden sm:block">
             <div className="font-medium text-sm sm:text-base">{user?.fullName || user?.username || "Guest"}</div>
             <div className="text-xs sm:text-sm text-muted-foreground">
@@ -58,7 +58,10 @@ export function DashboardHeader() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => logout()}>
+              <DropdownMenuItem onClick={() => {
+                                logout();
+                                window.location.href = '/';
+                              }}>
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
