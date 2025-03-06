@@ -15,8 +15,7 @@ const WebhookUrl = () => {
   const [error, setError] = useState<string | null>(null);
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
-
-  // Removed redundant redirect - the dashboard layout already handles this
+  // Fetch webhook URL when component mounts or user changes
   useEffect(() => {
     const fetchWebhookUrl = async () => {
       if (!user) return;
@@ -25,10 +24,7 @@ const WebhookUrl = () => {
       setError(null);
       
       try {
-        // Enhanced debugging information
-        console.log("Current user:", JSON.stringify(user, null, 2));
-        console.log("Access token available:", !!user.accessToken);
-        
+        // Check if user has an access token
         if (!user.accessToken) {
           console.error("No access token available - user may need to re-login");
           setError("Authentication error. Please try logging out and back in.");
@@ -36,17 +32,14 @@ const WebhookUrl = () => {
           return;
         }
         
-        // Explicitly set the Authorization header for this specific request
+        // Make API request with explicit Authorization header
         const response = await axiosInstance.get('/webhook/url', {
           headers: {
             Authorization: `Bearer ${user.accessToken}`
           }
         });
         
-        console.log("Webhook URL response:", JSON.stringify(response.data, null, 2));
-        
-        // Axios throws errors automatically for non-2xx responses, but we'll keep the error handling pattern
-        // for consistency and to handle specific error messages from the API
+        // Process response
         const data = response.data;
         if (data.data && data.data.webhookUrl) {
           setWebhookUrl(data.data.webhookUrl);
@@ -56,21 +49,15 @@ const WebhookUrl = () => {
         }
       } catch (err: any) {
         console.error("Error fetching webhook URL:", err);
-        // Enhanced error reporting
+        
+        // Provide specific error messages based on the error type
         if (err.response) {
-          console.error("Error response:", {
-            status: err.response.status,
-            data: err.response.data
-          });
-          
-          // Provide more specific error messages based on status codes
           if (err.response.status === 401) {
             setError("Authentication error. Please try logging out and back in.");
           } else {
             setError(`Failed to load webhook URL: ${err.response.data?.message || err.message}`);
           }
         } else if (err.request) {
-          console.error("No response received:", err.request);
           setError("Failed to connect to server. Please check your internet connection.");
         } else {
           setError("Failed to load webhook URL. Please try again later.");
@@ -91,22 +78,21 @@ const WebhookUrl = () => {
   }, [user, authLoading]);
 
   const handleRegenerateWebhook = async () => {
+    if (!user || !user.accessToken) {
+      setError("Authentication required. Please try logging out and back in.");
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     
     try {
-      if (!user || !user.accessToken) {
-        throw new Error("Authentication required");
-      }
-      
       const response = await axiosInstance.post('/webhook/regenerate', {}, {
         headers: {
           Authorization: `Bearer ${user.accessToken}`
         }
       });
       
-      // Axios throws errors automatically for non-2xx responses, but we'll keep the error handling pattern
-      // for consistency and to handle specific error messages from the API
       const data = response.data;
       if (data.data && data.data.webhookUrl) {
         setWebhookUrl(data.data.webhookUrl);
@@ -121,7 +107,13 @@ const WebhookUrl = () => {
       }
     } catch (err: any) {
       console.error("Error regenerating webhook URL:", err);
-      setError("Failed to regenerate webhook URL. Please try again later.");
+      
+      // Provide specific error messages based on the error type
+      if (err.response && err.response.status === 401) {
+        setError("Authentication error. Please try logging out and back in.");
+      } else {
+        setError("Failed to regenerate webhook URL. Please try again later.");
+      }
       
       toast.error("Error", {
         description: "Failed to regenerate webhook URL. Please try again.",
@@ -201,7 +193,7 @@ const WebhookUrl = () => {
           <Button
             variant="outline"
             onClick={handleRegenerateWebhook}
-            disabled={isLoading}
+            disabled={isLoading || !user?.accessToken}
           >
             Regenerate Webhook URL
           </Button>

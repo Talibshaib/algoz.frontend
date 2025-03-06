@@ -40,6 +40,12 @@ axiosInstance.interceptors.request.use(
         }
       }
     }
+    
+    // Don't override explicit Authorization headers if they were set by the component
+    if (config.headers && config.headers.Authorization) {
+      return config;
+    }
+    
     return config;
   },
   (error) => {
