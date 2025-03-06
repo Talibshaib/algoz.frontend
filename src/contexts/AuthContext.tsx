@@ -60,14 +60,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Always verify the token is still valid by making a request to get current user
+        // But don't clear user session if verification fails due to network issues
         try {
+          // Set a timeout for the fetch request to prevent long waiting times
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased timeout to 8 seconds
+          
           const response = await fetch(`${API_URL}/users/current-user`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json"
             },
-            credentials: "include" // Important for cookies
+            credentials: "include", // Important for cookies
+            signal: controller.signal
           });
+          
+          clearTimeout(timeoutId);
           
           if (response.ok) {
             const data = await response.json();
@@ -75,27 +83,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Update localStorage with the latest user data
             localStorage.setItem("user", JSON.stringify(data.data));
           } else {
-            // Only clear user if API verification fails
-            // This prevents the flash of dashboard before redirect
+            // Only clear user if API verification fails with an explicit authentication error
+            // This prevents accidental logouts due to temporary server issues
             if (savedUser) {
-              localStorage.removeItem("user");
-              setUser(null);
+              // Only clear on explicit authentication errors (401/403)
+              if (response.status === 401 || response.status === 403) {
+                console.warn("Authentication token expired or invalid, clearing session");
+                localStorage.removeItem("user");
+                setUser(null);
+              } else {
+                // For other error types (500, 502, etc), keep the user logged in from localStorage
+                console.warn(`Server returned ${response.status}, keeping user session active`);
+              }
             }
           }
-        } catch (apiError) {
+        } catch (error) {
+          const apiError = error as Error;
           console.error("API verification error:", apiError);
-          // Don't clear user data on network errors to allow offline access
-          // Only clear if we're sure the token is invalid
-          if (!(apiError instanceof TypeError) && savedUser) {
-            localStorage.removeItem("user");
-            setUser(null);
+          // Don't clear user data on any network errors to allow offline access
+          // Keep the user logged in from localStorage
+          if (apiError && apiError.name === "AbortError") {
+            console.log("API request timed out, using cached user data");
+            // Keep the user from localStorage for offline access
+          } else if (apiError instanceof TypeError || (apiError && apiError.name === "NetworkError")) {
+            console.log("Network error detected, keeping user session active");
+            // Keep the user logged in during network issues
           }
+          // No longer clearing user session for any network-related errors
         }
       } catch (error) {
         console.error("Auth check error:", error);
-        // Only clear user if there was a saved user
+        // Only clear user if there was a saved user and it's not a network error
         const savedUser = localStorage.getItem("user");
-        if (savedUser) {
+        if (savedUser && !(error instanceof TypeError)) {
           localStorage.removeItem("user");
           setUser(null);
         }
@@ -131,10 +151,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
       
       if (response.ok) {
-        setUser(data.data.user);
-        localStorage.setItem("user", JSON.stringify(data.data.user));
-        router.push("/dashboard");
-        return true;
+        // Make sure we have valid user data before setting it
+        if (data.data && data.data.user) {
+          setUser(data.data.user);
+          localStorage.setItem("user", JSON.stringify(data.data.user));
+          router.push("/dashboard");
+          return true;
+        } else {
+          console.error("Login response missing user data:", data);
+          setError("Invalid response from server");
+          return false;
+        }
       } else {
         setError(data.message || "Login failed");
         return false;
@@ -190,24 +217,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      const response = await fetch(`${API_URL}/users/logout`, {
-        method: "POST",
-        credentials: "include" // Important for cookies
-      });
-      
-      if (response.ok) {
-        setUser(null);
-        localStorage.removeItem("user");
-        router.push("/");
-        return true;
-      } else {
-        const data = await response.json();
-        setError(data.message || "Logout failed");
-        return false;
+      try {
+        // Set a timeout for the fetch request
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        
+        const response = await fetch(`${API_URL}/users/logout`, {
+          method: "POST",
+          credentials: "include", // Important for cookies
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          // Success case - API call worked
+          console.log("Logout successful");
+        } else {
+          // API returned an error
+          const data = await response.json().catch(() => ({}));
+          console.error("Logout API error:", data.message || "Unknown error");
+        }
+      } catch (apiError) {
+        // Network error or timeout - just log it
+        console.error("Logout API call failed:", apiError);
       }
+      
+      // Always clear local state regardless of API response
+      setUser(null);
+      localStorage.removeItem("user");
+      router.push("/");
+      return true;
     } catch (error) {
       console.error("Logout error:", error);
-      // Even if the API call fails, we should still clear local state
+      // Even if there's an unexpected error, still clear local state
       setUser(null);
       localStorage.removeItem("user");
       router.push("/");
@@ -230,4 +273,9 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
+}
+
+// Helper function to check if we're in a browser environment
+export function isBrowser() {
+  return typeof window !== 'undefined';
 }
