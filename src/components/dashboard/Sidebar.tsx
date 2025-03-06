@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Sheet,
   SheetContent,
@@ -48,11 +48,34 @@ export default function Sidebar({ className }: SidebarProps) {
   const [searchQuery, setSearchQuery] = React.useState<string>("");
   const [selectedBroker, setSelectedBroker] = React.useState<string | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const [isApiCredentialsOpen, setIsApiCredentialsOpen] = React.useState(false);
   const [userId, setUserId] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [server, setServer] = React.useState("");
   const { logout } = useAuth(); // Get logout function from AuthContext
+
+  // Set active item based on current pathname
+  React.useEffect(() => {
+    if (pathname === "/dashboard") {
+      setActiveItem("dashboard");
+    } else if (pathname === "/dashboard/webhook") {
+      setActiveItem("tradingview");
+    } else if (pathname.includes("/dashboard/pricing")) {
+      setActiveItem("pricing");
+    } else if (pathname.includes("/dashboard/support")) {
+      setActiveItem("support");
+    } else {
+      // For other routes, check if they match any known section
+      const pathSegments = pathname.split("/");
+      if (pathSegments.length > 2) {
+        const section = pathSegments[2];
+        if (["brokerauth", "tradingview", "pricing", "support", "help"].includes(section)) {
+          setActiveItem(section);
+        }
+      }
+    }
+  }, [pathname]);
 
   const handleItemClick = (itemName: string) => {
     setActiveItem(itemName);
@@ -71,7 +94,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <Button
           variant="ghost"
           size="icon"
-          onClick={toggleSidebar}
+          onClick={() => toggleSidebar()}
           className="h-8 w-8 rounded-full"
         >
           {open ? <ChevronLeft className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -88,7 +111,11 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <a
           href="/dashboard"
-          className="flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className={cn(
+            "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+            activeItem === "dashboard" && "bg-black text-white"
+          )}
+          onClick={() => handleItemClick("dashboard")}
         >
           <LayoutDashboard className="h-5 w-5 min-w-5" />
           {open && <span className="ml-3 text-sm md:text-base">Dashboard</span>}
@@ -128,10 +155,10 @@ export default function Sidebar({ className }: SidebarProps) {
                   />
                   {selectedBroker && (
                     <Button 
-                      className="w-full" 
+                      className="w-full bg-black text-white hover:bg-accent hover:text-primary transition-colors" 
                       onClick={() => setIsApiCredentialsOpen(true)}
                     >
-                      Continue with {selectedBroker}
+                      {selectedBroker}
                     </Button>
                   )}
                   <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
@@ -372,10 +399,18 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <a
           href="/dashboard/pricing"
-          className="flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+          className={cn(
+            "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+            activeItem === "pricing" && "bg-black text-white",
+            !open && "justify-center",
+            open && "space-x-3"
+          )}
+          onClick={() => handleItemClick("pricing")}
         >
-          <CreditCard className="h-5 w-5 min-w-5" />
-          {open && <span className="ml-3 text-sm md:text-base">Pricing</span>}
+          <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+            <CreditCard className="h-5 w-5 min-w-5" />
+            {open && <span className="ml-3 text-sm md:text-base">Pricing</span>}
+          </div>
         </a>
 
         {open && (

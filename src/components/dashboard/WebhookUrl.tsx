@@ -217,11 +217,12 @@ const WebhookUrl = () => {
           </div>
         )}
         
+        {/* Regenerate button removed as requested */}
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             onClick={handleRegenerateWebhook}
-            disabled={isLoading || !user?.accessToken}
+            disabled
           >
             Regenerate Webhook URL
           </Button>
