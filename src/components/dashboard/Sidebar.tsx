@@ -43,7 +43,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ className }: SidebarProps) {
-  const { open, toggleSidebar, isMobile } = useSidebar();
+  const { open, toggleSidebar, isMobile, openMobile, setOpenMobile } = useSidebar();
   const [activeItem, setActiveItem] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
   const [selectedBroker, setSelectedBroker] = React.useState<string | null>(null);
@@ -86,6 +86,7 @@ export default function Sidebar({ className }: SidebarProps) {
       className={cn(
         "bg-card border-r border-border h-full transition-all duration-300",
         open ? "w-64" : "w-[70px] min-w-[70px]",
+        isMobile && "w-full",
         className
       )}
     >
