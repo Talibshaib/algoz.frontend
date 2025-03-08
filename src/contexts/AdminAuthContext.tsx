@@ -15,7 +15,7 @@ type Admin = {
 
 type AdminAuthContextType = {
   admin: Admin;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (emailOrUsername: string, password: string) => Promise<boolean>;
   logout: () => Promise<boolean>;
   isLoading: boolean;
   error: string;
@@ -61,7 +61,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
                 setAdmin(updatedAdmin);
                 localStorage.setItem("adminUser", JSON.stringify(updatedAdmin));
               }
-            } catch (apiError) {
+            } catch (apiError: any) {
               console.error("Admin token validation failed:", apiError);
               // Don't immediately clear - try refresh token first if implemented
               // For now, we'll clear on 401/403 errors only
@@ -71,13 +71,13 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
                 delete axiosInstance.defaults.headers.common['Authorization'];
               }
             }
-          } catch (parseError) {
+          } catch (parseError: any) {
             console.error("Error parsing admin data:", parseError);
             localStorage.removeItem("adminUser");
             setAdmin(null);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Admin auth check error:", error);
         // Only clear admin data if there was a stored admin
         const storedAdmin = localStorage.getItem("adminUser");
@@ -160,7 +160,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
               Authorization: `Bearer ${admin.accessToken}`
             }
           });
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error during API logout:", error);
           // Continue with local logout even if API call fails
         }
@@ -171,7 +171,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("adminUser");
       router.push("/login");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Admin logout error:", error);
       // Even if there's an error, we should still clear local state
       setAdmin(null);
