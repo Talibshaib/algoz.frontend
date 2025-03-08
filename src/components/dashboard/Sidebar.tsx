@@ -130,59 +130,28 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <Accordion type="single" collapsible className="w-full space-y-2">
           <AccordionItem value="brokerauth" className="border-none">
-            <AccordionTrigger
+            <a
+              href="/dashboard/brockerauth"
               className={cn(
                 "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
                 activeItem === "brokerauth" && "bg-black text-white",
                 !open && "justify-center",
                 open && "space-x-3"
               )}
-              onClick={() => handleItemClick("brokerauth")}
+              onClick={(e) => {
+                e.preventDefault();
+                handleItemClick("brokerauth");
+                if (isMobile) {
+                  setOpenMobile(false);
+                }
+                router.push("/dashboard/brockerauth");
+              }}
             >
               <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
                 <KeyIcon className="h-5 w-5 min-w-5" />
-                {open && <span className="text-sm md:text-base">Broker Auth</span>}
+                {open && <span className="text-sm md:text-base">Api Credentials</span>}
               </div>
-            </AccordionTrigger>
-            {open && (
-              <AccordionContent>
-                <div className="pl-11 space-y-4">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  {selectedBroker && (
-                    <Button 
-                      className="w-full bg-black text-white hover:bg-accent hover:text-primary transition-colors" 
-                      onClick={() => setIsApiCredentialsOpen(true)}
-                    >
-                      {selectedBroker}
-                    </Button>
-                  )}
-                  <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
-                    {["Angel One", "Dhan", "Flattrade", "Zerodha", "Fyers", "Finvisia", "Forex", "Delta Exchange", "Kotak", "Upstox", "Metatrader 4", "Metatrader 5"].sort()
-                      .filter((broker) =>
-                        broker.toLowerCase().includes(searchQuery.toLowerCase())
-                      )
-                      .map((broker) => (
-                        <button
-                          key={broker}
-                          className={cn(
-                            "block py-2 px-2 hover:bg-accent hover:text-primary transition-colors w-full text-left rounded-md",
-                            selectedBroker === broker && "bg-accent/50 text-primary font-medium"
-                          )}
-                          onClick={() => setSelectedBroker(broker)}
-                        >
-                          {broker}
-                        </button>
-                      ))}
-                  </div>
-                </div>
-              </AccordionContent>
-            )}
+            </a>
           </AccordionItem>
         </Accordion>
 
