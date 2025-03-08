@@ -4,6 +4,9 @@ import type { ReactNode } from "react"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAdminAuth } from "@/contexts/AdminAuthContext"
+import { AdminHeader } from "@/components/admin/AdminHeader"
+import AdminSidebar from "@/components/admin/AdminSidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
 export default function AdminLayout({
   children,
@@ -39,5 +42,19 @@ export default function AdminLayout({
     )
   }
 
-  return children
+  return (
+    <SidebarProvider defaultOpen>
+      <div className="flex flex-col h-screen w-full overflow-hidden">
+        <AdminHeader />
+        <div className="flex flex-1 overflow-hidden">
+          <div className="hidden md:block">
+            <AdminSidebar />
+          </div>
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  )
 }

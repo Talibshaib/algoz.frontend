@@ -12,17 +12,12 @@ import { useRouter } from "next/navigation"
 export default function LoginPage() {
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [securityAnswer, setSecurityAnswer] = useState("");
-  const [showSecurityQuestion, setShowSecurityQuestion] = useState(false);
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login, error: authError, user } = useAuth();
   const { login: adminLogin, error: adminAuthError, admin } = useAdminAuth();
   const router = useRouter();
-  
-  // Admin credentials
-  const ADMIN_EMAIL = "mdtalib23038@gmail.com";
-  const ADMIN_PASSWORD = "admin4545";
   
   // Redirect if already logged in
   useEffect(() => {
@@ -33,28 +28,17 @@ export default function LoginPage() {
     }
   }, [user, admin, router]);
   
-  // Check if entered credentials match admin credentials
-  useEffect(() => {
-    if (emailOrUsername === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      setShowSecurityQuestion(true);
-    } else {
-      setShowSecurityQuestion(false);
-      setSecurityAnswer("");
-    }
-  }, [emailOrUsername, password]);
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
     
     try {
-      // If admin credentials are entered and security question is shown
-      if (showSecurityQuestion) {
-        // Try admin login
-        const adminSuccess = await adminLogin(emailOrUsername, password, securityAnswer);
+      if (isAdminLogin) {
+        // Admin login
+        const adminSuccess = await adminLogin(emailOrUsername, password);
         if (!adminSuccess) {
-          setError(adminAuthError || "Invalid admin credentials or security answer");
+          setError(adminAuthError || "Invalid admin credentials");
         }
       } else {
         // Regular user login
@@ -111,20 +95,17 @@ export default function LoginPage() {
             />
           </div>
           
-          {/* Security question field - only shown when admin credentials are entered */}
-          {showSecurityQuestion && (
-            <div className="grid gap-2">
-              <label htmlFor="securityQuestion">Security Question: What is your favorite pet?</label>
-              <Input 
-                id="securityQuestion" 
-                type="text" 
-                placeholder="Your answer" 
-                value={securityAnswer}
-                onChange={(e) => setSecurityAnswer(e.target.value)}
-                required 
-              />
-            </div>
-          )}
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="adminLogin" 
+              isSelected={isAdminLogin}
+              onValueChange={setIsAdminLogin}
+            />
+            <label htmlFor="adminLogin" className="text-sm font-normal">
+              Login as Admin
+            </label>
+          </div>
+          
           <div className="flex items-center space-x-2">
             <Checkbox id="remember" />
             <label htmlFor="remember" className="text-sm font-normal">

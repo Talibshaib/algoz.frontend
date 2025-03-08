@@ -15,6 +15,31 @@ axiosInstance.interceptors.request.use(
   (config) => {
     // Add Authorization header with JWT token if available in localStorage
     if (typeof window !== 'undefined') {
+      // Check for admin token first
+      const adminUser = localStorage.getItem('adminUser');
+      if (adminUser) {
+        try {
+          const parsedAdmin = JSON.parse(adminUser);
+          // If we have an accessToken in the admin object
+          if (parsedAdmin.accessToken) {
+            // Ensure headers object exists
+            config.headers = config.headers || {};
+            // Set Authorization header with Bearer token
+            config.headers.Authorization = `Bearer ${parsedAdmin.accessToken}`;
+            // Remove excessive logging in production
+            if (process.env.NODE_ENV === 'development') {
+              console.log("Admin Authorization header set with token");
+            }
+            return config;
+          }
+        } catch (error) {
+          console.error('Error parsing admin from localStorage:', error);
+          // Clear invalid admin data
+          localStorage.removeItem('adminUser');
+        }
+      }
+
+      // If no admin token, check for user token
       const user = localStorage.getItem('user');
       if (user) {
         try {
@@ -27,7 +52,7 @@ axiosInstance.interceptors.request.use(
             config.headers.Authorization = `Bearer ${parsedUser.accessToken}`;
             // Remove excessive logging in production
             if (process.env.NODE_ENV === 'development') {
-              console.log("Authorization header set with token:", `Bearer ${parsedUser.accessToken.substring(0, 10)}...`);
+              console.log("User Authorization header set with token");
             }
           } else {
             console.warn("No accessToken found in user object - user may need to re-login");
@@ -48,7 +73,6 @@ axiosInstance.interceptors.request.use(
         }
       }
     }
-    
     return config;
   },
   (error) => {

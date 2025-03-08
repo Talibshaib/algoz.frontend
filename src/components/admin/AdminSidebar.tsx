@@ -31,12 +31,15 @@ interface AdminSidebarProps {
 }
 
 export default function AdminSidebar({ className }: AdminSidebarProps) {
-  const { open, toggleSidebar } = useSidebar();
+  const { open, toggleSidebar, isMobile, openMobile, setOpenMobile } = useSidebar();
   const { logout } = useAdminAuth();
   const [activeItem, setActiveItem] = React.useState<string | null>(null);
   
   const handleItemClick = (itemName: string) => {
     setActiveItem(itemName);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   return (
@@ -44,6 +47,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
       className={cn(
         "bg-card border-r border-border h-full transition-all duration-300",
         open ? "w-64" : "w-[70px] min-w-[70px]",
+        isMobile && "w-full",
         className
       )}
     >

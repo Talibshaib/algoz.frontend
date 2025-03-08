@@ -1,12 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { AdminHeader } from "@/components/admin/AdminHeader";
-import AdminSidebar from "@/components/admin/AdminSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import {
   Search,
   Filter,
@@ -59,18 +56,10 @@ export default function AdminPage() {
       setError(null);
 
       try {
-        // Get admin token from context
-        const adminToken = getAdminToken();
-        if (!adminToken) {
-          throw new Error("Admin authentication required");
-        }
-
-        // Fetch users from the backend API with credentials
-        const response = await axiosInstance.get('/users', {
-          headers: {
-            Authorization: `Bearer ${adminToken}`,
-          }
-        });
+        console.log("Fetching users from admin API");
+        
+        // Fetch users from the admin API endpoint
+        const response = await axiosInstance.get('/admin/users');
 
         if (response.status !== 200) {
           throw new Error(`Error fetching users: ${response.statusText}`);
@@ -81,9 +70,7 @@ export default function AdminPage() {
         console.log("API Response:", data);
 
         // Update to handle different response structures
-        if (data.users) {
-          setUsers(data.users);
-        } else if (data.data && Array.isArray(data.data)) {
+        if (data.data && Array.isArray(data.data)) {
           setUsers(
             data.data.map((user: any) => ({
               _id: user._id,
@@ -95,8 +82,8 @@ export default function AdminPage() {
               avatar: user.avatar,
             }))
           );
-        } else if (Array.isArray(data)) {
-          setUsers(data);
+        } else if (Array.isArray(data.data)) {
+          setUsers(data.data);
         } else {
           console.error("Unexpected API response structure:", data);
           setError("Received unexpected data format from server");
@@ -169,7 +156,7 @@ export default function AdminPage() {
     };
 
     fetchUsers();
-  }, [API_URL]);
+  }, []);
 
   // Filter users based on search query
   const filteredUsers = users.filter(
@@ -179,158 +166,141 @@ export default function AdminPage() {
       user.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
   return (
-    <SidebarProvider defaultOpen>
-      <div className="relative flex min-h-screen flex-col overflow-hidden">
-        <AdminHeader />
-        <div className="flex flex-1 w-full overflow-hidden">
-          <AdminSidebar />
-          <main className="flex-1 p-6 overflow-auto max-w-full">
-            {/* User Management Section */}
-            <div className="mb-8">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                <h2 className="text-2xl font-semibold">Users</h2>
-                <Button className="bg-black hover:bg-gray-800 text-white">
-                  <Plus className="h-4 w-4 mr-2" /> Add New User
-                </Button>
-              </div>
-
-              {/* Error message */}
-              {error && (
-                <Alert className="mb-4 bg-red-50 text-red-800 border-red-200">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              {/* Search and Filter */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4 w-full">
-                <div className="relative flex-1 w-full">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search users..."
-                    className="pl-8"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <Button variant="outline" className="flex items-center gap-1">
-                  <Filter className="h-4 w-4" />
-                  Filter
-                  <ChevronDown className="h-3 w-3 opacity-50" />
-                </Button>
-              </div>
-
-              {/* Loading state */}
-              {isLoading ? (
-                <div className="flex justify-center items-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <span className="ml-2">Loading users...</span>
-                </div>
-              ) : (
-                <>
-                  {/* Users Table */}
-                  <div className="border rounded-md overflow-x-auto w-full">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-12">
-                            <input type="checkbox" className="h-4 w-4" />
-                          </TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Phone</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Coins</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredUsers.length === 0 ? (
-                          <TableRow>
-                            <TableCell
-                              colSpan={7}
-                              className="text-center py-4 text-muted-foreground"
-                            >
-                              {searchQuery
-                                ? "No users match your search criteria"
-                                : "No users found"}
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredUsers.map((user) => (
-                            <TableRow key={user._id}>
-                              <TableCell>
-                                <input type="checkbox" className="h-4 w-4" />
-                              </TableCell>
-                              <TableCell className="font-medium">
-                                {user.name}
-                              </TableCell>
-                              <TableCell>{user.email}</TableCell>
-                              <TableCell>{user.phone}</TableCell>
-                              <TableCell>{user.type}</TableCell>
-                              <TableCell>
-                                <div className="font-medium">
-                                  {user.balance}
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                      <ChevronDown className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>
-                                      <Edit className="h-4 w-4 mr-2" /> Edit
-                                      User
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                      <Edit className="h-4 w-4 mr-2" /> Modify
-                                      Coins
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive">
-                                      <Trash className="h-4 w-4 mr-2" /> Delete
-                                      User
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* Pagination */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
-                    <div className="text-sm text-muted-foreground">
-                      Showing{" "}
-                      {filteredUsers.length > 0
-                        ? `1-${filteredUsers.length}`
-                        : "0"}{" "}
-                      of {filteredUsers.length} users
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm" disabled>
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={filteredUsers.length === 0}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </main>
+    <div className="p-4 sm:p-6">
+      {/* User Management Section */}
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <h2 className="text-2xl font-semibold">Users</h2>
+          <Button className="bg-black hover:bg-gray-800 text-white">
+            <Plus className="h-4 w-4 mr-2" /> Add New User
+          </Button>
         </div>
+
+        {/* Error message */}
+        {error && (
+          <Alert className="mb-4 bg-red-50 text-red-800 border-red-200">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Search and Filter */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4 w-full">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search users..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Button variant="outline" className="flex items-center gap-1">
+            <Filter className="h-4 w-4" />
+            Filter
+            <ChevronDown className="h-3 w-3 opacity-50" />
+          </Button>
+        </div>
+
+        {/* Loading state */}
+        {isLoading ? (
+          <div className="flex justify-center items-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2">Loading users...</span>
+          </div>
+        ) : (
+          <>
+            {/* Users Table */}
+            <div className="border rounded-md overflow-x-auto w-full">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">
+                      <input type="checkbox" className="h-4 w-4" />
+                    </TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Coins</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="text-center py-4 text-muted-foreground"
+                      >
+                        {searchQuery
+                          ? "No users match your search criteria"
+                          : "No users found"}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <TableRow key={user._id}>
+                        <TableCell>
+                          <input type="checkbox" className="h-4 w-4" />
+                        </TableCell>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.phone}</TableCell>
+                        <TableCell>{user.type}</TableCell>
+                        <TableCell>{user.balance}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <ChevronDown className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">
+                                <Trash className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
+              <div className="text-sm text-muted-foreground">
+                Showing{" "}
+                {filteredUsers.length > 0
+                  ? `1-${filteredUsers.length}`
+                  : "0"}{" "}
+                of {filteredUsers.length} users
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" disabled>
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={filteredUsers.length === 0}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
