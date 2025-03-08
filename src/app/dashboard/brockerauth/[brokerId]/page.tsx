@@ -2,155 +2,179 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-// Define broker data
-const brokers = {
+// Define broker configurations
+const brokers: Record<string, { name: string; logo: string; fields: { name: string; label: string; type: string }[] }> = {
   spaisa: {
     name: "SPAISA",
     logo: "/brokers/spaisa.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" },
-      { id: "userId", label: "User ID", type: "text" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" },
+      { name: "userId", label: "User ID", type: "text" }
     ]
   },
   aliceblue: {
     name: "ALICEBLUE",
     logo: "/brokers/aliceblue.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" },
-      { id: "clientId", label: "Client ID", type: "text" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   alpaca: {
     name: "ALPACA",
     logo: "/brokers/alpaca.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   anandrathi: {
     name: "ANANDRATHI",
     logo: "/brokers/anandrathi.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" },
-      { id: "userId", label: "User ID", type: "text" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" },
+      { name: "clientId", label: "Client ID", type: "text" }
     ]
   },
   angelbroking: {
     name: "ANGELBROKING",
     logo: "/brokers/angelbroking.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "clientId", label: "Client ID", type: "text" },
-      { id: "password", label: "Password", type: "password" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" },
+      { name: "clientId", label: "Client ID", type: "text" }
     ]
   },
   ats: {
     name: "ATS",
     logo: "/brokers/ats.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   binance: {
     name: "BINANCE",
     logo: "/brokers/binance.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   binanceV2: {
     name: "BINANCEV2",
     logo: "/brokers/binance.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   bitbns: {
     name: "BITBNS",
     logo: "/brokers/bitbns.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   bitmex: {
     name: "BITMEX",
     logo: "/brokers/bitmex.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   bybit: {
     name: "BYBIT",
     logo: "/brokers/bybit.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   coindcx: {
     name: "COINDCX",
     logo: "/brokers/coindcx.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   delta: {
     name: "DELTA",
     logo: "/brokers/delta.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   dhanhq: {
     name: "DHANHQ",
     logo: "/brokers/dhanhq.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" },
-      { id: "clientId", label: "Client ID", type: "text" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   finvasia: {
     name: "FINVASIA",
     logo: "/brokers/finvasia.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" },
-      { id: "userId", label: "User ID", type: "text" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" },
+      { name: "vendorCode", label: "Vendor Code", type: "text" }
     ]
   },
   forex: {
     name: "FOREX",
     logo: "/brokers/forex.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" },
-      { id: "accountId", label: "Account ID", type: "text" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
     ]
   },
   ftx: {
     name: "FTX",
     logo: "/brokers/ftx.png",
     fields: [
-      { id: "apiKey", label: "API Key", type: "text" },
-      { id: "apiSecret", label: "API Secret", type: "password" }
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" }
+    ]
+  },
+  flattrader: {
+    name: "FLATTRADER",
+    logo: "/brokers/flattrader.png",
+    fields: [
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" },
+      { name: "accountId", label: "Account ID", type: "text" }
+    ]
+  },
+  metatrader5: {
+    name: "METATRADER 5",
+    logo: "/brokers/mt5.png",
+    fields: [
+      { name: "login", label: "Login", type: "text" },
+      { name: "password", label: "Password", type: "password" },
+      { name: "server", label: "Server", type: "text" }
+    ]
+  },
+  metatrader4: {
+    name: "METATRADER 4",
+    logo: "/brokers/mt4.png",
+    fields: [
+      { name: "login", label: "Login", type: "text" },
+      { name: "password", label: "Password", type: "password" },
+      { name: "server", label: "Server", type: "text" }
     ]
   }
 };
@@ -188,30 +212,25 @@ export default function BrokerAuthDetailPage({ params }: { params: { brokerId: s
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-    setSuccess(null);
-
+    
     try {
-      // Create credentials object
-      const credentials = {
-        brokerId,
-        ...formData
-      };
+      setIsSubmitting(true);
       
-      // Call the broker service to connect the broker
-      // For now, we'll just simulate a successful API call
+      // Here you would make an API call to save the broker credentials
+      console.log("Submitting credentials for", broker.name, formData);
+      
+      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log("Submitted broker credentials:", credentials);
+      // Show success message
+      alert(`Your ${broker.name} credentials have been saved successfully.`);
       
-      setSuccess("Broker connected successfully!");
+      // Redirect to broker list
+      router.push("/dashboard/brockerauth");
       
-      // Optionally redirect after successful connection
-      // setTimeout(() => router.push("/dashboard"), 2000);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to connect broker. Please try again.");
-      console.error("Error connecting broker:", err);
+    } catch (error) {
+      console.error("Error saving credentials:", error);
+      alert("Failed to save credentials. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -259,13 +278,13 @@ export default function BrokerAuthDetailPage({ params }: { params: { brokerId: s
           
           <form onSubmit={handleSubmit} className="space-y-4">
             {broker.fields.map(field => (
-              <div key={field.id} className="space-y-2">
-                <Label htmlFor={field.id}>{field.label}</Label>
+              <div key={field.name} className="space-y-2">
+                <Label htmlFor={field.name}>{field.label}</Label>
                 <Input
-                  id={field.id}
-                  name={field.id}
+                  id={field.name}
+                  name={field.name}
                   type={field.type}
-                  value={formData[field.id] || ""}
+                  value={formData[field.name] || ""}
                   onChange={handleInputChange}
                   required
                 />

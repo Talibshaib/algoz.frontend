@@ -146,7 +146,7 @@ export default function Sidebar({ className }: SidebarProps) {
           >
             <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
               <KeyIcon className="h-5 w-5 min-w-5" />
-              {open && <span className="text-sm md:text-base">Broker Auth</span>}
+              {open && <span className="text-sm md:text-base">Api Credentials</span>}
             </div>
           </a>
 

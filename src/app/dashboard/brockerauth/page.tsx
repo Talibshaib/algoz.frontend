@@ -179,6 +179,36 @@ const brokers = [
       { name: "apiKey", label: "API Key", type: "text" },
       { name: "apiSecret", label: "API Secret", type: "password" }
     ]
+  },
+  {
+    id: "flattrader",
+    name: "FLATTRADER",
+    description: "Connect your FLATTRADER account to automate trading.",
+    fields: [
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" },
+      { name: "accountId", label: "Account ID", type: "text" }
+    ]
+  },
+  {
+    id: "metatrader5",
+    name: "METATRADER 5",
+    description: "Connect your MetaTrader 5 account to automate trading.",
+    fields: [
+      { name: "login", label: "Login", type: "text" },
+      { name: "password", label: "Password", type: "password" },
+      { name: "server", label: "Server", type: "text" }
+    ]
+  },
+  {
+    id: "metatrader4",
+    name: "METATRADER 4",
+    description: "Connect your MetaTrader 4 account to automate trading.",
+    fields: [
+      { name: "login", label: "Login", type: "text" },
+      { name: "password", label: "Password", type: "password" },
+      { name: "server", label: "Server", type: "text" }
+    ]
   }
 ];
 
