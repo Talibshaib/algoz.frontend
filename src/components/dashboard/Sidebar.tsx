@@ -14,6 +14,7 @@ import {
   Menu,
   KeyIcon,
   Bot,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -84,14 +85,14 @@ export default function Sidebar({ className }: SidebarProps) {
   return (
     <div
       className={cn(
-        "bg-card border-r border-border h-full transition-all duration-300",
+        "bg-card border-r border-border h-full transition-all duration-300 flex flex-col",
         open ? "w-64" : "w-[70px] min-w-[70px]",
         isMobile && "w-full",
         className
       )}
     >
-      <div className="flex justify-between items-center p-4">
-        {open && <span className="font-bold">Menu</span>}
+      {/* Toggle button at the top right */}
+      <div className="flex justify-end items-center p-4 border-b border-border">
         <Button
           variant="ghost"
           size="icon"
@@ -101,15 +102,9 @@ export default function Sidebar({ className }: SidebarProps) {
           {open ? <ChevronLeft className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
       </div>
-      <nav className="sticky p-4 space-y-2">
-        {/* <a
-          href="#"
-          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
-        >
-          <Home className="h-5 w-5" />
-          {open && <span>Home</span>}
-        </a> */}
-
+      
+      {/* Scrollable navigation */}
+      <nav className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
         <a
           href="/dashboard"
           className={cn(
@@ -128,260 +123,258 @@ export default function Sidebar({ className }: SidebarProps) {
           </div>
         )}
 
-        <Accordion type="single" collapsible className="w-full space-y-2">
-          <AccordionItem value="brokerauth" className="border-none">
-            <a
-              href="/dashboard/brockerauth"
-              className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                activeItem === "brokerauth" && "bg-black text-white",
-                !open && "justify-center",
-                open && "space-x-3"
-              )}
-              onClick={(e) => {
-                e.preventDefault();
-                handleItemClick("brokerauth");
-                if (isMobile) {
-                  setOpenMobile(false);
-                }
-                router.push("/dashboard/brockerauth");
-              }}
-            >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
-                <KeyIcon className="h-5 w-5 min-w-5" />
-                {open && <span className="text-sm md:text-base">Broker Auth</span>}
-              </div>
-            </a>
-          </AccordionItem>
-        </Accordion>
-
-        <Accordion type="single" collapsible className="w-full space-y-2">
-          <AccordionItem value="tradingview" className="border-none">
-            <AccordionTrigger
-              className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                activeItem === "tradingview" && "bg-black text-white",
-                !open && "justify-center",
-                open && "space-x-3"
-              )}
-              onClick={() => handleItemClick("tradingview")}
-            >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
-                <LineChart className="h-5 w-5 min-w-5" />
-                {open && <span className="text-sm md:text-base">TradingView</span>}
-              </div>
-            </AccordionTrigger>
-            {open && (
-              <AccordionContent>
-                <div className="pl-11 space-y-2">
-
-                  <a
-                    href="/dashboard/webhook"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    Webhook URL
-                  </a>
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    Symbol
-                  </a>
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    JSON
-                  </a>
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    Trade Logs
-                  </a>
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    Manage
-                  </a>
-                </div>
-              </AccordionContent>
+        {/* FEATURES SECTION */}
+        <div className="mb-4">
+          {open && <p className="text-xs text-muted-foreground mb-2 px-3">FEATURES</p>}
+          
+          <a
+            href="/dashboard/brockerauth"
+            className={cn(
+              "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+              activeItem === "brokerauth" && "bg-black text-white",
+              !open && "justify-center",
+              open && "space-x-3"
             )}
-          </AccordionItem>
+            onClick={(e) => {
+              e.preventDefault();
+              handleItemClick("brokerauth");
+              if (isMobile) {
+                setOpenMobile(false);
+              }
+              router.push("/dashboard/brockerauth");
+            }}
+          >
+            <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+              <KeyIcon className="h-5 w-5 min-w-5" />
+              {open && <span className="text-sm md:text-base">Broker Auth</span>}
+            </div>
+          </a>
 
-          <AccordionItem value="scalping" className="border-none">
-            <AccordionTrigger
-              className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                activeItem === "scalping" && "bg-black text-white",
-                !open && "justify-center",
-                open && "space-x-3"
-              )}
-              onClick={() => handleItemClick("scalping")}
-            >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
-                <Zap className="h-5 w-5 min-w-5" />
-                {open && <span className="text-sm md:text-base">Scalping Tool</span>}
-              </div>
-            </AccordionTrigger>
-            {open && (
-              <AccordionContent>
-                <div className="pl-11 space-y-2">
-
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    Trade Panel
-                  </a>
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    Manage
-                  </a>
+          <Accordion type="single" collapsible className="w-full space-y-2">
+            <AccordionItem value="tradingview" className="border-none">
+              <AccordionTrigger
+                className={cn(
+                  "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                  activeItem === "tradingview" && "bg-black text-white",
+                  !open && "justify-center",
+                  open && "space-x-3"
+                )}
+                onClick={() => handleItemClick("tradingview")}
+              >
+                <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                  <LineChart className="h-5 w-5 min-w-5" />
+                  {open && <span className="text-sm md:text-base">TradingView</span>}
                 </div>
-              </AccordionContent>
-            )}
-          </AccordionItem>
-
-          <AccordionItem value="copytrading" className="border-none">
-            <AccordionTrigger
-              className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                activeItem === "copytrading" && "bg-black text-white",
-                !open && "justify-center",
-                open && "space-x-3"
+              </AccordionTrigger>
+              {open && (
+                <AccordionContent>
+                  <div className="pl-11 space-y-2">
+                    <a
+                      href="/dashboard/webhook"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      Webhook URL
+                    </a>
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      Symbol
+                    </a>
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      JSON
+                    </a>
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      Trade Logs
+                    </a>
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      Manage
+                    </a>
+                  </div>
+                </AccordionContent>
               )}
-              onClick={() => handleItemClick("copytrading")}
-            >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
-                <Copy className="h-5 w-5 min-w-5" />
-                {open && <span className="text-sm md:text-base">Copy Trading</span>}
-              </div>
-            </AccordionTrigger>
-            {open && (
-              <AccordionContent>
-                <div className="pl-11 space-y-2">
+            </AccordionItem>
 
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    Strategy
-                  </a>
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    Manage
-                  </a>
+            <AccordionItem value="scalping" className="border-none">
+              <AccordionTrigger
+                className={cn(
+                  "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                  activeItem === "scalping" && "bg-black text-white",
+                  !open && "justify-center",
+                  open && "space-x-3"
+                )}
+                onClick={() => handleItemClick("scalping")}
+              >
+                <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                  <Zap className="h-5 w-5 min-w-5" />
+                  {open && <span className="text-sm md:text-base">Scalping Tool</span>}
                 </div>
-              </AccordionContent>
-            )}
-          </AccordionItem>
-
-          <AccordionItem value="strategy" className="border-none">
-            <AccordionTrigger
-              className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                activeItem === "strategy" && "bg-black text-white",
-                !open && "justify-center",
-                open && "space-x-3"
+              </AccordionTrigger>
+              {open && (
+                <AccordionContent>
+                  <div className="pl-11 space-y-2">
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      Trade Panel
+                    </a>
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      Manage
+                    </a>
+                  </div>
+                </AccordionContent>
               )}
-              onClick={() => handleItemClick("strategy")}
-            >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
-                <LineChart className="h-5 w-5 min-w-5" />
-                {open && <span className="text-sm md:text-base">Strategy</span>}
-              </div>
-            </AccordionTrigger>
-            {open && (
-              <AccordionContent>
-                <div className="pl-11 space-y-2">
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    Pine Script
-                  </a>
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    MQL
-                  </a>
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    AFL
-                  </a>
-                </div>
-              </AccordionContent>
-            )}
-          </AccordionItem>
-        </Accordion>
+            </AccordionItem>
 
-        <Accordion type="single" collapsible className="w-full space-y-2">
-          <AccordionItem value="bots" className="border-none">
-            <AccordionTrigger
-              className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                activeItem === "bots" && "bg-black text-white",
-                !open && "justify-center",
-                open && "space-x-3"
+            <AccordionItem value="copytrading" className="border-none">
+              <AccordionTrigger
+                className={cn(
+                  "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                  activeItem === "copytrading" && "bg-black text-white",
+                  !open && "justify-center",
+                  open && "space-x-3"
+                )}
+                onClick={() => handleItemClick("copytrading")}
+              >
+                <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                  <Copy className="h-5 w-5 min-w-5" />
+                  {open && <span className="text-sm md:text-base">Copy Trading</span>}
+                </div>
+              </AccordionTrigger>
+              {open && (
+                <AccordionContent>
+                  <div className="pl-11 space-y-2">
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      Strategy
+                    </a>
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      Manage
+                    </a>
+                  </div>
+                </AccordionContent>
               )}
-              onClick={() => handleItemClick("bots")}
-            >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
-                <Bot className="h-5 w-5 min-w-5" />
-                {open && <span className="text-sm md:text-base">Bots</span>}
-              </div>
-            </AccordionTrigger>
-            {open && (
-              <AccordionContent>
-                <div className="pl-11 space-y-2">
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    NSE/BSE
-                  </a>
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    Forex
-                  </a>
-                  <a
-                    href="#"
-                    className="block py-2 hover:text-primary transition-colors"
-                  >
-                    Crypto
-                  </a>
-                </div>
-              </AccordionContent>
-            )}
-          </AccordionItem>
-        </Accordion>
+            </AccordionItem>
 
-        <a
-          href="/dashboard/pricing"
-          className={cn(
-            "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-            activeItem === "pricing" && "bg-black text-white",
-            !open && "justify-center",
-            open && "space-x-3"
-          )}
-          onClick={() => handleItemClick("pricing")}
-        >
-          <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
-            <CreditCard className="h-5 w-5 min-w-5" />
-            {open && <span className="ml-3 text-sm md:text-base">Pricing</span>}
-          </div>
-        </a>
+            <AccordionItem value="strategy" className="border-none">
+              <AccordionTrigger
+                className={cn(
+                  "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                  activeItem === "strategy" && "bg-black text-white",
+                  !open && "justify-center",
+                  open && "space-x-3"
+                )}
+                onClick={() => handleItemClick("strategy")}
+              >
+                <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                  <LineChart className="h-5 w-5 min-w-5" />
+                  {open && <span className="text-sm md:text-base">Strategy</span>}
+                </div>
+              </AccordionTrigger>
+              {open && (
+                <AccordionContent>
+                  <div className="pl-11 space-y-2">
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      Pine Script
+                    </a>
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      MQL
+                    </a>
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      AFL
+                    </a>
+                  </div>
+                </AccordionContent>
+              )}
+            </AccordionItem>
+          </Accordion>
+
+          <Accordion type="single" collapsible className="w-full space-y-2">
+            <AccordionItem value="bots" className="border-none">
+              <AccordionTrigger
+                className={cn(
+                  "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+                  activeItem === "bots" && "bg-black text-white",
+                  !open && "justify-center",
+                  open && "space-x-3"
+                )}
+                onClick={() => handleItemClick("bots")}
+              >
+                <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                  <Bot className="h-5 w-5 min-w-5" />
+                  {open && <span className="text-sm md:text-base">Bots</span>}
+                </div>
+              </AccordionTrigger>
+              {open && (
+                <AccordionContent>
+                  <div className="pl-11 space-y-2">
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      NSE/BSE
+                    </a>
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      Forex
+                    </a>
+                    <a
+                      href="#"
+                      className="block py-2 hover:text-primary transition-colors"
+                    >
+                      Crypto
+                    </a>
+                  </div>
+                </AccordionContent>
+              )}
+            </AccordionItem>
+          </Accordion>
+
+          <a
+            href="/dashboard/pricing"
+            className={cn(
+              "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+              activeItem === "pricing" && "bg-black text-white",
+              !open && "justify-center",
+              open && "space-x-3"
+            )}
+            onClick={() => handleItemClick("pricing")}
+          >
+            <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+              <CreditCard className="h-5 w-5 min-w-5" />
+              {open && <span className="ml-3 text-sm md:text-base">Pricing</span>}
+            </div>
+          </a>
+        </div>
 
         {open && (
           <div className="py-2">
@@ -389,65 +382,66 @@ export default function Sidebar({ className }: SidebarProps) {
           </div>
         )}
 
-        <Accordion type="single" collapsible className="w-full space-y-2">
-          <AccordionItem value="contact" className="border-none">
-            <div
-              className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors cursor-pointer",
-                activeItem === "contact" && "bg-black text-white",
-                !open && "justify-center",
-                open && "space-x-3"
-              )}
-              onClick={() => handleItemClick("contact")}
-            >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
-                <HeadphonesIcon className="h-5 w-5 min-w-5" />
-                {open && <span className="ml-3 text-sm md:text-base">Contact Us</span>}
-              </div>
+        {/* SUPPORT SECTION */}
+        <div className="mb-4">
+          {open && <p className="text-xs text-muted-foreground mb-2 px-3">SUPPORT</p>}
+          
+          <a
+            href="#"
+            className={cn(
+              "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+              activeItem === "contact" && "bg-black text-white",
+              !open && "justify-center",
+              open && "space-x-3"
+            )}
+            onClick={() => handleItemClick("contact")}
+          >
+            <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+              <HeadphonesIcon className="h-5 w-5 min-w-5" />
+              {open && <span className="ml-3 text-sm md:text-base">Contact Us</span>}
             </div>
-          </AccordionItem>
+          </a>
 
-          <AccordionItem value="faq" className="border-none">
-            <div
-              className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors cursor-pointer",
-                activeItem === "faq" && "bg-black text-white",
-                !open && "justify-center",
-                open && "space-x-3"
-              )}
-              onClick={() => handleItemClick("faq")}
-            >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
-                <HelpCircle className="h-5 w-5 min-w-5" />
-                {open && <span className="ml-3 text-sm md:text-base">FAQ</span>}
-              </div>
+          <a
+            href="#"
+            className={cn(
+              "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+              activeItem === "faq" && "bg-black text-white",
+              !open && "justify-center",
+              open && "space-x-3"
+            )}
+            onClick={() => handleItemClick("faq")}
+          >
+            <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+              <HelpCircle className="h-5 w-5 min-w-5" />
+              {open && <span className="ml-3 text-sm md:text-base">FAQ</span>}
             </div>
-          </AccordionItem>
-
-          <AccordionItem value="logout" className="border-none">
-            <div
-              className={cn(
-                "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors cursor-pointer",
-                activeItem === "logout" && "bg-black text-white",
-                !open && "justify-center",
-                open && "space-x-3"
-              )}
-              onClick={() => {
-                // Logout function is already available from the useAuth hook at component level
-                logout().then(() => {
-                  // Redirect will be handled in the logout function
-                  toast.success("Logged out successfully");
-                });
-              }}
-            >
-              <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
-                <KeyIcon className="h-5 w-5 min-w-5" />
-                {open && <span className="ml-3 text-sm md:text-base">Logout</span>}
-              </div>
-            </div>
-          </AccordionItem>
-        </Accordion>
+          </a>
+        </div>
       </nav>
+      
+      {/* Logout button at the bottom */}
+      <div className="p-4 border-t border-border mt-auto">
+        <a
+          href="#"
+          className={cn(
+            "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+            !open && "justify-center",
+            open && "space-x-3"
+          )}
+          onClick={() => {
+            logout().then(() => {
+              toast.success("Logged out successfully");
+            });
+          }}
+        >
+          <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+            <LogOut className="h-5 w-5 min-w-5" />
+            {open && <span className="ml-3 text-sm md:text-base">Logout</span>}
+          </div>
+        </a>
+      </div>
+      
       <Sheet open={isApiCredentialsOpen} onOpenChange={setIsApiCredentialsOpen}>
         <SheetContent className={cn("sm:max-w-md", open ? "w-[17.6rem]" : "w-[5.975rem]")}>
           <SheetHeader>
