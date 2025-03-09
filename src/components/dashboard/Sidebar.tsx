@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Home,
@@ -44,20 +44,24 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ className }: SidebarProps) {
+  // Context and hooks
   const { open, toggleSidebar, isMobile, openMobile, setOpenMobile } = useSidebar();
-  const [activeItem, setActiveItem] = React.useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = React.useState<string>("");
-  const [selectedBroker, setSelectedBroker] = React.useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const [isApiCredentialsOpen, setIsApiCredentialsOpen] = React.useState(false);
-  const [userId, setUserId] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [server, setServer] = React.useState("");
-  const { logout } = useAuth(); // Get logout function from AuthContext
+  const { logout } = useAuth();
+  
+  // Local state
+  const [activeItem, setActiveItem] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedBroker, setSelectedBroker] = useState<string | null>(null);
+  const [isApiCredentialsOpen, setIsApiCredentialsOpen] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
+  const [server, setServer] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   // Set active item based on current pathname
-  React.useEffect(() => {
+  useEffect(() => {
     if (pathname === "/dashboard") {
       setActiveItem("dashboard");
     } else if (pathname === "/dashboard/webhook") {
@@ -78,8 +82,55 @@ export default function Sidebar({ className }: SidebarProps) {
     }
   }, [pathname]);
 
-  const handleItemClick = (itemName: string) => {
+  // Safe toggle function that checks for input focus
+  const handleToggleSidebar = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Don't toggle if an input is focused
+    if (document.activeElement && 
+        (document.activeElement.tagName === 'INPUT' || 
+         document.activeElement.tagName === 'TEXTAREA' || 
+         document.activeElement.tagName === 'SELECT' ||
+         isInputFocused)) {
+      return;
+    }
+    
+    toggleSidebar();
+  };
+
+  // Handle navigation
+  const handleNavigation = (e: React.MouseEvent, path: string, itemName: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     setActiveItem(itemName);
+    
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+    
+    router.push(path);
+  };
+
+  // Handle logout
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    logout().then(() => {
+      toast.success("Logged out successfully");
+    });
+  };
+
+  // Handle input focus
+  const handleInputFocus = () => {
+    setIsInputFocused(true);
+  };
+
+  // Handle input blur
+  const handleInputBlur = () => {
+    setIsInputFocused(false);
   };
 
   return (
@@ -96,7 +147,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => toggleSidebar()}
+          onClick={handleToggleSidebar}
           className="h-8 w-8 rounded-full"
         >
           {open ? <ChevronLeft className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -111,7 +162,7 @@ export default function Sidebar({ className }: SidebarProps) {
             "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
             activeItem === "dashboard" && "bg-black text-white"
           )}
-          onClick={() => handleItemClick("dashboard")}
+          onClick={(e) => handleNavigation(e, "/dashboard", "dashboard")}
         >
           <LayoutDashboard className="h-5 w-5 min-w-5" />
           {open && <span className="ml-3 text-sm md:text-base">Dashboard</span>}
@@ -135,14 +186,7 @@ export default function Sidebar({ className }: SidebarProps) {
               !open && "justify-center",
               open && "space-x-3"
             )}
-            onClick={(e) => {
-              e.preventDefault();
-              handleItemClick("brokerauth");
-              if (isMobile) {
-                setOpenMobile(false);
-              }
-              router.push("/dashboard/brockerauth");
-            }}
+            onClick={(e) => handleNavigation(e, "/dashboard/brockerauth", "brokerauth")}
           >
             <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
               <KeyIcon className="h-5 w-5 min-w-5" />
@@ -159,7 +203,10 @@ export default function Sidebar({ className }: SidebarProps) {
                   !open && "justify-center",
                   open && "space-x-3"
                 )}
-                onClick={() => handleItemClick("tradingview")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveItem("tradingview");
+                }}
               >
                 <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
                   <LineChart className="h-5 w-5 min-w-5" />
@@ -172,30 +219,35 @@ export default function Sidebar({ className }: SidebarProps) {
                     <a
                       href="/dashboard/webhook"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => handleNavigation(e, "/dashboard/webhook", "tradingview")}
                     >
                       Webhook URL
                     </a>
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Symbol
                     </a>
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       JSON
                     </a>
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Trade Logs
                     </a>
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Manage
                     </a>
@@ -212,7 +264,10 @@ export default function Sidebar({ className }: SidebarProps) {
                   !open && "justify-center",
                   open && "space-x-3"
                 )}
-                onClick={() => handleItemClick("scalping")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveItem("scalping");
+                }}
               >
                 <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
                   <Zap className="h-5 w-5 min-w-5" />
@@ -225,12 +280,14 @@ export default function Sidebar({ className }: SidebarProps) {
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Trade Panel
                     </a>
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Manage
                     </a>
@@ -247,7 +304,10 @@ export default function Sidebar({ className }: SidebarProps) {
                   !open && "justify-center",
                   open && "space-x-3"
                 )}
-                onClick={() => handleItemClick("copytrading")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveItem("copytrading");
+                }}
               >
                 <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
                   <Copy className="h-5 w-5 min-w-5" />
@@ -260,12 +320,14 @@ export default function Sidebar({ className }: SidebarProps) {
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Strategy
                     </a>
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Manage
                     </a>
@@ -282,7 +344,10 @@ export default function Sidebar({ className }: SidebarProps) {
                   !open && "justify-center",
                   open && "space-x-3"
                 )}
-                onClick={() => handleItemClick("strategy")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveItem("strategy");
+                }}
               >
                 <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
                   <LineChart className="h-5 w-5 min-w-5" />
@@ -295,18 +360,21 @@ export default function Sidebar({ className }: SidebarProps) {
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Pine Script
                     </a>
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       MQL
                     </a>
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       AFL
                     </a>
@@ -325,7 +393,10 @@ export default function Sidebar({ className }: SidebarProps) {
                   !open && "justify-center",
                   open && "space-x-3"
                 )}
-                onClick={() => handleItemClick("bots")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveItem("bots");
+                }}
               >
                 <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
                   <Bot className="h-5 w-5 min-w-5" />
@@ -338,18 +409,21 @@ export default function Sidebar({ className }: SidebarProps) {
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       NSE/BSE
                     </a>
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Forex
                     </a>
                     <a
                       href="#"
                       className="block py-2 hover:text-primary transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Crypto
                     </a>
@@ -367,7 +441,7 @@ export default function Sidebar({ className }: SidebarProps) {
               !open && "justify-center",
               open && "space-x-3"
             )}
-            onClick={() => handleItemClick("pricing")}
+            onClick={(e) => handleNavigation(e, "/dashboard/pricing", "pricing")}
           >
             <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
               <CreditCard className="h-5 w-5 min-w-5" />
@@ -394,7 +468,10 @@ export default function Sidebar({ className }: SidebarProps) {
               !open && "justify-center",
               open && "space-x-3"
             )}
-            onClick={() => handleItemClick("contact")}
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveItem("contact");
+            }}
           >
             <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
               <HeadphonesIcon className="h-5 w-5 min-w-5" />
@@ -410,7 +487,10 @@ export default function Sidebar({ className }: SidebarProps) {
               !open && "justify-center",
               open && "space-x-3"
             )}
-            onClick={() => handleItemClick("faq")}
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveItem("faq");
+            }}
           >
             <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
               <HelpCircle className="h-5 w-5 min-w-5" />
@@ -429,11 +509,7 @@ export default function Sidebar({ className }: SidebarProps) {
             !open && "justify-center",
             open && "space-x-3"
           )}
-          onClick={() => {
-            logout().then(() => {
-              toast.success("Logged out successfully");
-            });
-          }}
+          onClick={handleLogout}
         >
           <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
             <LogOut className="h-5 w-5 min-w-5" />
@@ -442,8 +518,12 @@ export default function Sidebar({ className }: SidebarProps) {
         </a>
       </div>
       
+      {/* API Credentials Sheet */}
       <Sheet open={isApiCredentialsOpen} onOpenChange={setIsApiCredentialsOpen}>
-        <SheetContent className={cn("sm:max-w-md", open ? "w-[17.6rem]" : "w-[5.975rem]")}>
+        <SheetContent 
+          className={cn("sm:max-w-md", open ? "w-[17.6rem]" : "w-[5.975rem]")}
+          onClick={(e) => e.stopPropagation()}
+        >
           <SheetHeader>
             <SheetTitle>
               API Credentials{selectedBroker ? `: ${selectedBroker}` : ""}
@@ -460,7 +540,13 @@ export default function Sidebar({ className }: SidebarProps) {
                   <Input
                     id="userId"
                     value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setUserId(e.target.value);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -471,7 +557,13 @@ export default function Sidebar({ className }: SidebarProps) {
                     id="password"
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setPassword(e.target.value);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -481,10 +573,20 @@ export default function Sidebar({ className }: SidebarProps) {
                   <Input
                     id="server"
                     value={server}
-                    onChange={(e) => setServer(e.target.value)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setServer(e.target.value);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
                   />
                 </div>
-                <Button>Save</Button>
+                <Button 
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Save
+                </Button>
               </div>
             ) : null}
           </SheetDescription>

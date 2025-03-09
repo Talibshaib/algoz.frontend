@@ -74,3 +74,15 @@
   }
 }
 
+/* Prevent sidebar toggling when inputs are focused */
+input:focus, 
+textarea:focus, 
+select:focus {
+  z-index: 100;
+}
+
+/* Add a class to indicate when an input is focused */
+.input-focused {
+  pointer-events: none;
+}
+

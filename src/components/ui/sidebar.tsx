@@ -96,12 +96,26 @@ const SidebarProvider = React.forwardRef<
 
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
-      if (isMobile) {
-        setOpenMobile((open) => !open)
-      } else {
-        setOpen((open) => !open)
+      // Check if an input field is focused
+      const activeElement = document.activeElement;
+      if (activeElement) {
+        const tagName = activeElement.tagName.toLowerCase();
+        
+        // Don't toggle if an input field is focused
+        if (tagName === 'input' || 
+            tagName === 'textarea' || 
+            tagName === 'select' || 
+            activeElement.isContentEditable) {
+          return;
+        }
       }
-    }, [isMobile, setOpen, setOpenMobile])
+      
+      if (isMobile) {
+        setOpenMobile((open) => !open);
+      } else {
+        setOpen((open) => !open);
+      }
+    }, [isMobile, setOpen, setOpenMobile]);
 
     // Adds a keyboard shortcut to toggle the sidebar.
     React.useEffect(() => {
@@ -110,14 +124,28 @@ const SidebarProvider = React.forwardRef<
           event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
           (event.metaKey || event.ctrlKey)
         ) {
-          event.preventDefault()
-          toggleSidebar()
+          // Check if an input field is focused
+          const activeElement = document.activeElement;
+          if (activeElement) {
+            const tagName = activeElement.tagName.toLowerCase();
+            
+            // Don't toggle if an input field is focused
+            if (tagName === 'input' || 
+                tagName === 'textarea' || 
+                tagName === 'select' || 
+                activeElement.isContentEditable) {
+              return;
+            }
+          }
+          
+          event.preventDefault();
+          toggleSidebar();
         }
       }
 
-      window.addEventListener("keydown", handleKeyDown)
-      return () => window.removeEventListener("keydown", handleKeyDown)
-    }, [toggleSidebar])
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [toggleSidebar]);
 
     // We add a state so that we can do data-state="expanded" or "collapsed".
     // This makes it easier to style the sidebar with Tailwind classes.
