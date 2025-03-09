@@ -247,6 +247,18 @@ const brokers = [
       { name: "apiSecret", label: "API Secret", type: "password" },
     ]
   },
+  {
+    id: "flattrade",
+    name: "FLATTRADE",
+    logo: "/brokers/flattrade.png",
+    description: "Connect your FlatTrade account to automate trading.",
+    fields: [
+      { name: "apiKey", label: "API Key", type: "text" },
+      { name: "apiSecret", label: "API Secret", type: "password" },
+      { name: "toTp", label: "TO TP", type: "password" },
+      { name: "clientId", label: "Client ID", type: "text" },
+    ]
+  },
 ];
 
 export default function BrokerAuthPage() {
