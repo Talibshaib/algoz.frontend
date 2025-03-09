@@ -105,7 +105,7 @@ const SidebarProvider = React.forwardRef<
         if (tagName === 'input' || 
             tagName === 'textarea' || 
             tagName === 'select' || 
-            activeElement.isContentEditable) {
+            (activeElement as HTMLElement).isContentEditable) {
           return;
         }
       }
@@ -133,7 +133,7 @@ const SidebarProvider = React.forwardRef<
             if (tagName === 'input' || 
                 tagName === 'textarea' || 
                 tagName === 'select' || 
-                activeElement.isContentEditable) {
+                (activeElement as HTMLElement).isContentEditable) {
               return;
             }
           }
