@@ -82,23 +82,6 @@ export default function Sidebar({ className }: SidebarProps) {
     }
   }, [pathname]);
 
-  // Safe toggle function that checks for input focus
-  const handleToggleSidebar = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Don't toggle if an input is focused
-    if (document.activeElement && 
-        (document.activeElement.tagName === 'INPUT' || 
-         document.activeElement.tagName === 'TEXTAREA' || 
-         document.activeElement.tagName === 'SELECT' ||
-         isInputFocused)) {
-      return;
-    }
-    
-    toggleSidebar();
-  };
-
   // Handle navigation
   const handleNavigation = (e: React.MouseEvent, path: string, itemName: string) => {
     e.preventDefault();
@@ -142,18 +125,6 @@ export default function Sidebar({ className }: SidebarProps) {
         className
       )}
     >
-      {/* Toggle button at the top right */}
-      <div className="flex justify-end items-center p-4 border-b border-border">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleToggleSidebar}
-          className="h-8 w-8 rounded-full"
-        >
-          {open ? <ChevronLeft className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </Button>
-      </div>
-      
       {/* Scrollable navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
         <a
@@ -530,7 +501,6 @@ export default function Sidebar({ className }: SidebarProps) {
             </SheetTitle>
           </SheetHeader>
           <SheetDescription>
-            {/* Add your API credentials form or content here */}
             {selectedBroker === "Metatrader 4" || selectedBroker === "Metatrader 5" ? (
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -582,9 +552,7 @@ export default function Sidebar({ className }: SidebarProps) {
                     onBlur={handleInputBlur}
                   />
                 </div>
-                <Button 
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <Button onClick={(e) => e.stopPropagation()}>
                   Save
                 </Button>
               </div>
