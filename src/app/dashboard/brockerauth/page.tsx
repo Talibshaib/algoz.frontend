@@ -292,8 +292,15 @@ export default function BrokerAuthPage() {
   const handleBrokerSelect = (brokerId: string) => {
     const broker = brokers.find(b => b.id === brokerId);
     if (broker) {
+      // Load saved credentials if they exist
+      const savedCredentials = localStorage.getItem(`broker_${brokerId}_credentials`);
+      if (savedCredentials) {
+        setFormData(JSON.parse(savedCredentials));
+      } else {
+        setFormData({});
+      }
+      
       setSelectedBroker(broker);
-      setFormData({});
       setIsSheetOpen(true);
     }
   };
