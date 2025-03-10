@@ -3,6 +3,9 @@
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import Sidebar from "@/components/dashboard/Sidebar";
 
 export default function BrokerAuthLayout({
   children,
@@ -37,6 +40,20 @@ export default function BrokerAuthLayout({
     );
   }
 
-  // Render children when authenticated
-  return children;
+  // Render children with dashboard layout when authenticated
+  return (
+    <SidebarProvider defaultOpen>
+      <div className="flex flex-col h-screen w-full overflow-hidden">
+        <DashboardHeader />
+        <div className="flex flex-1 overflow-hidden">
+          <div className="hidden md:block">
+            <Sidebar />
+          </div>
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
 } 

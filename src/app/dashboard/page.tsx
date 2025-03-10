@@ -16,6 +16,11 @@ export default function DashboardPage() {
           </div>
           <main className="flex-1 overflow-y-auto">
             {/* Dashboard content goes here */}
+            <div className="flex flex-col items-center justify-center h-full">
+              <h1>Dashboard</h1>
+              <p>Welcome to Our Platform</p>
+            </div>
+
           </main>
         </div>
       </div>

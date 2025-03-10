@@ -4,22 +4,9 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { getConnectedBrokers, BrokerConnection } from "@/services/brokerService";
-import { CheckCircle, Search, X, KeyIcon } from "lucide-react";
-import Image from "next/image";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import Sidebar from "@/components/dashboard/Sidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetClose
-} from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
+import { CheckCircle, Search, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 // Define broker data - include all brokers
 const brokers = [
@@ -261,19 +248,113 @@ const brokers = [
   }
 ];
 
+// Create a completely isolated modal component
+const BrokerCredentialsModal = ({ 
+  isOpen, 
+  onClose, 
+  broker, 
+  onSubmit, 
+  isLoading 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  broker: any; 
+  onSubmit: (formData: Record<string, string>) => void; 
+  isLoading: boolean;
+}) => {
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  
+  // Load saved credentials when broker changes
+  useEffect(() => {
+    if (broker) {
+      const savedCredentials = localStorage.getItem(`broker_${broker.id}_credentials`);
+      if (savedCredentials) {
+        try {
+          setFormData(JSON.parse(savedCredentials));
+        } catch (e) {
+          console.error("Error parsing saved credentials", e);
+          setFormData({});
+        }
+      } else {
+        setFormData({});
+      }
+    }
+  }, [broker]);
+  
+  // Handle input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+  
+  if (!isOpen || !broker) return null;
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Connect {broker.name}</h2>
+          <button 
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            onClick={onClose}
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+          Enter your {broker.name} API credentials to connect your account.
+        </p>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {broker.fields.map((field: any) => (
+            <div key={field.name} className="space-y-2">
+              <Label htmlFor={field.name}>{field.label}</Label>
+              <Input
+                id={field.name}
+                name={field.name}
+                type={field.type}
+                placeholder={field.label}
+                value={formData[field.name] || ''}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+          ))}
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Connecting...' : 'Connect'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 export default function BrokerAuthPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBroker, setSelectedBroker] = useState<any>(null);
-  const [formData, setFormData] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Get connected brokers
   const [connectedBrokers, setConnectedBrokers] = useState<string[]>([]);
   
+  // Load connected brokers on mount
   useEffect(() => {
-    // Check localStorage for connected brokers
     const connected: string[] = [];
     brokers.forEach(broker => {
       if (localStorage.getItem(`broker_${broker.id}_authenticated`) === 'true') {
@@ -282,70 +363,55 @@ export default function BrokerAuthPage() {
     });
     setConnectedBrokers(connected);
   }, []);
-
+  
   // Filter brokers based on search query
   const filteredBrokers = brokers.filter(broker => 
     broker.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+  
   // Handle broker selection
   const handleBrokerSelect = (brokerId: string) => {
     const broker = brokers.find(b => b.id === brokerId);
     if (broker) {
-      // Load saved credentials if they exist
-      const savedCredentials = localStorage.getItem(`broker_${brokerId}_credentials`);
-      if (savedCredentials) {
-        setFormData(JSON.parse(savedCredentials));
-      } else {
-        setFormData({});
-      }
-      
       setSelectedBroker(broker);
-      setIsSheetOpen(true);
+      // Use setTimeout to ensure this runs after the current call stack is clear
+      setTimeout(() => {
+        setIsModalOpen(true);
+      }, 0);
     }
   };
-
-  // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  
+  // Handle form submission from modal
+  const handleFormSubmit = (formData: Record<string, string>) => {
+    setIsLoading(true);
     
     try {
-      setIsLoading(true);
-      
       // Save credentials to localStorage
       localStorage.setItem(`broker_${selectedBroker.id}_credentials`, JSON.stringify(formData));
       localStorage.setItem(`broker_${selectedBroker.id}_authenticated`, 'true');
       
-      // Add the broker to connected brokers
-      setConnectedBrokers(prev => [...prev, selectedBroker.id]);
+      // Add the broker to connected brokers if not already connected
+      if (!connectedBrokers.includes(selectedBroker.id)) {
+        setConnectedBrokers(prev => [...prev, selectedBroker.id]);
+      }
       
-      // Close the sheet
+      // Close the modal after a short delay
       setTimeout(() => {
-        setIsSheetOpen(false);
-        setSelectedBroker(null);
+        setIsLoading(false);
+        setIsModalOpen(false);
       }, 1000);
-      
     } catch (error) {
       console.error("Error connecting broker:", error);
-    } finally {
       setIsLoading(false);
     }
   };
-
-  // Get broker initial
+  
+  // Get broker initial for avatar
   const getBrokerInitial = (name: string) => {
     return name.charAt(0);
   };
 
-  const BrokerContent = () => (
+  return (
     <div className="p-6">
       <div className="flex flex-col space-y-6">
         <div>
@@ -363,20 +429,12 @@ export default function BrokerAuthPage() {
             placeholder="Search brokers..."
             className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
             value={searchQuery}
-            onChange={(e) => {
-              e.stopPropagation();
-              setSearchQuery(e.target.value);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            onFocus={(e) => e.stopPropagation()}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           {searchQuery && (
             <button 
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSearchQuery("");
-              }}
+              onClick={() => setSearchQuery("")}
             >
               <X size={18} />
             </button>
@@ -411,10 +469,7 @@ export default function BrokerAuthPage() {
                         className="w-full" 
                         variant="outline"
                         size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleBrokerSelect(broker.id);
-                        }}
+                        onClick={() => handleBrokerSelect(broker.id)}
                       >
                         Manage
                       </Button>
@@ -449,10 +504,7 @@ export default function BrokerAuthPage() {
                       className="w-full" 
                       variant="outline"
                       size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBrokerSelect(broker.id);
-                      }}
+                      onClick={() => handleBrokerSelect(broker.id)}
                     >
                       Connect
                     </Button>
@@ -467,61 +519,16 @@ export default function BrokerAuthPage() {
             <p className="text-muted-foreground">No brokers found matching your search.</p>
           </div>
         )}
-
-        {/* Side panel for entering credentials */}
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
-            <SheetHeader>
-              <SheetTitle>Connect {selectedBroker?.name}</SheetTitle>
-              <SheetDescription>
-                Enter your {selectedBroker?.name} API credentials to connect your account.
-              </SheetDescription>
-            </SheetHeader>
-            <form onSubmit={handleSubmit} className="space-y-6 py-6" onClick={(e) => e.stopPropagation()}>
-              {selectedBroker?.fields.map((field: any) => (
-                <div key={field.name} className="space-y-2">
-                  <Label htmlFor={field.name}>{field.label}</Label>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type={field.type}
-                    placeholder={field.label}
-                    value={formData[field.name] || ''}
-                    onChange={handleInputChange}
-                    required
-                    onClick={(e) => e.stopPropagation()}
-                    onFocus={(e) => e.stopPropagation()}
-                  />
-                </div>
-              ))}
-              <div className="flex justify-end space-x-2 pt-4">
-                <SheetClose asChild>
-                  <Button type="button" variant="outline" onClick={(e) => e.stopPropagation()}>Cancel</Button>
-                </SheetClose>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Connecting...' : 'Connect'}
-                </Button>
-              </div>
-            </form>
-          </SheetContent>
-        </Sheet>
       </div>
+      
+      {/* Completely isolated modal */}
+      <BrokerCredentialsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        broker={selectedBroker}
+        onSubmit={handleFormSubmit}
+        isLoading={isLoading}
+      />
     </div>
   );
-
-  return (
-    <SidebarProvider defaultOpen>
-      <div className="flex flex-col h-screen w-full overflow-hidden">
-        <DashboardHeader />
-        <div className="flex flex-1 overflow-hidden">
-          <div className="hidden md:block">
-            <Sidebar />
-          </div>
-          <main className="flex-1 overflow-y-auto">
-            <BrokerContent />
-          </main>
-        </div>
-      </div>
-    </SidebarProvider>
-  );
-} 
+}
