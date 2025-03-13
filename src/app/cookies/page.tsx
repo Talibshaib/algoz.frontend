@@ -86,8 +86,8 @@ export default function CookiesPolicyPage() {
               contact methods:
             </p>
             <p>
-              Email: cookies@algoz.com<br />
-              Phone: +91 88981-35037
+              Email: admin@algoz.tech<br />
+              Phone: +91 9214740350
             </p>
           </div>
         </div>

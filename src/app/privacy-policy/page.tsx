@@ -88,8 +88,8 @@ export default function PrivacyPolicyPage() {
               If you have questions or comments about this Privacy Policy, please contact us at:
             </p>
             <p>
-              Email: privacy@algoz.com<br />
-              Phone: +91 88981-35037
+              Email: admin@algoz.tech<br />
+              Phone: +91 9214740350
             </p>
           </div>
         </div>
