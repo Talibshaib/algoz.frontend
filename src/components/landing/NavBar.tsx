@@ -4,8 +4,8 @@ import { useState } from "react"
 import type React from "react"
 import "../../app/globals.css"
 import Link from "next/link"
-import { Button } from "@nextui-org/react"
-import { Menu } from "lucide-react"
+import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
+import { Menu, ChevronDown } from "lucide-react"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/navigation-menu"
 import MobileNav from "./MobileNav"
 import { MotionDiv } from "@/components/ui/motion"
+import { ShinyButton } from "../magicui/shiny-button"
 
 export default function Navbar() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -25,7 +26,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="border-b border-gray-100 bg-white shadow-sm sticky top-0 z-50">
+    <header className="border-b border-gray-100 bg-gradient-to-br from-gray-50 to-white shadow-sm sticky top-0 z-50">
       <div className="container flex h-16 sm:h-18 items-center mx-auto justify-between px-4">
         <Link href="/" className="text-xl sm:text-2xl font-bold relative group">
           <span className="bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent">AlgoZ</span>
@@ -166,16 +167,29 @@ export default function Navbar() {
           </NavigationMenuList>
         </NavigationMenu>
         <div className="hidden md:flex items-center gap-4">
-          <Link href="/login">
-            <MotionDiv whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button variant="light" className="text-sm font-medium py-2 px-4 h-10">Log In</Button>
-            </MotionDiv>
-          </Link>
-          <Link href="/signup">
-            <MotionDiv whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button className="bg-black hover:bg-gray-800 text-white text-sm font-medium py-2 px-4 h-10 shadow-sm">Sign Up</Button>
-            </MotionDiv>
-          </Link>
+          <MotionDiv whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Dropdown>
+              <DropdownTrigger>
+                <ShinyButton> 
+                  Get Started
+                </ShinyButton>  
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Get Started Options" className="bg-white rounded-lg p-2">
+                <DropdownItem key="login" className="py-2">
+                  <Link href="/login" className="w-full block">
+                    <div className="text-sm font-medium">Log In</div>
+                    <p className="text-xs text-gray-500 mt-1">Access your account</p>
+                  </Link>
+                </DropdownItem>
+                <DropdownItem key="signup" className="py-2">
+                  <Link href="/signup" className="w-full block">
+                    <div className="text-sm font-medium">Sign Up</div>
+                    <p className="text-xs text-gray-500 mt-1">Create a new account</p>
+                  </Link>
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </MotionDiv>
         </div>
       </div>
       
