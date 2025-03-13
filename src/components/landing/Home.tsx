@@ -374,26 +374,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 border-t">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-center items-center gap-4 mb-6">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-              <span className="text-sm">SOC 2 Certified</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-              <span className="text-sm">256-bit Encryption</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-              <span className="text-sm">24/7 Support</span>
-            </div>
-          </div>
-          <p className="text-center text-sm text-gray-500">© 2025 AlgoZ Trading Platform. All rights reserved.</p>
-        </div>
-      </footer>
+      
     </main>
   )
 }
