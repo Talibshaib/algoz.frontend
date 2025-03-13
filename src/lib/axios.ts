@@ -1,6 +1,14 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { API_URL } from '@/constants/URI';
 import { getWorkingEndpoint, checkAPIHealth } from '@/services/healthCheck';
+
+// Define a custom error interface that includes the 'code' property
+interface NetworkError extends Error {
+  code?: string;
+  config?: any;
+  request?: any;
+  response?: any;
+}
 
 // Create an axios instance with default config
 const axiosInstance = axios.create({
@@ -102,7 +110,7 @@ axiosInstance.interceptors.response.use(
     }
     return response;
   },
-  async (error) => {
+  async (error: AxiosError & NetworkError) => {
     // Get the request ID from the config
     const requestId = error.config?.headers?.["X-Request-ID"];
     
@@ -145,7 +153,7 @@ axiosInstance.interceptors.response.use(
         error.code === "ERR_NAME_NOT_RESOLVED" 
           ? "Unable to connect to the server. Please check your internet connection or try again later."
           : "Network error. Please check your connection and try again."
-      );
+      ) as NetworkError;
       
       // Preserve the original error properties
       customError.name = "NetworkError";

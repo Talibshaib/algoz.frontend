@@ -2,7 +2,7 @@ import { API_URL } from "@/constants/URI";
 
 // List of alternative endpoints to try if the main one fails
 // These could be different regions or fallback servers
-const FALLBACK_ENDPOINTS = [
+const FALLBACK_ENDPOINTS: string[] = [
   // Add any fallback endpoints here if available
   // Example: Direct IP address access instead of domain name
   // "https://123.456.789.101/api/v1" // Replace with actual IP if available
