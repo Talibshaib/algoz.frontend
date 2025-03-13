@@ -8,6 +8,7 @@ interface NetworkError extends Error {
   config?: any;
   request?: any;
   response?: any;
+  userFriendlyMessage?: string;
 }
 
 // Create an axios instance with default config
@@ -40,19 +41,16 @@ axiosInstance.interceptors.request.use(
       config.headers["X-Request-ID"] = requestId;
     }
     
-    // Check if we need to update the baseURL due to DNS issues
-    if (retryCount.get(requestId) > 0) {
-      try {
-        // Force a health check on retry
-        const { isOnline, endpoint } = await checkAPIHealth(true);
-        if (isOnline && endpoint) {
-          // Use the working endpoint for this request
-          const url = new URL(config.url || "", API_URL);
-          config.url = `${endpoint}${url.pathname}${url.search}`;
-        }
-      } catch (error) {
-        console.error("Failed to check API health during retry:", error);
+    // Always use the most up-to-date working endpoint
+    try {
+      const workingEndpoint = getWorkingEndpoint();
+      if (workingEndpoint && workingEndpoint !== API_URL) {
+        // Use the working endpoint for this request
+        const url = new URL(config.url || "", API_URL);
+        config.url = `${workingEndpoint}${url.pathname}${url.search}`;
       }
+    } catch (error) {
+      console.error("Failed to get working endpoint:", error);
     }
     
     // Get tokens from localStorage
@@ -135,7 +133,7 @@ axiosInstance.interceptors.response.use(
           
           await delay(delayTime);
           
-          // Force a health check before retrying
+          // Force a health check before retrying to get the latest working endpoint
           await checkAPIHealth(true);
           
           // Retry the request
@@ -149,17 +147,26 @@ axiosInstance.interceptors.response.use(
       }
       
       // Provide a user-friendly error message
-      const customError = new Error(
-        error.code === "ERR_NAME_NOT_RESOLVED" 
-          ? "Unable to connect to the server. Please check your internet connection or try again later."
-          : "Network error. Please check your connection and try again."
-      ) as NetworkError;
+      let userFriendlyMessage = "";
+      
+      if (error.code === "ERR_NAME_NOT_RESOLVED") {
+        userFriendlyMessage = "Unable to connect to the server. This might be a DNS resolution issue. Please try using the manual connection option.";
+      } else if (error.code === "ERR_NETWORK") {
+        userFriendlyMessage = "Network error. Please check your internet connection and try again.";
+      } else if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
+        userFriendlyMessage = "The server is taking too long to respond. Please try again later.";
+      } else {
+        userFriendlyMessage = "Network error. Please check your connection and try again.";
+      }
+      
+      const customError = new Error(userFriendlyMessage) as NetworkError;
       
       // Preserve the original error properties
       customError.name = "NetworkError";
       customError.code = error.code;
       customError.config = error.config;
       customError.request = error.request;
+      customError.userFriendlyMessage = userFriendlyMessage;
       
       return Promise.reject(customError);
     }
@@ -173,12 +180,13 @@ axiosInstance.interceptors.response.use(
       if (status === 401) {
         // Token might be expired, could implement token refresh here
         console.log("Authentication error - token may be expired");
+        error.userFriendlyMessage = "Your session has expired. Please log in again.";
       }
       
       // Handle server errors
       if (status >= 500) {
         console.error("Server error:", error.response.data);
-        error.message = "Server error. Please try again later.";
+        error.userFriendlyMessage = "Server error. Please try again later.";
       }
     }
     

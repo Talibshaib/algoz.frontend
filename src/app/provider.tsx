@@ -5,13 +5,17 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 import { NetworkStatus } from "@/components/ui/NetworkStatus";
 import { Toaster } from "sonner";
-import { checkAPIHealth } from "@/services/healthCheck";
+import { checkAPIHealth, loadSavedEndpoint } from "@/services/healthCheck";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [isServerOnline, setIsServerOnline] = useState(true);
 
-  // Check server status on initial load
+  // Load any saved custom endpoint and check server status on initial load
   useEffect(() => {
+    // First load any saved custom endpoint
+    loadSavedEndpoint();
+    
+    // Then check server status
     const checkServerStatus = async () => {
       try {
         const { isOnline } = await checkAPIHealth();
@@ -23,6 +27,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
     };
     
     checkServerStatus();
+    
+    // Set up periodic health checks
+    const intervalId = setInterval(async () => {
+      try {
+        const { isOnline } = await checkAPIHealth();
+        setIsServerOnline(isOnline);
+      } catch (error) {
+        console.error("Periodic health check failed:", error);
+      }
+    }, 60000); // Check every minute
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   return (
