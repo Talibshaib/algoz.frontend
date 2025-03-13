@@ -2,27 +2,32 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Menu } from "lucide-react"
 import { useTheme } from "next-themes"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { usePathname } from "next/navigation"
 import { useSidebar } from "@/components/ui/sidebar"
 import { useAuth } from "@/contexts/AuthContext"
-import { usePathname } from "next/navigation"
-import {
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import Sidebar from "./Sidebar"
+import { HealthCheck } from "@/components/ui/HealthCheck"
+import { Bell, Settings, LogOut, User, Menu } from "lucide-react"
+
+// Import NextUI components
+import { 
+  Button, 
+  Avatar, 
+  Dropdown, 
+  DropdownTrigger, 
+  DropdownMenu, 
+  DropdownItem 
+} from "@nextui-org/react"
+
+// Import custom UI components for shadcn
+import { Button as ShadcnButton } from "@/components/ui/button"
+import { Avatar as ShadcnAvatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import Sidebar from "./Sidebar"
-import { HealthCheck } from "@/components/ui/HealthCheck"
-import { Bell, Settings, LogOut, User } from "lucide-react"
-import { Dropdown, DropdownTrigger, DropdownItem } from "@nextui-org/react"
 
 interface DashboardHeaderProps {
   username?: string;
@@ -48,14 +53,14 @@ export function DashboardHeader() {
           {/* Mobile menu button */}
           <Sheet open={openMobile} onOpenChange={setOpenMobile}>
             <SheetTrigger asChild>
-              <Button
+              <ShadcnButton
                 variant="ghost"
-                size="icon"
+                size="sm"
                 className="md:hidden mr-1 sm:mr-2 h-8 w-8"
               >
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle Sidebar</span>
-              </Button>
+              </ShadcnButton>
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-[280px] [&>button]:hidden">
               <Sidebar className="border-none" />
@@ -63,15 +68,15 @@ export function DashboardHeader() {
           </Sheet>
           
           {/* Desktop menu button */}
-          <Button
+          <ShadcnButton
             variant="ghost"
-            size="icon"
+            size="sm"
             className="hidden md:flex mr-1 sm:mr-2 h-8 w-8"
             onClick={toggleSidebar}
           >
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle Sidebar</span>
-          </Button>
+          </ShadcnButton>
           
           <Link href="/" className="flex items-center space-x-1 sm:space-x-2 ml-1 sm:ml-2">
             <span className="font-bold text-sm sm:text-base">AlgoZ</span>
@@ -104,12 +109,12 @@ export function DashboardHeader() {
               Client #{user?._id?.substring(0, 5) || ""}
             </div>
           </div>
-          <Avatar className="h-8 w-8">
+          <ShadcnAvatar className="h-8 w-8">
             {user?.avatar && <AvatarImage src={user.avatar} alt={user.fullName || user.username} />}
             <AvatarFallback className="bg-primary text-primary-foreground">
               {(user?.fullName || user?.username || "U").charAt(0).toUpperCase()}
             </AvatarFallback>
-          </Avatar>
+          </ShadcnAvatar>
         </div>
 
         {/* User menu */}
@@ -121,17 +126,18 @@ export function DashboardHeader() {
                 className="p-0"
               >
                 <Avatar
-                  name={user?.fullName?.charAt(0) || "U"}
                   src={user?.avatar || ""}
                   size="sm"
                   className="transition-transform"
-                />
+                >
+                  {user?.fullName?.charAt(0) || "U"}
+                </Avatar>
                 <span className="ml-2 hidden md:inline-block">
                   {user?.fullName || "User"}
                 </span>
               </Button>
             </DropdownTrigger>
-            <DropdownMenu aria-label="User menu actions" className="w-56">
+            <DropdownMenu aria-label="User menu actions">
               <DropdownItem key="profile" startContent={<User size={18} />}>
                 <Link href="/dashboard/profile" className="w-full block">
                   Profile
