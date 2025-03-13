@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useAdminAuth } from "@/contexts/AdminAuthContext"
 import { useRouter } from "next/navigation"
 import { MotionDiv } from "@/components/ui/motion"
+import { API_URL } from "@/constants/URI"
 
 export default function LoginPage() {
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -15,6 +16,8 @@ export default function LoginPage() {
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [localError, setLocalError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingServer, setIsCheckingServer] = useState(false);
+  const [serverStatus, setServerStatus] = useState<"unknown" | "online" | "offline">("unknown");
   const { login, error: authError, clearError, user } = useAuth();
   const { login: adminLogin, error: adminAuthError, admin } = useAdminAuth();
   const router = useRouter();
@@ -33,6 +36,37 @@ export default function LoginPage() {
       router.replace("/admin");
     }
   }, [user, admin, router]);
+
+  // Check server status on component mount
+  useEffect(() => {
+    const checkServerStatus = async () => {
+      setIsCheckingServer(true);
+      try {
+        // Extract the base URL from the API_URL
+        const baseUrl = API_URL.split('/api')[0];
+        
+        // Use fetch with a timeout to check if the server is reachable
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(`${baseUrl}/health`, {
+          method: 'GET',
+          mode: 'no-cors', // This allows us to at least check if the server responds
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        setServerStatus("online");
+      } catch (error) {
+        console.error("Server status check failed:", error);
+        setServerStatus("offline");
+      } finally {
+        setIsCheckingServer(false);
+      }
+    };
+    
+    checkServerStatus();
+  }, []);
   
   // Handle input validation
   const validateInputs = () => {
@@ -53,6 +87,12 @@ export default function LoginPage() {
     e.preventDefault();
     setLocalError("");
     clearError?.();
+    
+    // Check server status first
+    if (serverStatus === "offline") {
+      setLocalError("The server appears to be offline. Please try again later.");
+      return;
+    }
     
     // Validate inputs before submission
     if (!validateInputs()) {
@@ -77,9 +117,19 @@ export default function LoginPage() {
           setLocalError(authError || "Invalid username/email or password");
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login error:", err);
-      setLocalError("An unexpected error occurred. Please try again.");
+      
+      // Handle network errors specifically
+      if (err.code === "ERR_NETWORK" || err.code === "ERR_NAME_NOT_RESOLVED") {
+        setLocalError("Unable to connect to the server. Please check your internet connection and try again.");
+        setServerStatus("offline");
+      } else if (err.userFriendlyMessage) {
+        // Use the user-friendly message if available
+        setLocalError(err.userFriendlyMessage);
+      } else {
+        setLocalError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -87,6 +137,37 @@ export default function LoginPage() {
   
   // Determine which error to display (local or from context)
   const displayError = localError || (isAdminLogin ? adminAuthError : authError);
+  
+  // Function to retry server connection
+  const retryServerConnection = async () => {
+    setIsCheckingServer(true);
+    setLocalError("");
+    
+    try {
+      // Extract the base URL from the API_URL
+      const baseUrl = API_URL.split('/api')[0];
+      
+      // Use fetch with a timeout to check if the server is reachable
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      await fetch(`${baseUrl}/health`, {
+        method: 'GET',
+        mode: 'no-cors',
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      setServerStatus("online");
+      setLocalError("");
+    } catch (error) {
+      console.error("Server retry failed:", error);
+      setServerStatus("offline");
+      setLocalError("Still unable to connect to the server. The service might be temporarily unavailable.");
+    } finally {
+      setIsCheckingServer(false);
+    }
+  };
   
   return (
     <div className="flex h-screen max-w-screen items-center justify-center">
@@ -96,7 +177,31 @@ export default function LoginPage() {
           <p className="text-muted-foreground">Enter your credentials to access your account</p>
         </div>
         
-        {displayError && (
+        {serverStatus === "offline" && (
+          <MotionDiv
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 text-sm bg-amber-100 border border-amber-200 text-amber-800 rounded-md"
+          >
+            <p className="font-medium mb-2">Server Connection Issue</p>
+            <p className="mb-3">We're having trouble connecting to our servers. This could be due to:</p>
+            <ul className="list-disc pl-5 mb-3 space-y-1">
+              <li>Temporary server maintenance</li>
+              <li>Network connectivity issues</li>
+              <li>DNS resolution problems</li>
+            </ul>
+            <Button 
+              size="sm"
+              className="bg-amber-600 text-white hover:bg-amber-700 mt-2"
+              onClick={retryServerConnection}
+              disabled={isCheckingServer}
+            >
+              {isCheckingServer ? "Checking..." : "Retry Connection"}
+            </Button>
+          </MotionDiv>
+        )}
+        
+        {displayError && serverStatus !== "offline" && (
           <MotionDiv
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -121,6 +226,7 @@ export default function LoginPage() {
               isInvalid={!!localError && !emailOrUsername.trim()}
               color={localError && !emailOrUsername.trim() ? "danger" : "default"}
               required 
+              disabled={serverStatus === "offline" || isCheckingServer}
             />
           </div>
           <div className="grid gap-2">
@@ -141,6 +247,7 @@ export default function LoginPage() {
               isInvalid={!!localError && !password}
               color={localError && !password ? "danger" : "default"}
               required 
+              disabled={serverStatus === "offline" || isCheckingServer}
             />
           </div>
           
@@ -149,6 +256,7 @@ export default function LoginPage() {
               id="adminLogin" 
               isSelected={isAdminLogin}
               onValueChange={setIsAdminLogin}
+              disabled={serverStatus === "offline" || isCheckingServer}
             />
             <label htmlFor="adminLogin" className="text-sm font-normal">
               Login as Admin
@@ -156,7 +264,10 @@ export default function LoginPage() {
           </div>
           
           <div className="flex items-center space-x-2">
-            <Checkbox id="remember" />
+            <Checkbox 
+              id="remember" 
+              disabled={serverStatus === "offline" || isCheckingServer}
+            />
             <label htmlFor="remember" className="text-sm font-normal">
               Remember me for 30 days
             </label>
@@ -165,9 +276,9 @@ export default function LoginPage() {
           <Button 
             type="submit" 
             className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
-            disabled={isLoading}
+            disabled={isLoading || serverStatus === "offline" || isCheckingServer}
           >
-            {isLoading ? "Logging in..." : isAdminLogin ? "Login as Admin" : "Login"}
+            {isLoading ? "Logging in..." : isCheckingServer ? "Checking server..." : isAdminLogin ? "Login as Admin" : "Login"}
           </Button>
         </form>
         
@@ -181,7 +292,10 @@ export default function LoginPage() {
         </div>
         
         <div className="grid grid-cols-2 gap-4">
-          <Button variant="bordered">
+          <Button 
+            variant="bordered"
+            disabled={serverStatus === "offline" || isCheckingServer}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -198,7 +312,10 @@ export default function LoginPage() {
             </svg>
             GitHub
           </Button>
-          <Button variant="bordered">
+          <Button 
+            variant="bordered"
+            disabled={serverStatus === "offline" || isCheckingServer}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"

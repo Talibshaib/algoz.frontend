@@ -8,11 +8,22 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true, // Important for cookies
+  timeout: 15000, // 15 second timeout
 });
+
+// Add retry logic for network errors
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1000; // 1 second
+
+// Helper function to delay execution
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
+    // Store retry count in config
+    config.retryCount = config.retryCount || 0;
+    
     // Add Authorization header with JWT token if available in localStorage
     if (typeof window !== 'undefined') {
       // Check for admin token first
@@ -86,7 +97,28 @@ axiosInstance.interceptors.response.use(
     // You can modify the response data here before it reaches the component
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Check if we should retry the request
+    if (
+      (error.code === 'ERR_NETWORK' || 
+       error.code === 'ECONNABORTED' || 
+       error.code === 'ERR_NAME_NOT_RESOLVED' ||
+       (error.response && error.response.status >= 500)) && 
+      originalRequest.retryCount < MAX_RETRIES
+    ) {
+      originalRequest.retryCount += 1;
+      
+      console.log(`Retrying request (${originalRequest.retryCount}/${MAX_RETRIES}) after network error: ${error.message}`);
+      
+      // Wait before retrying
+      await delay(RETRY_DELAY * originalRequest.retryCount);
+      
+      // Return the retry request
+      return axiosInstance(originalRequest);
+    }
+    
     // Handle common errors here (e.g., 401 unauthorized, network errors)
     if (error.response) {
       // The request was made and the server responded with a status code
@@ -111,7 +143,14 @@ axiosInstance.interceptors.response.use(
       });
     } else if (error.request) {
       // The request was made but no response was received
-      console.error('Network error: No response received from server');
+      console.error('Network error:', error.message);
+      
+      // Specific handling for DNS resolution issues
+      if (error.code === 'ERR_NAME_NOT_RESOLVED') {
+        console.error('DNS resolution failed. The API server domain could not be resolved.');
+        // Show a more user-friendly message
+        error.userFriendlyMessage = "Unable to connect to the server. This could be due to network issues or the server may be temporarily unavailable. Please try again later.";
+      }
     } else {
       // Something happened in setting up the request that triggered an Error
       console.error('Request error:', error.message);
