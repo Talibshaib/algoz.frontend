@@ -9,6 +9,9 @@ import { useAdminAuth } from "@/contexts/AdminAuthContext"
 import { useRouter } from "next/navigation"
 import { MotionDiv } from "@/components/ui/motion"
 import { API_URL } from "@/constants/URI"
+import { ManualConnectionForm } from "@/components/ui/ManualConnectionForm"
+import { checkAPIHealth } from "@/services/healthCheck"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -42,21 +45,8 @@ export default function LoginPage() {
     const checkServerStatus = async () => {
       setIsCheckingServer(true);
       try {
-        // Extract the base URL from the API_URL
-        const baseUrl = API_URL.split('/api')[0];
-        
-        // Use fetch with a timeout to check if the server is reachable
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const response = await fetch(`${baseUrl}/health`, {
-          method: 'GET',
-          mode: 'no-cors', // This allows us to at least check if the server responds
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        setServerStatus("online");
+        const { isOnline } = await checkAPIHealth(true);
+        setServerStatus(isOnline ? "online" : "offline");
       } catch (error) {
         console.error("Server status check failed:", error);
         setServerStatus("offline");
@@ -90,7 +80,7 @@ export default function LoginPage() {
     
     // Check server status first
     if (serverStatus === "offline") {
-      setLocalError("The server appears to be offline. Please try again later.");
+      setLocalError("The server appears to be offline. Please try again later or use the manual connection option below.");
       return;
     }
     
@@ -122,7 +112,7 @@ export default function LoginPage() {
       
       // Handle network errors specifically
       if (err.code === "ERR_NETWORK" || err.code === "ERR_NAME_NOT_RESOLVED") {
-        setLocalError("Unable to connect to the server. Please check your internet connection and try again.");
+        setLocalError("Unable to connect to the server. Please check your internet connection and try again, or use the manual connection option below.");
         setServerStatus("offline");
       } else if (err.userFriendlyMessage) {
         // Use the user-friendly message if available
@@ -144,29 +134,31 @@ export default function LoginPage() {
     setLocalError("");
     
     try {
-      // Extract the base URL from the API_URL
-      const baseUrl = API_URL.split('/api')[0];
+      const { isOnline } = await checkAPIHealth(true);
+      setServerStatus(isOnline ? "online" : "offline");
       
-      // Use fetch with a timeout to check if the server is reachable
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      await fetch(`${baseUrl}/health`, {
-        method: 'GET',
-        mode: 'no-cors',
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      setServerStatus("online");
-      setLocalError("");
+      if (isOnline) {
+        toast.success("Successfully connected to server");
+        setLocalError("");
+      } else {
+        setLocalError("Still unable to connect to the server. The service might be temporarily unavailable or you may be experiencing DNS resolution issues.");
+      }
     } catch (error) {
       console.error("Server retry failed:", error);
       setServerStatus("offline");
-      setLocalError("Still unable to connect to the server. The service might be temporarily unavailable.");
+      setLocalError("Still unable to connect to the server. Try using the manual connection option below.");
     } finally {
       setIsCheckingServer(false);
     }
+  };
+  
+  // Handle successful manual connection
+  const handleManualConnectionSuccess = () => {
+    setServerStatus("online");
+    setLocalError("");
+    toast.success("Manual connection successful", {
+      description: "You can now log in to your account"
+    });
   };
   
   return (
@@ -190,14 +182,25 @@ export default function LoginPage() {
               <li>Network connectivity issues</li>
               <li>DNS resolution problems</li>
             </ul>
-            <Button 
-              size="sm"
-              className="bg-amber-600 text-white hover:bg-amber-700 mt-2"
-              onClick={retryServerConnection}
-              disabled={isCheckingServer}
-            >
-              {isCheckingServer ? "Checking..." : "Retry Connection"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                size="sm"
+                className="bg-amber-600 text-white hover:bg-amber-700"
+                onClick={retryServerConnection}
+                disabled={isCheckingServer}
+              >
+                {isCheckingServer ? "Checking..." : "Retry Connection"}
+              </Button>
+              <Link href="/help/dns-issues">
+                <Button 
+                  size="sm"
+                  variant="flat"
+                  className="bg-white text-amber-700 border border-amber-300"
+                >
+                  Connection Troubleshooting
+                </Button>
+              </Link>
+            </div>
           </MotionDiv>
         )}
         
@@ -281,6 +284,11 @@ export default function LoginPage() {
             {isLoading ? "Logging in..." : isCheckingServer ? "Checking server..." : isAdminLogin ? "Login as Admin" : "Login"}
           </Button>
         </form>
+        
+        {/* Manual Connection Form for DNS resolution issues */}
+        {serverStatus === "offline" && (
+          <ManualConnectionForm onConnectionSuccess={handleManualConnectionSuccess} />
+        )}
         
         <div className="relative">
           <div className="absolute inset-0 flex items-center">

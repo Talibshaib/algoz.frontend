@@ -11,6 +11,23 @@ export const metadata: Metadata = {
   title: "AlgoZ - Algorithmic Trading Made Simple",
   description:
     "Leverage advanced trading algorithms and copy successful strategies with our automated trading platform.",
+  metadataBase: new URL('https://algoz-trading.com'),
+  openGraph: {
+    title: "AlgoZ - Algorithmic Trading Made Simple",
+    description: "Leverage advanced trading algorithms and copy successful strategies with our automated trading platform.",
+    url: 'https://algoz-trading.com',
+    siteName: 'AlgoZ',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'AlgoZ Trading Platform',
+      }
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({

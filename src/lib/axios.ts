@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_URL } from '@/constants/URI';
+import { getWorkingEndpoint, checkAPIHealth } from '@/services/healthCheck';
 
 // Create an axios instance with default config
 const axiosInstance = axios.create({
@@ -11,79 +12,79 @@ const axiosInstance = axios.create({
   timeout: 15000, // 15 second timeout
 });
 
-// Add retry logic for network errors
-const MAX_RETRIES = 2;
-const RETRY_DELAY = 1000; // 1 second
-
 // Helper function to delay execution
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Track retry attempts for each request
+const retryCount = new Map();
+const MAX_RETRIES = 2;
 
 // Request interceptor
 axiosInstance.interceptors.request.use(
-  (config) => {
-    // Store retry count in config
-    config.retryCount = config.retryCount || 0;
+  async (config) => {
+    // Generate a unique request ID for tracking retries
+    const requestId = `${config.method}-${config.url}-${Date.now()}`;
     
-    // Add Authorization header with JWT token if available in localStorage
-    if (typeof window !== 'undefined') {
-      // Check for admin token first
-      const adminUser = localStorage.getItem('adminUser');
-      if (adminUser) {
-        try {
-          const parsedAdmin = JSON.parse(adminUser);
-          // If we have an accessToken in the admin object
-          if (parsedAdmin.accessToken) {
-            // Ensure headers object exists
-            config.headers = config.headers || {};
-            // Set Authorization header with Bearer token
-            config.headers.Authorization = `Bearer ${parsedAdmin.accessToken}`;
-            // Remove excessive logging in production
-            if (process.env.NODE_ENV === 'development') {
-              console.log("Admin Authorization header set with token");
-            }
-            return config;
-          }
-        } catch (error) {
-          console.error('Error parsing admin from localStorage:', error);
-          // Clear invalid admin data
-          localStorage.removeItem('adminUser');
+    // Check if we're retrying and track count
+    if (!retryCount.has(requestId)) {
+      retryCount.set(requestId, 0);
+      // Store the requestId in the config for the response interceptor
+      config.headers["X-Request-ID"] = requestId;
+    }
+    
+    // Check if we need to update the baseURL due to DNS issues
+    if (retryCount.get(requestId) > 0) {
+      try {
+        // Force a health check on retry
+        const { isOnline, endpoint } = await checkAPIHealth(true);
+        if (isOnline && endpoint) {
+          // Use the working endpoint for this request
+          const url = new URL(config.url || "", API_URL);
+          config.url = `${endpoint}${url.pathname}${url.search}`;
         }
+      } catch (error) {
+        console.error("Failed to check API health during retry:", error);
       }
-
-      // If no admin token, check for user token
+    }
+    
+    // Get tokens from localStorage
+    let token = null;
+    
+    if (typeof window !== 'undefined') {
+      // Check for user token
       const user = localStorage.getItem('user');
       if (user) {
         try {
-          const parsedUser = JSON.parse(user);
-          // If we have an accessToken directly in the user object
-          if (parsedUser.accessToken) {
-            // Ensure headers object exists
-            config.headers = config.headers || {};
-            // Set Authorization header with Bearer token
-            config.headers.Authorization = `Bearer ${parsedUser.accessToken}`;
-            // Remove excessive logging in production
-            if (process.env.NODE_ENV === 'development') {
-              console.log("User Authorization header set with token");
-            }
-          } else {
-            console.warn("No accessToken found in user object - user may need to re-login");
-            // If we're in a browser environment, redirect to login
-            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-              console.log("Redirecting to login due to missing token");
-              // Use a timeout to avoid interrupting the current request
-              setTimeout(() => {
-                localStorage.removeItem('user');
-                window.location.href = '/login';
-              }, 0);
-            }
+          const userData = JSON.parse(user);
+          if (userData.accessToken) {
+            token = userData.accessToken;
           }
         } catch (error) {
-          console.error('Error parsing user from localStorage:', error);
-          // Clear invalid user data
-          localStorage.removeItem('user');
+          console.error("Error parsing user data:", error);
+        }
+      }
+      
+      // If no user token, check for admin token
+      if (!token) {
+        const admin = localStorage.getItem('adminUser');
+        if (admin) {
+          try {
+            const adminData = JSON.parse(admin);
+            if (adminData.accessToken) {
+              token = adminData.accessToken;
+            }
+          } catch (error) {
+            console.error("Error parsing admin data:", error);
+          }
         }
       }
     }
+    
+    // Set Authorization header if token exists
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
     return config;
   },
   (error) => {
@@ -94,67 +95,90 @@ axiosInstance.interceptors.request.use(
 // Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => {
-    // You can modify the response data here before it reaches the component
+    // Clear retry count for successful requests
+    const requestId = response.config.headers["X-Request-ID"];
+    if (requestId) {
+      retryCount.delete(requestId);
+    }
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
+    // Get the request ID from the config
+    const requestId = error.config?.headers?.["X-Request-ID"];
     
-    // Check if we should retry the request
-    if (
-      (error.code === 'ERR_NETWORK' || 
-       error.code === 'ECONNABORTED' || 
-       error.code === 'ERR_NAME_NOT_RESOLVED' ||
-       (error.response && error.response.status >= 500)) && 
-      originalRequest.retryCount < MAX_RETRIES
-    ) {
-      originalRequest.retryCount += 1;
+    // Handle network errors and retry logic
+    if (error.code === "ERR_NETWORK" || 
+        error.code === "ECONNABORTED" || 
+        error.code === "ERR_NAME_NOT_RESOLVED" ||
+        error.message.includes("Network Error") ||
+        error.message.includes("timeout")) {
       
-      console.log(`Retrying request (${originalRequest.retryCount}/${MAX_RETRIES}) after network error: ${error.message}`);
-      
-      // Wait before retrying
-      await delay(RETRY_DELAY * originalRequest.retryCount);
-      
-      // Return the retry request
-      return axiosInstance(originalRequest);
-    }
-    
-    // Handle common errors here (e.g., 401 unauthorized, network errors)
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      if (error.response.status === 401) {
-        console.error('Authentication error: You may need to log in again');
-        // Clear user data and redirect to login page
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-          console.log("Redirecting to login due to 401 error");
-          localStorage.removeItem('user');
-          // Use a timeout to avoid interrupting the current request handling
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 0);
+      // Check if we should retry
+      if (requestId && retryCount.has(requestId)) {
+        const currentRetryCount = retryCount.get(requestId);
+        
+        if (currentRetryCount < MAX_RETRIES) {
+          // Increment retry count
+          retryCount.set(requestId, currentRetryCount + 1);
+          
+          // Exponential backoff delay
+          const delayTime = Math.pow(2, currentRetryCount) * 1000;
+          console.log(`Retrying request (${currentRetryCount + 1}/${MAX_RETRIES}) after ${delayTime}ms delay...`);
+          
+          await delay(delayTime);
+          
+          // Force a health check before retrying
+          await checkAPIHealth(true);
+          
+          // Retry the request
+          return axiosInstance(error.config);
         }
       }
-      // Log more detailed error information
-      console.error('API Error Response:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data
-      });
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('Network error:', error.message);
       
-      // Specific handling for DNS resolution issues
-      if (error.code === 'ERR_NAME_NOT_RESOLVED') {
-        console.error('DNS resolution failed. The API server domain could not be resolved.');
-        // Show a more user-friendly message
-        error.userFriendlyMessage = "Unable to connect to the server. This could be due to network issues or the server may be temporarily unavailable. Please try again later.";
+      // Clean up retry count if we're not retrying
+      if (requestId) {
+        retryCount.delete(requestId);
       }
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.error('Request error:', error.message);
+      
+      // Provide a user-friendly error message
+      const customError = new Error(
+        error.code === "ERR_NAME_NOT_RESOLVED" 
+          ? "Unable to connect to the server. Please check your internet connection or try again later."
+          : "Network error. Please check your connection and try again."
+      );
+      
+      // Preserve the original error properties
+      customError.name = "NetworkError";
+      customError.code = error.code;
+      customError.config = error.config;
+      customError.request = error.request;
+      
+      return Promise.reject(customError);
     }
+    
+    // Handle other types of errors
+    if (error.response) {
+      // Server responded with a status code outside of 2xx range
+      const status = error.response.status;
+      
+      // Handle authentication errors
+      if (status === 401) {
+        // Token might be expired, could implement token refresh here
+        console.log("Authentication error - token may be expired");
+      }
+      
+      // Handle server errors
+      if (status >= 500) {
+        console.error("Server error:", error.response.data);
+        error.message = "Server error. Please try again later.";
+      }
+    }
+    
+    // Clean up retry count
+    if (requestId) {
+      retryCount.delete(requestId);
+    }
+    
     return Promise.reject(error);
   }
 );
