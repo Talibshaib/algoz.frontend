@@ -24,6 +24,7 @@ type AuthContextType = {
   logout: () => Promise<boolean>;
   isLoading: boolean;
   error: string;
+  clearError: () => void;
   refreshToken: () => Promise<boolean>;
 };
 
@@ -42,7 +43,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  // Check if user is logged in on initial load - simplified to prioritize localStorage persistence
+  // Function to clear error messages
+  const clearError = () => setError("");
+
+  // Check if user is logged in on initial load
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
@@ -152,64 +156,143 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Real login function that calls the backend API
+  // Login function with improved error handling
   const login = async (emailOrUsername: string, password: string) => {
-    setError("");
+    clearError();
     try {
       setIsLoading(true);
       
-      const response = await axiosInstance.post('/users/login', { 
-        // Send as both email and username, backend will handle which one is provided
-        email: emailOrUsername.includes("@") ? emailOrUsername : undefined,
-        username: !emailOrUsername.includes("@") ? emailOrUsername : undefined,
-        password 
-      });
-      
-      
-      const data = response.data;
-      console.log("Login response data:", data); // Added console log
-      
-      if (response.status === 200) {
-        // Make sure we have valid user data before setting it
-        if (data.data && data.data.user) {
-          // Store both user data and tokens
-          // Create a userData object that includes the user data and accessToken
-          const userData = {
-            ...data.data.user,
-            accessToken: data.data.accessToken
-          };
-          
-          // Update the user state with the complete userData including accessToken
-          setUser(userData);
-          
-          // Store user data and access token in localStorage
-          localStorage.setItem("user", JSON.stringify(userData));
-          console.log("User data stored in localStorage with token");
-          router.push("/dashboard");
-          return true;
-        } else {
-          console.error("Login response missing user data:", data);
-          setError("Invalid response from server");
-          return false;
-        }
-      } else {
-        setError(data.message || "Login failed");
+      // Validate inputs
+      if (!emailOrUsername || !password) {
+        setError("Email/username and password are required");
         return false;
       }
-    } catch (error) {
+      
+      // Determine if input is email or username
+      const isEmail = emailOrUsername.includes("@");
+      
+      // Prepare login payload
+      const loginData = {
+        email: isEmail ? emailOrUsername : undefined,
+        username: !isEmail ? emailOrUsername : undefined,
+        password
+      };
+      
+      console.log("Attempting login with:", { 
+        ...(isEmail ? { email: emailOrUsername } : { username: emailOrUsername }),
+        password: "********" 
+      });
+      
+      const response = await axiosInstance.post('/users/login', loginData);
+      
+      console.log("Login response status:", response.status);
+      
+      // Check if response has data
+      if (!response.data) {
+        console.error("No data in login response");
+        setError("Server returned an empty response");
+        return false;
+      }
+      
+      const data = response.data;
+      console.log("Login response data structure:", Object.keys(data));
+      
+      // Check for success status
+      if (response.status === 200 || response.status === 201) {
+        // Validate response data structure
+        if (!data.data) {
+          console.error("Missing data.data in response:", data);
+          setError("Invalid server response format");
+          return false;
+        }
+        
+        // Check for user data
+        if (!data.data.user) {
+          console.error("Missing user data in response:", data.data);
+          setError("User data not found in response");
+          return false;
+        }
+        
+        // Check for access token
+        if (!data.data.accessToken) {
+          console.error("Missing access token in response:", data.data);
+          setError("Access token not found in response");
+          return false;
+        }
+        
+        // Create complete user object with token
+        const userData = {
+          ...data.data.user,
+          accessToken: data.data.accessToken
+        };
+        
+        // Update state and localStorage
+        setUser(userData);
+        localStorage.setItem("user", JSON.stringify(userData));
+        console.log("Login successful, user data stored");
+        
+        // Navigate to dashboard
+        router.push("/dashboard");
+        return true;
+      } else {
+        // Handle non-200 success responses
+        const errorMessage = data.message || "Login failed with status " + response.status;
+        console.error("Login failed:", errorMessage);
+        setError(errorMessage);
+        return false;
+      }
+    } catch (error: any) {
+      // Handle axios errors
       console.error("Login error:", error);
-      setError("An error occurred during login");
+      
+      // Extract error message from response if available
+      let errorMessage = "An error occurred during login";
+      
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+        
+        if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.status === 401) {
+          errorMessage = "Invalid credentials";
+        } else if (error.response.status === 404) {
+          errorMessage = "User not found";
+        } else if (error.response.status >= 500) {
+          errorMessage = "Server error, please try again later";
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("No response received:", error.request);
+        errorMessage = "No response from server, please check your connection";
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Error message:", error.message);
+        errorMessage = error.message || "Request failed";
+      }
+      
+      setError(errorMessage);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Real signup function that calls the backend API
+  // Signup function with improved error handling
   const signup = async (fullName: string, email: string, username: string, password: string) => {
-    setError("");
+    clearError();
     try {
       setIsLoading(true);
+      
+      // Validate inputs
+      if (!fullName || !email || !username || !password) {
+        setError("All fields are required");
+        return false;
+      }
+      
+      console.log("Attempting signup with:", { fullName, email, username, password: "********" });
       
       const formData = new FormData();
       formData.append("fullName", fullName);
@@ -220,20 +303,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // For FormData, we don't need to set Content-Type as axios will set it automatically
       const response = await axiosInstance.post('/users/register', formData);
       
-      const data = response.data;
+      console.log("Signup response status:", response.status);
       
-      if (response.status === 200) {
-        // Don't set user or store in localStorage after signup
-        // Instead, redirect to landing page for explicit login
-        router.push("/");
-        return true;
-      } else {
-        setError(data.message || "Registration failed");
+      if (!response.data) {
+        console.error("No data in signup response");
+        setError("Server returned an empty response");
         return false;
       }
-    } catch (error) {
+      
+      const data = response.data;
+      console.log("Signup response data:", data);
+      
+      if (response.status === 200 || response.status === 201) {
+        // Redirect to login page after successful signup
+        router.push("/login");
+        return true;
+      } else {
+        const errorMessage = data.message || "Registration failed with status " + response.status;
+        console.error("Signup failed:", errorMessage);
+        setError(errorMessage);
+        return false;
+      }
+    } catch (error: any) {
       console.error("Signup error:", error);
-      setError("An error occurred during registration");
+      
+      // Extract error message from response if available
+      let errorMessage = "An error occurred during registration";
+      
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+        
+        if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.status === 409) {
+          errorMessage = "Email or username already exists";
+        } else if (error.response.status >= 500) {
+          errorMessage = "Server error, please try again later";
+        }
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        errorMessage = "No response from server, please check your connection";
+      } else {
+        console.error("Error message:", error.message);
+        errorMessage = error.message || "Request failed";
+      }
+      
+      setError(errorMessage);
       return false;
     } finally {
       setIsLoading(false);
@@ -289,7 +405,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading, error, refreshToken }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      signup, 
+      logout, 
+      isLoading, 
+      error, 
+      clearError, 
+      refreshToken 
+    }}>
       {children}
     </AuthContext.Provider>
   );

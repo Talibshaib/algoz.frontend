@@ -7,17 +7,23 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useAdminAuth } from "@/contexts/AdminAuthContext"
 import { useRouter } from "next/navigation"
-
+import { MotionDiv } from "@/components/ui/motion"
 
 export default function LoginPage() {
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isAdminLogin, setIsAdminLogin] = useState(false);
-  const [error, setError] = useState("");
+  const [localError, setLocalError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login, error: authError, user } = useAuth();
+  const { login, error: authError, clearError, user } = useAuth();
   const { login: adminLogin, error: adminAuthError, admin } = useAdminAuth();
   const router = useRouter();
+  
+  // Clear errors when component mounts or when switching between admin/user login
+  useEffect(() => {
+    clearError?.();
+    setLocalError("");
+  }, [isAdminLogin, clearError]);
   
   // Redirect if already logged in
   useEffect(() => {
@@ -28,32 +34,59 @@ export default function LoginPage() {
     }
   }, [user, admin, router]);
   
+  // Handle input validation
+  const validateInputs = () => {
+    if (!emailOrUsername.trim()) {
+      setLocalError("Email or username is required");
+      return false;
+    }
+    
+    if (!password) {
+      setLocalError("Password is required");
+      return false;
+    }
+    
+    return true;
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setLocalError("");
+    clearError?.();
+    
+    // Validate inputs before submission
+    if (!validateInputs()) {
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
       if (isAdminLogin) {
         // Admin login
+        console.log("Attempting admin login with:", emailOrUsername);
         const adminSuccess = await adminLogin(emailOrUsername, password);
         if (!adminSuccess) {
-          setError(adminAuthError || "Invalid admin credentials");
+          setLocalError(adminAuthError || "Invalid admin credentials");
         }
       } else {
         // Regular user login
+        console.log("Attempting user login with:", emailOrUsername);
         const success = await login(emailOrUsername, password);
         if (!success) {
-          setError(authError || "Invalid username/email or password");
+          setLocalError(authError || "Invalid username/email or password");
         }
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
-      console.error(err);
+      console.error("Login error:", err);
+      setLocalError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+  
+  // Determine which error to display (local or from context)
+  const displayError = localError || (isAdminLogin ? adminAuthError : authError);
   
   return (
     <div className="flex h-screen max-w-screen items-center justify-center">
@@ -62,11 +95,17 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold">Login</h1>
           <p className="text-muted-foreground">Enter your credentials to access your account</p>
         </div>
-        {error && (
-          <div className="p-3 text-sm bg-red-100 border border-red-200 text-red-600 rounded-md">
-            {error}
-          </div>
+        
+        {displayError && (
+          <MotionDiv
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-3 text-sm bg-red-100 border border-red-200 text-red-600 rounded-md"
+          >
+            {displayError}
+          </MotionDiv>
         )}
+        
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div className="grid gap-2">
             <label htmlFor="emailOrUsername">Email or Username</label>
@@ -75,14 +114,19 @@ export default function LoginPage() {
               type="text" 
               placeholder="name@example.com or username" 
               value={emailOrUsername}
-              onChange={(e) => setEmailOrUsername(e.target.value)}
+              onChange={(e) => {
+                setEmailOrUsername(e.target.value);
+                if (localError) setLocalError("");
+              }}
+              isInvalid={!!localError && !emailOrUsername.trim()}
+              color={localError && !emailOrUsername.trim() ? "danger" : "default"}
               required 
             />
           </div>
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <label htmlFor="password">Password</label>
-              <Link href="#" className="text-sm text-primary underline-offset-4 hover:underline">
+              <Link href="/forgot-password" className="text-sm text-primary underline-offset-4 hover:underline">
                 Forgot password?
               </Link>
             </div>
@@ -90,7 +134,12 @@ export default function LoginPage() {
               id="password" 
               type="password" 
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (localError) setLocalError("");
+              }}
+              isInvalid={!!localError && !password}
+              color={localError && !password ? "danger" : "default"}
               required 
             />
           </div>
@@ -112,10 +161,16 @@ export default function LoginPage() {
               Remember me for 30 days
             </label>
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
+          
+          <Button 
+            type="submit" 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : isAdminLogin ? "Login as Admin" : "Login"}
           </Button>
         </form>
+        
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />
@@ -124,6 +179,7 @@ export default function LoginPage() {
             <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
           </div>
         </div>
+        
         <div className="grid grid-cols-2 gap-4">
           <Button variant="bordered">
             <svg
@@ -160,6 +216,7 @@ export default function LoginPage() {
             Facebook
           </Button>
         </div>
+        
         <div className="text-center text-sm">
           Don&apos;t have an account?{" "}
           <Link href="/signup" className="text-primary underline-offset-4 hover:underline">

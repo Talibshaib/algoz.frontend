@@ -4,8 +4,10 @@ import Link from "next/link"
 import { Button } from "@nextui-org/react"
 import { Input } from "@nextui-org/react"
 import { Checkbox } from "@nextui-org/react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
+import { useRouter } from "next/navigation"
+import { MotionDiv } from "@/components/ui/motion"
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -13,45 +15,118 @@ export default function SignupPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  const [localError, setLocalError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const { signup, error: authError } = useAuth();
+  const { signup, error: authError, clearError, user } = useAuth();
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  // Clear errors when component mounts
+  useEffect(() => {
+    clearError?.();
+    setLocalError("");
+  }, [clearError]);
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
+
+  // Validate email format
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Validate password strength
+  const isStrongPassword = (password: string) => {
+    return password.length >= 8;
+  };
+
+  // Handle input validation
+  const validateInputs = () => {
+    if (!fullName.trim()) {
+      setLocalError("Full name is required");
+      return false;
+    }
     
-    // Validation
+    if (!email.trim()) {
+      setLocalError("Email is required");
+      return false;
+    }
+    
+    if (!isValidEmail(email)) {
+      setLocalError("Please enter a valid email address");
+      return false;
+    }
+    
+    if (!username.trim()) {
+      setLocalError("Username is required");
+      return false;
+    }
+    
+    if (username.length < 3) {
+      setLocalError("Username must be at least 3 characters long");
+      return false;
+    }
+    
+    if (!password) {
+      setLocalError("Password is required");
+      return false;
+    }
+    
+    if (!isStrongPassword(password)) {
+      setLocalError("Password must be at least 8 characters long");
+      return false;
+    }
+    
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
+      setLocalError("Passwords do not match");
+      return false;
     }
     
     if (!acceptTerms) {
-      setError("You must accept the terms and conditions");
-      return;
+      setLocalError("You must accept the terms and conditions");
+      return false;
     }
+    
+    return true;
+  };
 
-    if (!username) {
-      setError("Username is required");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError("");
+    clearError?.();
+    
+    // Validate inputs before submission
+    if (!validateInputs()) {
       return;
     }
     
     setIsLoading(true);
     
     try {
+      console.log("Attempting signup with:", { fullName, email, username, password: "********" });
       const success = await signup(fullName, email, username, password);
-      if (!success) {
-        setError(authError || "Failed to create account. Please try again.");
+      
+      if (success) {
+        // Show success message or redirect
+        router.push("/login?registered=true");
+      } else {
+        setLocalError(authError || "Failed to create account. Please try again.");
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
-      console.error(err);
+      console.error("Signup error:", err);
+      setLocalError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Determine which error to display (local or from context)
+  const displayError = localError || authError;
 
   return (
     <div className="flex h-screen max-w-screen items-center justify-center">
@@ -60,11 +135,17 @@ export default function SignupPage() {
           <h1 className="text-3xl font-bold">Create an account</h1>
           <p className="text-muted-foreground">Enter your information to create an account</p>
         </div>
-        {error && (
-          <div className="p-3 text-sm bg-red-100 border border-red-200 text-red-600 rounded-md">
-            {error}
-          </div>
+        
+        {displayError && (
+          <MotionDiv
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-3 text-sm bg-red-100 border border-red-200 text-red-600 rounded-md"
+          >
+            {displayError}
+          </MotionDiv>
         )}
+        
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div className="grid gap-2">
             <label htmlFor="fullName">Full Name</label>
@@ -73,10 +154,16 @@ export default function SignupPage() {
               type="text" 
               placeholder="John Doe" 
               value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              onChange={(e) => {
+                setFullName(e.target.value);
+                if (localError) setLocalError("");
+              }}
+              isInvalid={!!localError && !fullName.trim()}
+              color={localError && !fullName.trim() ? "danger" : "default"}
               required 
             />
           </div>
+          
           <div className="grid gap-2">
             <label htmlFor="email">Email</label>
             <Input 
@@ -84,10 +171,16 @@ export default function SignupPage() {
               type="email" 
               placeholder="name@example.com" 
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (localError) setLocalError("");
+              }}
+              isInvalid={!!localError && (!email.trim() || !isValidEmail(email))}
+              color={localError && (!email.trim() || !isValidEmail(email)) ? "danger" : "default"}
               required 
             />
           </div>
+          
           <div className="grid gap-2">
             <label htmlFor="username">Username</label>
             <Input 
@@ -95,51 +188,86 @@ export default function SignupPage() {
               type="text" 
               placeholder="johndoe" 
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                if (localError) setLocalError("");
+              }}
+              isInvalid={!!localError && (!username.trim() || username.length < 3)}
+              color={localError && (!username.trim() || username.length < 3) ? "danger" : "default"}
               required 
             />
           </div>
+          
           <div className="grid gap-2">
             <label htmlFor="password">Password</label>
             <Input 
               id="password" 
               type="password" 
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (localError) setLocalError("");
+              }}
+              isInvalid={!!localError && (!password || !isStrongPassword(password))}
+              color={localError && (!password || !isStrongPassword(password)) ? "danger" : "default"}
               required 
             />
+            {password && !isStrongPassword(password) && (
+              <p className="text-xs text-amber-600">Password must be at least 8 characters long</p>
+            )}
           </div>
+          
           <div className="grid gap-2">
             <label htmlFor="confirm-password">Confirm Password</label>
             <Input 
               id="confirm-password" 
               type="password" 
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                if (localError) setLocalError("");
+              }}
+              isInvalid={!!localError && password !== confirmPassword && confirmPassword !== ""}
+              color={localError && password !== confirmPassword && confirmPassword !== "" ? "danger" : "default"}
               required 
             />
+            {password && confirmPassword && password !== confirmPassword && (
+              <p className="text-xs text-amber-600">Passwords do not match</p>
+            )}
           </div>
+          
           <div className="flex items-center space-x-2">
             <Checkbox 
               id="terms" 
               isSelected={acceptTerms} 
-              onValueChange={setAcceptTerms} 
+              onValueChange={(value) => {
+                setAcceptTerms(value);
+                if (localError) setLocalError("");
+              }}
+              isInvalid={!!localError && !acceptTerms}
+              color={localError && !acceptTerms ? "danger" : "default"}
             />
             <label htmlFor="terms" className="text-sm font-normal">
               I agree to the{" "}
-              <Link href="#" className="text-primary underline-offset-4 hover:underline">
+              <Link href="/terms" className="text-primary underline-offset-4 hover:underline">
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="#" className="text-primary underline-offset-4 hover:underline">
+              <Link href="/privacy-policy" className="text-primary underline-offset-4 hover:underline">
                 Privacy Policy
               </Link>
             </label>
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          
+          <Button 
+            type="submit" 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+            disabled={isLoading}
+          >
             {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
         </form>
+        
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />
@@ -148,6 +276,7 @@ export default function SignupPage() {
             <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
           </div>
         </div>
+        
         <div className="grid grid-cols-2 gap-4">
           <Button variant="bordered">
             <svg
@@ -184,6 +313,7 @@ export default function SignupPage() {
             Facebook
           </Button>
         </div>
+        
         <div className="text-center text-sm">
           Already have an account?{" "}
           <Link href="/login" className="text-primary underline-offset-4 hover:underline">
