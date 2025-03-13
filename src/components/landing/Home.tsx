@@ -1,55 +1,175 @@
 import { Button } from "@nextui-org/react"
 import { Zap, BarChart2, MousePointer } from "lucide-react"
+import { 
+  MotionDiv, 
+  MotionSection, 
+  MotionH1, 
+  MotionH2, 
+  MotionH3, 
+  MotionP 
+} from "@/components/ui/motion"
 
 export default function Home() {
+  // Animation variants
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.6 }
+    }
+  }
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
+  }
+
+  const itemFadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  }
+
+  const scaleOnHover = {
+    hover: { scale: 1.05, transition: { duration: 0.3 } }
+  }
+
   return (
     <main className="flex min-h-screen flex-col">
       {/* Hero Section */}
-      <section className="py-16 md:py-24">
+      <MotionSection 
+        className="py-16 md:py-24"
+        initial="hidden"
+        animate="visible"
+        variants={fadeIn}
+      >
         <div className="mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <MotionH1 
+            className="text-4xl md:text-5xl font-bold mb-4"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+          >
             Algorithmic Trading <br /> Made Simple
-          </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto mb-8">
+          </MotionH1>
+          <MotionP 
+            className="text-gray-600 max-w-2xl mx-auto mb-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+          >
             Leverage advanced trading algorithms and copy successful strategies with our automated trading platform.
             Start maximizing your returns today.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button className="bg-black hover:bg-gray-800 text-white">Start Copy Trading</Button>
-            <Button variant="bordered">Browse Strategies</Button>
-          </div>
+          </MotionP>
+          <MotionDiv 
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <MotionDiv whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button className="bg-black hover:bg-gray-800 text-white">Start Copy Trading</Button>
+            </MotionDiv>
+            <MotionDiv whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button variant="bordered">Browse Strategies</Button>
+            </MotionDiv>
+          </MotionDiv>
         </div>
-      </section>
+      </MotionSection>
 
       {/* Stats Section */}
-      <section className="py-16 container mx-auto px-4">
+      <MotionSection 
+        className="py-16 container mx-auto px-4"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={staggerContainer}
+      >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          <div>
-            <h2 className="text-3xl font-bold">$2.5B+</h2>
+          <MotionDiv variants={itemFadeIn}>
+            <MotionH2 
+              className="text-3xl font-bold"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              $2.5B+
+            </MotionH2>
             <p className="text-gray-500">Trading Volume</p>
-          </div>
-          <div>
-            <h2 className="text-3xl font-bold">50K+</h2>
+          </MotionDiv>
+          <MotionDiv variants={itemFadeIn}>
+            <MotionH2 
+              className="text-3xl font-bold"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              50K+
+            </MotionH2>
             <p className="text-gray-500">Active Traders</p>
-          </div>
-          <div>
-            <h2 className="text-3xl font-bold">99.9%</h2>
+          </MotionDiv>
+          <MotionDiv variants={itemFadeIn}>
+            <MotionH2 
+              className="text-3xl font-bold"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              viewport={{ once: true }}
+            >
+              99.9%
+            </MotionH2>
             <p className="text-gray-500">Uptime</p>
-          </div>
+          </MotionDiv>
         </div>
-      </section>
+      </MotionSection>
 
       {/* Trading Solutions Section */}
-      <section className="py-16 bg-white">
+      <MotionSection 
+        className="py-16 bg-white"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={fadeIn}
+      >
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-2">Our Trading Solutions</h2>
-          <p className="text-gray-600 text-center mb-12">
+          <MotionH2 
+            className="text-3xl font-bold text-center mb-2"
+            variants={itemFadeIn}
+          >
+            Our Trading Solutions
+          </MotionH2>
+          <MotionP 
+            className="text-gray-600 text-center mb-12"
+            variants={itemFadeIn}
+          >
             Choose from our range of professional trading tools and services
-          </p>
+          </MotionP>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <MotionDiv 
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.1 }}
+          >
             {/* TradingView Integration */}
-            <div className="border rounded-lg p-6 flex flex-col">
+            <MotionDiv 
+              className="border rounded-lg p-6 flex flex-col"
+              variants={itemFadeIn}
+              whileHover={{ y: -10, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+              transition={{ duration: 0.3 }}
+            >
               <h3 className="text-xl font-bold mb-2">TradingView Integration</h3>
               <p className="text-sm text-gray-600 mb-4">
                 Seamlessly connect your TradingView charts and execute trades directly from the platform.
@@ -107,11 +227,18 @@ export default function Home() {
                   24/7 support
                 </li>
               </ul>
-              <Button className="w-full bg-black hover:bg-gray-800 text-white">Get Started</Button>
-            </div>
+              <MotionDiv whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button className="w-full bg-black hover:bg-gray-800 text-white">Get Started</Button>
+              </MotionDiv>
+            </MotionDiv>
 
             {/* Pine Script Strategies */}
-            <div className="border rounded-lg p-6 flex flex-col">
+            <MotionDiv 
+              className="border rounded-lg p-6 flex flex-col"
+              variants={itemFadeIn}
+              whileHover={{ y: -10, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+              transition={{ duration: 0.3 }}
+            >
               <h3 className="text-xl font-bold mb-2">Pine Script Strategies</h3>
               <p className="text-sm text-gray-600 mb-4">
                 Create a library of custom trading strategies or create your own using Pine Script.
@@ -169,11 +296,18 @@ export default function Home() {
                   Strategy optimization
                 </li>
               </ul>
-              <Button className="w-full bg-black hover:bg-gray-800 text-white">Get Started</Button>
-            </div>
+              <MotionDiv whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button className="w-full bg-black hover:bg-gray-800 text-white">Get Started</Button>
+              </MotionDiv>
+            </MotionDiv>
 
             {/* MQL Solutions */}
-            <div className="border rounded-lg p-6 flex flex-col">
+            <MotionDiv 
+              className="border rounded-lg p-6 flex flex-col"
+              variants={itemFadeIn}
+              whileHover={{ y: -10, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+              transition={{ duration: 0.3 }}
+            >
               <h3 className="text-xl font-bold mb-2">MQL Solutions</h3>
               <p className="text-sm text-gray-600 mb-4">
                 Professional MetaTrader integration with custom MQL4/5 expert advisors and indicators.
@@ -231,91 +365,201 @@ export default function Home() {
                   Priority support
                 </li>
               </ul>
-              <Button className="w-full bg-black hover:bg-gray-800 text-white">Get Started</Button>
-            </div>
-          </div>
+              <MotionDiv whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button className="w-full bg-black hover:bg-gray-800 text-white">Get Started</Button>
+              </MotionDiv>
+            </MotionDiv>
+          </MotionDiv>
         </div>
-      </section>
+      </MotionSection>
 
       {/* Features Section */}
-      <section className="py-16 bg-gray-100">
+      <MotionSection 
+        className="py-16 bg-gray-100"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={fadeIn}
+      >
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-2">Powerful Trading Features</h2>
-          <p className="text-gray-600 text-center mb-12">
+          <MotionH2 
+            className="text-3xl font-bold text-center mb-2"
+            variants={itemFadeIn}
+          >
+            Powerful Trading Features
+          </MotionH2>
+          <MotionP 
+            className="text-gray-600 text-center mb-12"
+            variants={itemFadeIn}
+          >
             Experience the next generation of algorithmic trading with our cutting-edge features
-          </p>
+          </MotionP>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="flex justify-center mb-4">
+          <MotionDiv 
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            variants={staggerContainer}
+          >
+            <MotionDiv 
+              className="text-center"
+              variants={itemFadeIn}
+              whileHover={{ scale: 1.05 }}
+            >
+              <MotionDiv 
+                className="flex justify-center mb-4"
+                whileHover={{ rotate: 5 }}
+              >
                 <div className="p-4 rounded-full bg-white inline-block">
                   <MousePointer className="h-8 w-8 text-black" />
                 </div>
-              </div>
+              </MotionDiv>
               <h3 className="text-xl font-bold mb-2">One-Click Trading</h3>
               <p className="text-gray-600">
                 Execute trades instantly with our streamlined one-click trading interface. No more complex order forms.
               </p>
-            </div>
+            </MotionDiv>
 
-            <div className="text-center">
-              <div className="flex justify-center mb-4">
+            <MotionDiv 
+              className="text-center"
+              variants={itemFadeIn}
+              whileHover={{ scale: 1.05 }}
+            >
+              <MotionDiv 
+                className="flex justify-center mb-4"
+                whileHover={{ rotate: 5 }}
+              >
                 <div className="p-4 rounded-full bg-white inline-block">
                   <BarChart2 className="h-8 w-8 text-black" />
                 </div>
-              </div>
+              </MotionDiv>
               <h3 className="text-xl font-bold mb-2">Real-Time Metrics</h3>
               <p className="text-gray-600">
                 Monitor your trading performance with live updates on key metrics, P&L, and portfolio analytics.
               </p>
-            </div>
+            </MotionDiv>
 
-            <div className="text-center">
-              <div className="flex justify-center mb-4">
+            <MotionDiv 
+              className="text-center"
+              variants={itemFadeIn}
+              whileHover={{ scale: 1.05 }}
+            >
+              <MotionDiv 
+                className="flex justify-center mb-4"
+                whileHover={{ rotate: 5 }}
+              >
                 <div className="p-4 rounded-full bg-white inline-block">
                   <Zap className="h-8 w-8 text-black" />
                 </div>
-              </div>
+              </MotionDiv>
               <h3 className="text-xl font-bold mb-2">Lightning Fast Execution</h3>
               <p className="text-gray-600">
                 Experience ultra-low latency trade execution with our optimized trading infrastructure.
               </p>
-            </div>
-          </div>
+            </MotionDiv>
+          </MotionDiv>
 
-          <div className="text-center mt-12">
-            <Button className="bg-black hover:bg-gray-800 text-white">Explore All Features</Button>
-          </div>
+          <MotionDiv 
+            className="text-center mt-12"
+            variants={itemFadeIn}
+          >
+            <MotionDiv whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button className="bg-black hover:bg-gray-800 text-white">Explore All Features</Button>
+            </MotionDiv>
+          </MotionDiv>
         </div>
-      </section>
+      </MotionSection>
 
       {/* Trusted Section */}
-      <section className="py-16">
+      <MotionSection 
+        className="py-16"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={fadeIn}
+      >
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-2">Trusted by Traders Worldwide</h2>
-          <p className="text-gray-600 text-center mb-12">Join thousands of successful traders using AlgoZ</p>
+          <MotionH2 
+            className="text-3xl font-bold text-center mb-2"
+            variants={itemFadeIn}
+          >
+            Trusted by Traders Worldwide
+          </MotionH2>
+          <MotionP 
+            className="text-gray-600 text-center mb-12"
+            variants={itemFadeIn}
+          >
+            Join thousands of successful traders using AlgoZ
+          </MotionP>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <div className="text-center">
-              <h3 className="text-3xl font-bold">$2.5B+</h3>
+          <MotionDiv 
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
+            variants={staggerContainer}
+          >
+            <MotionDiv 
+              className="text-center"
+              variants={itemFadeIn}
+              whileHover={{ y: -5 }}
+            >
+              <MotionH3 
+                className="text-3xl font-bold"
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
+              >
+                $2.5B+
+              </MotionH3>
               <p className="text-gray-500">Total Trading Volume</p>
               <p className="text-xs text-gray-400">Processed in 2023</p>
-            </div>
-            <div className="text-center">
-              <h3 className="text-3xl font-bold">50,000+</h3>
+            </MotionDiv>
+            <MotionDiv 
+              className="text-center"
+              variants={itemFadeIn}
+              whileHover={{ y: -5 }}
+            >
+              <MotionH3 
+                className="text-3xl font-bold"
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                viewport={{ once: true }}
+              >
+                50,000+
+              </MotionH3>
               <p className="text-gray-500">Active Traders</p>
               <p className="text-xs text-gray-400">Worldwide</p>
-            </div>
-            <div className="text-center">
-              <h3 className="text-3xl font-bold">94%</h3>
+            </MotionDiv>
+            <MotionDiv 
+              className="text-center"
+              variants={itemFadeIn}
+              whileHover={{ y: -5 }}
+            >
+              <MotionH3 
+                className="text-3xl font-bold"
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                viewport={{ once: true }}
+              >
+                94%
+              </MotionH3>
               <p className="text-gray-500">Success Rate</p>
               <p className="text-xs text-gray-400">Profitable strategies</p>
-            </div>
-          </div>
+            </MotionDiv>
+          </MotionDiv>
 
           {/* Testimonials */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="border rounded-lg p-6">
+          <MotionDiv 
+            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+            variants={staggerContainer}
+          >
+            <MotionDiv 
+              className="border rounded-lg p-6"
+              variants={itemFadeIn}
+              whileHover={{ 
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+                y: -5
+              }}
+            >
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
                   <span className="text-blue-500 font-bold">SC</span>
@@ -341,9 +585,16 @@ export default function Home() {
               <p className="text-gray-600">
                 AlgoZ has transformed our trading strategy. The automation tools are incredibly powerful and reliable.
               </p>
-            </div>
+            </MotionDiv>
 
-            <div className="border rounded-lg p-6">
+            <MotionDiv 
+              className="border rounded-lg p-6"
+              variants={itemFadeIn}
+              whileHover={{ 
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+                y: -5
+              }}
+            >
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
                   <span className="text-red-500 font-bold">MR</span>
@@ -369,12 +620,32 @@ export default function Home() {
               <p className="text-gray-600">
                 The platform's ease of use and advanced features make it my go-to choice for algorithmic trading.
               </p>
-            </div>
-          </div>
+            </MotionDiv>
+          </MotionDiv>
         </div>
-      </section>
+      </MotionSection>
 
-      
+      {/* Add a floating animation element for visual interest */}
+      <MotionDiv
+        className="fixed bottom-10 right-10 w-16 h-16 bg-black rounded-full flex items-center justify-center z-50 cursor-pointer"
+        animate={{ 
+          y: [0, -10, 0],
+          boxShadow: [
+            "0 0 0 rgba(0, 0, 0, 0.2)",
+            "0 10px 20px rgba(0, 0, 0, 0.2)",
+            "0 0 0 rgba(0, 0, 0, 0.2)"
+          ]
+        }}
+        transition={{ 
+          duration: 2, 
+          repeat: Infinity,
+          repeatType: "reverse"
+        }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+      >
+        <Zap className="h-8 w-8 text-white" />
+      </MotionDiv>
     </main>
   )
 }
