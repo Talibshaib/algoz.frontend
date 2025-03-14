@@ -8,9 +8,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useAdminAuth } from "@/contexts/AdminAuthContext"
 import { useRouter } from "next/navigation"
 import { MotionDiv } from "@/components/ui/motion"
-import { API_URL } from "@/constants/URI"
-import { ManualConnectionForm } from "@/components/ui/ManualConnectionForm"
-import { checkAPIHealth } from "@/services/healthCheck"
+import { API_URL, getApiUrl } from "@/constants/URI"
 import { toast } from "sonner"
 
 export default function LoginPage() {
@@ -45,8 +43,17 @@ export default function LoginPage() {
     const checkServerStatus = async () => {
       setIsCheckingServer(true);
       try {
-        const { isOnline } = await checkAPIHealth(true);
-        setServerStatus(isOnline ? "online" : "offline");
+        // Check if the server is reachable
+        const response = await fetch(`${API_URL}/health`, {
+          method: 'HEAD',
+          cache: 'no-store',
+        }).catch(() => null);
+        
+        if (response && response.ok) {
+          setServerStatus("online");
+        } else {
+          setServerStatus("offline");
+        }
       } catch (error) {
         console.error("Server status check failed:", error);
         setServerStatus("offline");
@@ -80,7 +87,7 @@ export default function LoginPage() {
     
     // Check server status first
     if (serverStatus === "offline") {
-      setLocalError("The server appears to be offline. Please try again later or use the manual connection option below.");
+      setLocalError("The server appears to be offline. Please try again later.");
       return;
     }
     
@@ -94,14 +101,12 @@ export default function LoginPage() {
     try {
       if (isAdminLogin) {
         // Admin login
-        console.log("Attempting admin login with:", emailOrUsername);
         const adminSuccess = await adminLogin(emailOrUsername, password);
         if (!adminSuccess) {
           setLocalError(adminAuthError || "Invalid admin credentials");
         }
       } else {
         // Regular user login
-        console.log("Attempting user login with:", emailOrUsername);
         const success = await login(emailOrUsername, password);
         if (!success) {
           setLocalError(authError || "Invalid username/email or password");
@@ -112,7 +117,7 @@ export default function LoginPage() {
       
       // Handle network errors specifically
       if (err.code === "ERR_NETWORK" || err.code === "ERR_NAME_NOT_RESOLVED") {
-        setLocalError("Unable to connect to the server. Please check your internet connection and try again, or use the manual connection option below.");
+        setLocalError("Unable to connect to the server. Please check your internet connection and try again.");
         setServerStatus("offline");
       } else if (err.userFriendlyMessage) {
         // Use the user-friendly message if available
@@ -134,31 +139,27 @@ export default function LoginPage() {
     setLocalError("");
     
     try {
-      const { isOnline } = await checkAPIHealth(true);
-      setServerStatus(isOnline ? "online" : "offline");
+      // Check if the server is reachable
+      const response = await fetch(`${API_URL}/health`, {
+        method: 'HEAD',
+        cache: 'no-store',
+      }).catch(() => null);
       
-      if (isOnline) {
+      if (response && response.ok) {
+        setServerStatus("online");
         toast.success("Successfully connected to server");
         setLocalError("");
       } else {
-        setLocalError("Still unable to connect to the server. The service might be temporarily unavailable or you may be experiencing DNS resolution issues.");
+        setServerStatus("offline");
+        setLocalError("Still unable to connect to the server. The service might be temporarily unavailable.");
       }
     } catch (error) {
       console.error("Server retry failed:", error);
       setServerStatus("offline");
-      setLocalError("Still unable to connect to the server. Try using the manual connection option below.");
+      setLocalError("Still unable to connect to the server. Please try again later.");
     } finally {
       setIsCheckingServer(false);
     }
-  };
-  
-  // Handle successful manual connection
-  const handleManualConnectionSuccess = () => {
-    setServerStatus("online");
-    setLocalError("");
-    toast.success("Manual connection successful", {
-      description: "You can now log in to your account"
-    });
   };
   
   return (
@@ -180,7 +181,6 @@ export default function LoginPage() {
             <ul className="list-disc pl-5 mb-3 space-y-1">
               <li>Temporary server maintenance</li>
               <li>Network connectivity issues</li>
-              <li>DNS resolution problems</li>
             </ul>
             <div className="flex flex-wrap gap-2">
               <Button 
@@ -191,15 +191,6 @@ export default function LoginPage() {
               >
                 {isCheckingServer ? "Checking..." : "Retry Connection"}
               </Button>
-              <Link href="/help/dns-issues">
-                <Button 
-                  size="sm"
-                  variant="flat"
-                  className="bg-white text-amber-700 border border-amber-300"
-                >
-                  Connection Troubleshooting
-                </Button>
-              </Link>
             </div>
           </MotionDiv>
         )}
@@ -249,47 +240,36 @@ export default function LoginPage() {
               }}
               isInvalid={!!localError && !password}
               color={localError && !password ? "danger" : "default"}
-              required 
+              required
               disabled={serverStatus === "offline" || isCheckingServer}
             />
           </div>
-          
           <div className="flex items-center space-x-2">
             <Checkbox 
               id="adminLogin" 
-              isSelected={isAdminLogin}
+              isSelected={isAdminLogin} 
               onValueChange={setIsAdminLogin}
               disabled={serverStatus === "offline" || isCheckingServer}
-            />
-            <label htmlFor="adminLogin" className="text-sm font-normal">
+            >
               Login as Admin
-            </label>
+            </Checkbox>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="remember" 
-              disabled={serverStatus === "offline" || isCheckingServer}
-            />
-            <label htmlFor="remember" className="text-sm font-normal">
-              Remember me for 30 days
-            </label>
-          </div>
-          
           <Button 
             type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+            color="primary" 
+            className="w-full"
+            isLoading={isLoading}
             disabled={isLoading || serverStatus === "offline" || isCheckingServer}
           >
-            {isLoading ? "Logging in..." : isCheckingServer ? "Checking server..." : isAdminLogin ? "Login as Admin" : "Login"}
+            {isLoading ? "Logging in..." : "Login"}
           </Button>
         </form>
-        
-        {/* Manual Connection Form for DNS resolution issues */}
-        {serverStatus === "offline" && (
-          <ManualConnectionForm onConnectionSuccess={handleManualConnectionSuccess} />
-        )}
-        
+        <div className="mt-4 text-center text-sm">
+          Don't have an account?{" "}
+          <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
+            Sign up
+          </Link>
+        </div>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />
@@ -298,58 +278,22 @@ export default function LoginPage() {
             <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
           </div>
         </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <Button 
-            variant="bordered"
-            disabled={serverStatus === "offline" || isCheckingServer}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="mr-2"
-            >
-              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button className="w-full" variant="bordered">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="mr-2" viewBox="0 0 16 16">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
             </svg>
             GitHub
           </Button>
-          <Button 
-            variant="bordered"
-            disabled={serverStatus === "offline" || isCheckingServer}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="mr-2"
-            >
-              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+          <Button className="w-full" variant="bordered">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="mr-2" viewBox="0 0 16 16">
+              <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
             </svg>
             Facebook
           </Button>
         </div>
-        
-        <div className="text-center text-sm">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
-            Sign up
-          </Link>
-        </div>
       </div>
     </div>
-  )
+  );
 }
 

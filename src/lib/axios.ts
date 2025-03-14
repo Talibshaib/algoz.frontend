@@ -1,6 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { API_URL } from '@/constants/URI';
-import { getWorkingEndpoint, checkAPIHealth } from '@/services/healthCheck';
+import { API_URL, getApiUrl, setApiUrl } from '@/constants/URI';
 
 // Define a custom error interface that includes the 'code' property
 interface NetworkError extends Error {
@@ -13,7 +12,7 @@ interface NetworkError extends Error {
 
 // Create an axios instance with default config
 const axiosInstance = axios.create({
-  baseURL: API_URL,
+  baseURL: getApiUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -41,17 +40,8 @@ axiosInstance.interceptors.request.use(
       config.headers["X-Request-ID"] = requestId;
     }
     
-    // Always use the most up-to-date working endpoint
-    try {
-      const workingEndpoint = getWorkingEndpoint();
-      if (workingEndpoint && workingEndpoint !== API_URL) {
-        // Use the working endpoint for this request
-        const url = new URL(config.url || "", API_URL);
-        config.url = `${workingEndpoint}${url.pathname}${url.search}`;
-      }
-    } catch (error) {
-      console.error("Failed to get working endpoint:", error);
-    }
+    // Always use the most up-to-date API URL
+    config.baseURL = getApiUrl();
     
     // Get tokens from localStorage
     let token = null;
@@ -120,7 +110,7 @@ axiosInstance.interceptors.response.use(
         error.message.includes("timeout")) {
       
       // Check if we should retry
-      if (requestId && retryCount.has(requestId)) {
+      if (requestId && retryCount.has(requestId) && error.config) {
         const currentRetryCount = retryCount.get(requestId);
         
         if (currentRetryCount < MAX_RETRIES) {
@@ -129,12 +119,8 @@ axiosInstance.interceptors.response.use(
           
           // Exponential backoff delay
           const delayTime = Math.pow(2, currentRetryCount) * 1000;
-          console.log(`Retrying request (${currentRetryCount + 1}/${MAX_RETRIES}) after ${delayTime}ms delay...`);
           
           await delay(delayTime);
-          
-          // Force a health check before retrying to get the latest working endpoint
-          await checkAPIHealth(true);
           
           // Retry the request
           return axiosInstance(error.config);
@@ -150,7 +136,7 @@ axiosInstance.interceptors.response.use(
       let userFriendlyMessage = "";
       
       if (error.code === "ERR_NAME_NOT_RESOLVED") {
-        userFriendlyMessage = "Unable to connect to the server. This might be a DNS resolution issue. Please try using the manual connection option.";
+        userFriendlyMessage = "Unable to connect to the server. Please check your internet connection and try again.";
       } else if (error.code === "ERR_NETWORK") {
         userFriendlyMessage = "Network error. Please check your internet connection and try again.";
       } else if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
@@ -178,15 +164,17 @@ axiosInstance.interceptors.response.use(
       
       // Handle authentication errors
       if (status === 401) {
-        // Token might be expired, could implement token refresh here
-        console.log("Authentication error - token may be expired");
         error.userFriendlyMessage = "Your session has expired. Please log in again.";
       }
       
       // Handle server errors
       if (status >= 500) {
-        console.error("Server error:", error.response.data);
         error.userFriendlyMessage = "Server error. Please try again later.";
+      }
+      
+      // Handle 404 errors
+      if (status === 404) {
+        error.userFriendlyMessage = "The requested resource was not found. Please check the URL and try again.";
       }
     }
     
