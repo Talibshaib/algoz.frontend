@@ -12,12 +12,11 @@ interface NetworkError extends Error {
 
 // Create an axios instance with default config
 const axiosInstance = axios.create({
-  baseURL: getApiUrl(),
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://algoz-backend-68rt.onrender.com/api/v1",
+  timeout: 15000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
-  withCredentials: true, // Important for cookies
-  timeout: 15000, // 15 second timeout
 });
 
 // Helper function to delay execution
@@ -26,6 +25,115 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // Track retry attempts for each request
 const retryCount = new Map();
 const MAX_RETRIES = 2;
+
+// Flag to prevent multiple simultaneous token refreshes
+let isRefreshing = false;
+// Queue of callbacks to be executed after token refresh
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+// Function to add callback to the queue
+const subscribeTokenRefresh = (callback: (token: string) => void) => {
+  refreshSubscribers.push(callback);
+};
+
+// Function to execute all callbacks with new token
+const onTokenRefreshed = (token: string) => {
+  refreshSubscribers.forEach(callback => callback(token));
+  refreshSubscribers = [];
+};
+
+// Function to refresh the token
+const refreshToken = async (): Promise<string | null> => {
+  try {
+    // Check for user token
+    let refreshToken = null;
+    let isAdmin = false;
+    
+    if (typeof window !== 'undefined') {
+      // Try user refresh token first
+      const user = sessionStorage.getItem('user');
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          if (userData.refreshToken) {
+            refreshToken = userData.refreshToken;
+          }
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+        }
+      }
+      
+      // If no user refresh token, try admin refresh token
+      if (!refreshToken) {
+        const admin = sessionStorage.getItem('adminUser');
+        if (admin) {
+          try {
+            const adminData = JSON.parse(admin);
+            if (adminData.refreshToken) {
+              refreshToken = adminData.refreshToken;
+              isAdmin = true;
+            }
+          } catch (error) {
+            console.error("Error parsing admin data:", error);
+          }
+        }
+      }
+    }
+    
+    if (!refreshToken) {
+      return null;
+    }
+    
+    // Make refresh token request
+    const endpoint = isAdmin ? '/admin/refresh-token' : '/users/refresh-token';
+    const response = await axios.post(`${getApiUrl()}${endpoint}`, { refreshToken });
+    
+    if (response.status === 200 && response.data.data && response.data.data.accessToken) {
+      const newToken = response.data.data.accessToken;
+      const newRefreshToken = response.data.data.refreshToken || refreshToken;
+      
+      // Update token in storage
+      if (typeof window !== 'undefined') {
+        if (isAdmin) {
+          const admin = sessionStorage.getItem('adminUser');
+          if (admin) {
+            try {
+              const adminData = JSON.parse(admin);
+              adminData.accessToken = newToken;
+              adminData.refreshToken = newRefreshToken;
+              adminData.loginTimestamp = Date.now();
+              adminData.tokenExpiry = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+              sessionStorage.setItem('adminUser', JSON.stringify(adminData));
+            } catch (error) {
+              console.error("Error updating admin token:", error);
+            }
+          }
+        } else {
+          const user = sessionStorage.getItem('user');
+          if (user) {
+            try {
+              const userData = JSON.parse(user);
+              userData.accessToken = newToken;
+              userData.refreshToken = newRefreshToken;
+              userData.loginTimestamp = Date.now();
+              userData.tokenExpiry = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+              sessionStorage.setItem('user', JSON.stringify(userData));
+            } catch (error) {
+              console.error("Error updating user token:", error);
+            }
+          }
+        }
+      }
+      
+      return newToken;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error refreshing token:", error);
+    return null;
+  }
+};
 
 // Request interceptor
 axiosInstance.interceptors.request.use(
@@ -43,12 +151,12 @@ axiosInstance.interceptors.request.use(
     // Always use the most up-to-date API URL
     config.baseURL = getApiUrl();
     
-    // Get tokens from localStorage
+    // Get tokens from sessionStorage
     let token = null;
     
     if (typeof window !== 'undefined') {
       // Check for user token
-      const user = localStorage.getItem('user');
+      const user = sessionStorage.getItem('user');
       if (user) {
         try {
           const userData = JSON.parse(user);
@@ -62,7 +170,7 @@ axiosInstance.interceptors.request.use(
       
       // If no user token, check for admin token
       if (!token) {
-        const admin = localStorage.getItem('adminUser');
+        const admin = sessionStorage.getItem('adminUser');
         if (admin) {
           try {
             const adminData = JSON.parse(admin);
@@ -97,95 +205,82 @@ axiosInstance.interceptors.response.use(
       retryCount.delete(requestId);
     }
     
-    // If this was a successful request, save the working API URL
-    if (response.config.baseURL) {
-      setApiUrl(response.config.baseURL);
+    // If this response is from a working endpoint, store it
+    if (typeof window !== 'undefined' && response.config.baseURL) {
+      sessionStorage.setItem('workingApiEndpoint', response.config.baseURL);
     }
     
     return response;
   },
-  async (error: AxiosError & NetworkError) => {
-    // Get the request ID from the config
-    const requestId = error.config?.headers?.["X-Request-ID"];
+  async (error) => {
+    const originalRequest = error.config;
+    const requestId = originalRequest?.headers?.["X-Request-ID"];
     
-    // Handle network errors and retry logic
-    if (error.code === "ERR_NETWORK" || 
-        error.code === "ECONNABORTED" || 
-        error.code === "ERR_NAME_NOT_RESOLVED" ||
-        error.message.includes("Network Error") ||
-        error.message.includes("timeout")) {
-      
-      // Check if we should retry
-      if (requestId && retryCount.has(requestId) && error.config) {
-        const currentRetryCount = retryCount.get(requestId);
+    // Handle token expiration (401 errors)
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // Prevent multiple simultaneous token refreshes
+      if (!isRefreshing) {
+        isRefreshing = true;
         
-        if (currentRetryCount < MAX_RETRIES) {
-          // Increment retry count
-          retryCount.set(requestId, currentRetryCount + 1);
+        const newToken = await refreshToken();
+        
+        isRefreshing = false;
+        
+        if (newToken) {
+          // Update the original request with the new token
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          originalRequest._retry = true;
           
-          // Exponential backoff delay
-          const delayTime = Math.pow(2, currentRetryCount) * 1000;
+          // Notify all waiting requests that token has been refreshed
+          onTokenRefreshed(newToken);
           
-          await delay(delayTime);
+          // Retry the original request
+          return axiosInstance(originalRequest);
+        } else {
+          // If refresh failed, clear auth data
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('user');
+            sessionStorage.removeItem('adminUser');
+          }
           
-          // Retry the request
-          return axiosInstance(error.config);
+          // Redirect to login page if in browser
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
         }
-      }
-      
-      // Clean up retry count if we're not retrying
-      if (requestId) {
-        retryCount.delete(requestId);
-      }
-      
-      // Provide a user-friendly error message
-      let userFriendlyMessage = "";
-      
-      if (error.code === "ERR_NAME_NOT_RESOLVED") {
-        userFriendlyMessage = "Unable to connect to the server. Please check your internet connection and try again.";
-      } else if (error.code === "ERR_NETWORK") {
-        userFriendlyMessage = "Network error. Please check your internet connection and try again.";
-      } else if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
-        userFriendlyMessage = "The server is taking too long to respond. Please try again later.";
       } else {
-        userFriendlyMessage = "Network error. Please check your connection and try again.";
-      }
-      
-      const customError = new Error(userFriendlyMessage) as NetworkError;
-      
-      // Preserve the original error properties
-      customError.name = "NetworkError";
-      customError.code = error.code;
-      customError.config = error.config;
-      customError.request = error.request;
-      customError.userFriendlyMessage = userFriendlyMessage;
-      
-      return Promise.reject(customError);
-    }
-    
-    // Handle other types of errors
-    if (error.response) {
-      // Server responded with a status code outside of 2xx range
-      const status = error.response.status;
-      
-      // Handle authentication errors
-      if (status === 401) {
-        error.userFriendlyMessage = "Your session has expired. Please log in again.";
-      }
-      
-      // Handle server errors
-      if (status >= 500) {
-        error.userFriendlyMessage = "Server error. Please try again later.";
-      }
-      
-      // Handle 404 errors
-      if (status === 404) {
-        error.userFriendlyMessage = "The requested resource was not found. Please check the URL and try again.";
+        // If another request is already refreshing the token, wait for it
+        return new Promise(resolve => {
+          subscribeTokenRefresh(token => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            originalRequest._retry = true;
+            resolve(axiosInstance(originalRequest));
+          });
+        });
       }
     }
     
-    // Clean up retry count
-    if (requestId) {
+    // Handle retry logic for network errors and 5xx server errors
+    if (
+      (error.code === 'ECONNABORTED' || 
+       error.code === 'ERR_NETWORK' || 
+       error.response?.status >= 500) && 
+      requestId
+    ) {
+      const currentRetryCount = retryCount.get(requestId) || 0;
+      
+      if (currentRetryCount < MAX_RETRIES) {
+        retryCount.set(requestId, currentRetryCount + 1);
+        
+        // Exponential backoff
+        const delay = Math.pow(2, currentRetryCount) * 1000;
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        return axiosInstance(originalRequest);
+      }
+      
+      // Clean up retry count if we're not retrying anymore
       retryCount.delete(requestId);
     }
     

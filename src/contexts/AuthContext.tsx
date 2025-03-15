@@ -5,38 +5,44 @@ import { useRouter } from "next/navigation";
 import { API_URL } from "@/constants/URI";
 import axiosInstance, { tryMultipleEndpoints } from "@/lib/axios";
 
-type User = {
+// Define types
+export type User = {
   _id: string;
-  fullName: string;
-  email: string;
   username: string;
-  avatar?: string;
-  coverImage?: string;
-  isAdmin?: boolean;
-  balance?: number;
-  accessToken?: string;
+  email: string;
+  fullName: string;
+  accessToken: string;
   refreshToken?: string;
   loginTimestamp?: number;
+  tokenExpiry?: number;
+  avatar?: string;
+  coverImage?: string;
+  balance?: number;
 } | null;
 
 type AuthContextType = {
   user: User;
   login: (emailOrUsername: string, password: string) => Promise<boolean>;
-  signup: (fullName: string, email: string, username: string, password: string) => Promise<boolean>;
+  signup: (userData: any) => Promise<boolean>;
   logout: () => Promise<boolean>;
   isLoading: boolean;
   error: string;
   clearError: () => void;
   refreshToken: () => Promise<boolean>;
+  isTokenExpired: () => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Token expiration constants
+const TOKEN_EXPIRY_BUFFER = 5 * 60 * 1000; // 5 minutes in milliseconds
+const DEFAULT_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Initialize user state from localStorage if available
+  // Initialize user state from sessionStorage if available (more secure than localStorage)
   const [user, setUser] = useState<User>(() => {
     if (typeof window !== 'undefined') {
-      const savedUser = localStorage.getItem("user");
+      const savedUser = sessionStorage.getItem("user");
       return savedUser ? JSON.parse(savedUser) : null;
     }
     return null;
@@ -48,36 +54,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Function to clear error messages
   const clearError = () => setError("");
 
+  // Function to check if token is expired
+  const isTokenExpired = () => {
+    if (!user) return true;
+    
+    // If we have a tokenExpiry field, use it
+    if (user.tokenExpiry) {
+      return Date.now() >= user.tokenExpiry - TOKEN_EXPIRY_BUFFER;
+    }
+    
+    // Fallback: Check if token is older than the default expiry time
+    if (user.loginTimestamp) {
+      return Date.now() >= user.loginTimestamp + DEFAULT_TOKEN_EXPIRY - TOKEN_EXPIRY_BUFFER;
+    }
+    
+    // If we can't determine, assume it's expired to be safe
+    return true;
+  };
+
   // Check if user is logged in on initial load
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        // Always prioritize the user data from localStorage
-        // This ensures persistent authentication without frequent API checks
-        const savedUser = localStorage.getItem("user");
+        // Always prioritize the user data from sessionStorage
+        const savedUser = sessionStorage.getItem("user");
         if (savedUser) {
           try {
-            // If we have a user in localStorage, keep them logged in
+            // If we have a user in sessionStorage, check token validity
             const parsedUser = JSON.parse(savedUser);
             
             // Ensure the user object has an accessToken
             if (!parsedUser.accessToken) {
               console.error("No access token found in saved user data");
-              localStorage.removeItem("user");
+              sessionStorage.removeItem("user");
               setUser(null);
               setIsLoading(false);
               return;
             }
             
-            setUser(parsedUser);
-            setIsLoading(false);
-            
-            // Perform a background verification without affecting the user experience
-            // This is just to keep the server-side session in sync
-            backgroundVerifyToken();
+            // Check if token is expired based on our local calculation
+            const tokenExpired = isTokenExpired();
+            if (tokenExpired) {
+              console.log("Token appears to be expired, attempting refresh");
+              // Try to refresh the token
+              const refreshed = await refreshTokenInternal();
+              if (!refreshed) {
+                console.log("Token refresh failed, logging out");
+                sessionStorage.removeItem("user");
+                setUser(null);
+                setIsLoading(false);
+                return;
+              }
+            } else {
+              // Token is still valid
+              setUser(parsedUser);
+              setIsLoading(false);
+              
+              // Perform a background verification without affecting the user experience
+              backgroundVerifyToken();
+            }
           } catch (parseError) {
             console.error("Error parsing saved user data:", parseError);
-            localStorage.removeItem("user");
+            sessionStorage.removeItem("user");
             setUser(null);
             setIsLoading(false);
           }
@@ -106,45 +144,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (response.status === 200) {
           // Only update user data if verification succeeds
           const data = response.data;
-          if (data.data && data.data.accessToken) {
-            // Make sure we preserve the access token
+          if (data.data) {
+            // Create a default user object with empty values
+            const defaultUser: User = {
+              _id: "",
+              username: "",
+              email: "",
+              fullName: "",
+              accessToken: "",
+            };
+            
+            // Use the current user data or default values
+            const currentUser = user || defaultUser;
+            
             const updatedUser = {
               ...data.data,
-              accessToken: data.data.accessToken
+              accessToken: currentUser.accessToken,
+              refreshToken: currentUser.refreshToken,
+              loginTimestamp: currentUser.loginTimestamp,
+              tokenExpiry: currentUser.tokenExpiry
             };
             setUser(updatedUser);
-            localStorage.setItem("user", JSON.stringify(updatedUser));
+            sessionStorage.setItem("user", JSON.stringify(updatedUser));
             console.log("User data refreshed successfully");
           } else {
-            console.warn("Token verification succeeded but no token in response");
+            console.warn("Token verification succeeded but no user data in response");
           }
         }
-        // If verification fails, we keep using the localStorage data
-        // Only explicit logout will clear the user session
-      } catch (error) {
+      } catch (error: any) {
         // Silently handle errors in background verification
-        // This ensures the user experience isn't affected by network issues
         console.log("Background verification failed, using cached user data");
+        
+        // If we get a 401/403, the token might be invalid
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          console.log("Token appears to be invalid, attempting refresh");
+          refreshTokenInternal();
+        }
       }
     };
     
     checkAuthStatus();
   }, []);
 
-  // Function to refresh the token
-  const refreshToken = async () => {
+  // Internal function to refresh the token
+  const refreshTokenInternal = async () => {
     try {
-      setIsLoading(true);
+      if (!user || !user.refreshToken) {
+        console.error("No refresh token available");
+        return false;
+      }
       
-      const response = await axiosInstance.get('/users/refresh-token');
+      const response = await axiosInstance.post('/users/refresh-token', {
+        refreshToken: user.refreshToken
+      });
       
-      if (response.status === 200 && response.data.data && response.data.data.accessToken) {
-        // Update user with new token
-        const currentUser = user ? { ...user } : null;
-        if (currentUser) {
-          currentUser.accessToken = response.data.data.accessToken;
-          setUser(currentUser);
-          localStorage.setItem("user", JSON.stringify(currentUser));
+      if (response.status === 200 && response.data.data) {
+        const { accessToken, refreshToken } = response.data.data;
+        
+        if (accessToken) {
+          // Update user with new tokens
+          const updatedUser = { 
+            ...user, 
+            accessToken,
+            refreshToken: refreshToken || user.refreshToken,
+            loginTimestamp: Date.now(),
+            tokenExpiry: Date.now() + DEFAULT_TOKEN_EXPIRY
+          };
+          
+          setUser(updatedUser);
+          sessionStorage.setItem("user", JSON.stringify(updatedUser));
           console.log("Token refreshed successfully");
           return true;
         }
@@ -153,55 +221,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Token refresh failed:", error);
       return false;
+    }
+  };
+
+  // Public function to refresh the token
+  const refreshToken = async () => {
+    setIsLoading(true);
+    try {
+      const result = await refreshTokenInternal();
+      return result;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Login function with improved error handling and network resilience
+  // Function to login
   const login = async (emailOrUsername: string, password: string) => {
-    clearError();
     try {
       setIsLoading(true);
+      setError("");
       
-      // Validate inputs
+      // Validate input
       if (!emailOrUsername || !password) {
         setError("Email/username and password are required");
         return false;
       }
       
       // Determine if input is email or username
-      const isEmail = emailOrUsername.includes("@");
+      const isEmail = emailOrUsername.includes('@');
       
-      // Prepare login payload
-      const loginData = {
-        email: isEmail ? emailOrUsername : undefined,
-        username: !isEmail ? emailOrUsername : undefined,
-        password
-      };
+      // Prepare login data
+      const loginData = isEmail 
+        ? { email: emailOrUsername, password } 
+        : { username: emailOrUsername, password };
       
-      console.log("Attempting login with:", { 
-        ...(isEmail ? { email: emailOrUsername } : { username: emailOrUsername }),
-        password: "********" 
-      });
+      // Make login request
+      const response = await axiosInstance.post('/users/login', loginData);
       
-      // Use the tryMultipleEndpoints function to attempt login on multiple endpoints
-      const response = await tryMultipleEndpoints(async (instance) => {
-        console.log("Trying login with instance baseURL:", instance.defaults.baseURL);
-        return await instance.post('/users/login', loginData);
-      });
-      
-      console.log("Login response status:", response.status);
-      
-      // Check if response has data
-      if (!response.data) {
-        console.error("No data in login response");
-        setError("Server returned an empty response");
-        return false;
-      }
-      
+      // Get response data
       const data = response.data;
-      console.log("Login response data structure:", Object.keys(data));
       
       // Check for success status
       if (response.status === 200 || response.status === 201) {
@@ -231,18 +289,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...data.data.user,
           accessToken: data.data.accessToken,
           refreshToken: data.data.refreshToken, // Store refresh token as well
-          loginTimestamp: Date.now() // Add timestamp for token freshness tracking
+          loginTimestamp: Date.now(), // Add timestamp for token freshness tracking
+          tokenExpiry: Date.now() + DEFAULT_TOKEN_EXPIRY // Calculate token expiry
         };
         
-        // Update state and localStorage
+        // Update state and sessionStorage
         setUser(userData);
         
-        // Store in localStorage with proper error handling
+        // Store in sessionStorage with proper error handling
         try {
-          localStorage.setItem("user", JSON.stringify(userData));
-          console.log("Login successful, user data stored in localStorage");
+          sessionStorage.setItem("user", JSON.stringify(userData));
+          console.log("Login successful, user data stored in sessionStorage");
         } catch (storageError) {
-          console.error("Failed to store user data in localStorage:", storageError);
+          console.error("Failed to store user data in sessionStorage:", storageError);
           // Continue anyway since we have the user in state
         }
         
@@ -256,17 +315,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error("Login error:", error);
       
-      // Provide more specific error messages based on the error type
-      if (error?.code === "ERR_NETWORK" || error?.message?.includes("Network Error")) {
-        setError("Network error. Please check your internet connection and try again.");
-      } else if (error?.code === "ECONNABORTED" || error?.message?.includes("timeout")) {
-        setError("The server is taking too long to respond. Please try again later.");
-      } else if (error?.response?.status === 401) {
-        setError("Invalid username or password. Please try again.");
-      } else if (error?.response?.status === 404) {
-        setError("User not found. Please check your username or email.");
+      // Handle different error scenarios
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        const errorMessage = error.response.data?.message || "Login failed";
+        setError(errorMessage);
+      } else if (error.request) {
+        // The request was made but no response was received
+        setError("No response from server. Please check your internet connection.");
       } else {
-        setError(error?.userFriendlyMessage || error?.response?.data?.message || "Failed to connect to the server. Please try the direct login page.");
+        // Something happened in setting up the request that triggered an Error
+        setError("An error occurred during login. Please try again.");
       }
       
       return false;
@@ -275,76 +335,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Signup function with improved error handling
-  const signup = async (fullName: string, email: string, username: string, password: string) => {
-    clearError();
+  // Function to signup
+  const signup = async (userData: any) => {
     try {
       setIsLoading(true);
+      setError("");
       
-      // Validate inputs
-      if (!fullName || !email || !username || !password) {
+      // Validate required fields
+      if (!userData.username || !userData.email || !userData.password || !userData.fullName) {
         setError("All fields are required");
         return false;
       }
       
-      console.log("Attempting signup with:", { fullName, email, username, password: "********" });
+      // Make signup request
+      const response = await axiosInstance.post('/users/register', userData);
       
-      const formData = new FormData();
-      formData.append("fullName", fullName);
-      formData.append("email", email);
-      formData.append("username", username);
-      formData.append("password", password);
-      
-      // For FormData, we don't need to set Content-Type as axios will set it automatically
-      const response = await axiosInstance.post('/users/register', formData);
-      
-      console.log("Signup response status:", response.status);
-      
-      if (!response.data) {
-        console.error("No data in signup response");
-        setError("Server returned an empty response");
-        return false;
-      }
-      
+      // Get response data
       const data = response.data;
-      console.log("Signup response data:", data);
       
+      // Check for success status
       if (response.status === 200 || response.status === 201) {
-        // Redirect to login page after successful signup
+        // Navigate to login page on successful signup
         router.push("/login");
         return true;
       } else {
-        const errorMessage = data.message || "Registration failed with status " + response.status;
-        console.error("Signup failed:", errorMessage);
-        setError(errorMessage);
+        setError(data.message || "Signup failed");
         return false;
       }
     } catch (error: any) {
       console.error("Signup error:", error);
       
-      // Extract error message from response if available
-      let errorMessage = "An error occurred during registration";
-      
+      // Handle different error scenarios
       if (error.response) {
-        console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
-        
-        if (error.response.data && error.response.data.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.status === 409) {
-          errorMessage = "Email or username already exists";
-        } else if (error.response.status >= 500) {
-          errorMessage = "Server error, please try again later";
-        }
+        const errorMessage = error.response.data?.message || "Signup failed";
+        setError(errorMessage);
       } else if (error.request) {
-        console.error("No response received:", error.request);
-        errorMessage = "No response from server, please check your connection";
+        setError("No response from server. Please check your internet connection.");
       } else {
-        console.error("Error message:", error.message);
-        errorMessage = error.message || "Request failed";
+        setError("An error occurred during signup. Please try again.");
       }
       
-      setError(errorMessage);
       return false;
     } finally {
       setIsLoading(false);
@@ -357,7 +387,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Clear local state before calling the API
       setUser(null);
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
 
       try {
         // Set a timeout for the fetch request
@@ -384,14 +414,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Always clear local state regardless of API response
       setUser(null);
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
       router.push("/");
       return true;
     } catch (error) {
       console.error("Logout error:", error);
       // Even if there's an unexpected error, still clear local state
       setUser(null);
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
       router.push("/");
       return true;
     } finally {
@@ -408,13 +438,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading, 
       error, 
       clearError, 
-      refreshToken 
+      refreshToken,
+      isTokenExpired
     }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
+// Custom hook to use the auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
