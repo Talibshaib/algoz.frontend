@@ -11,13 +11,13 @@ import { HealthCheck } from "@/components/ui/HealthCheck"
 import { Bell, Settings, LogOut, User, Menu } from "lucide-react"
 
 // Import NextUI components
-import { 
-  Button, 
-  Avatar, 
-  Dropdown, 
-  DropdownTrigger, 
-  DropdownMenu, 
-  DropdownItem 
+import {
+  Button,
+  Avatar,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem
 } from "@nextui-org/react"
 
 // Import custom UI components for shadcn
@@ -66,7 +66,7 @@ export function DashboardHeader() {
               <Sidebar className="border-none" />
             </SheetContent>
           </Sheet>
-          
+
           {/* Desktop menu button */}
           <ShadcnButton
             variant="ghost"
@@ -77,87 +77,70 @@ export function DashboardHeader() {
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle Sidebar</span>
           </ShadcnButton>
-          
+
           <Link href="/" className="flex items-center space-x-1 sm:space-x-2 ml-1 sm:ml-2">
             <span className="font-bold text-sm sm:text-base">AlgoZ</span>
           </Link>
         </div>
-
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          {/* Server status indicator */}
-          <div className="hidden md:block">
-            <HealthCheck 
-              compact={true} 
-              onStatusChange={setIsServerOnline}
-              className="mr-2"
-            />
-          </div>
-
-          {/* Notifications */}
-          <Button
-            isIconOnly
-            variant="light"
-            aria-label="Notifications"
-            className="text-gray-600"
-          >
-            <Bell size={20} />
-          </Button>
-
-          <div className="text-right mr-1 sm:mr-2 hidden sm:block">
-            <div className="font-medium text-sm sm:text-base">{user?.fullName || user?.username || "Guest"}</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">
-              Client #{user?._id?.substring(0, 5) || ""}
+        <div className="flex items-center justify-end space-x-2 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* Server status indicator */}
+            <div className="hidden md:block">
+              <HealthCheck
+                compact={true}
+                onStatusChange={setIsServerOnline}
+                className="mr-2"
+              />
             </div>
-          </div>
-          <ShadcnAvatar className="h-8 w-8">
-            {user?.avatar && <AvatarImage src={user.avatar} alt={user.fullName || user.username} />}
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {(user?.fullName || user?.username || "U").charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </ShadcnAvatar>
-        </div>
 
-        {/* User menu */}
-        <div className="flex items-center space-x-4">
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <Button
-                variant="light"
-                className="p-0"
-              >
-                <Avatar
-                  src={user?.avatar || ""}
-                  size="sm"
-                  className="transition-transform"
+            {/* Notifications */}
+            <Button
+              isIconOnly
+              variant="light"
+              aria-label="Notifications"
+              className="text-gray-600"
+            >
+              <Bell size={20} />
+            </Button>
+          </div>
+
+          {/* User menu */}
+          <div className="flex items-center space-x-4">
+            <Dropdown placement="bottom-end">
+              <DropdownTrigger>
+                <Button
+                  variant="light"
+                  className="p-0"
                 >
-                  {user?.fullName?.charAt(0) || "U"}
-                </Avatar>
-                <span className="ml-2 hidden md:inline-block">
-                  {user?.fullName || "User"}
-                </span>
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="User menu actions">
-              <DropdownItem key="profile" startContent={<User size={18} />}>
-                <Link href="/dashboard/profile" className="w-full block">
-                  Profile
-                </Link>
-              </DropdownItem>
-              <DropdownItem key="settings" startContent={<Settings size={18} />}>
-                <Link href="/dashboard/settings" className="w-full block">
-                  Settings
-                </Link>
-              </DropdownItem>
-              <DropdownItem 
-                key="logout" 
-                color="danger" 
-                startContent={<LogOut size={18} />}
-                onClick={handleLogout}
-              >
-                Logout
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+                  <Avatar
+                    src={user?.avatar || ""}
+                    size="sm"
+                    className="transition-transform"
+                  >
+                    {user?.fullName?.charAt(0) || "U"}
+                  </Avatar>
+                  <div className="text-right mr-1 sm:mr-2 hidden sm:block">
+                    <div className="font-medium text-sm sm:text-base">{user?.fullName || user?.username || "Guest"}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      Client #{user?._id?.substring(0, 5) || ""}
+                    </div>
+                  </div>
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="User menu actions">
+                <DropdownItem key="profile" startContent={<User size={18} />}>
+                  <Link href="/dashboard/profile" className="w-full block">
+                    Profile
+                  </Link>
+                </DropdownItem>
+                <DropdownItem key="settings" startContent={<Settings size={18} />}>
+                  <Link href="/dashboard/settings" className="w-full block">
+                    Settings
+                  </Link>
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
         </div>
       </div>
     </header>
