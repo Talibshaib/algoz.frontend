@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { CheckCircle, Search, X } from "lucide-react";
+import { CheckCircle, Search, X, Settings, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
@@ -249,21 +249,23 @@ const brokers = [
 ];
 
 // Create a completely isolated modal component
-const BrokerCredentialsModal = ({ 
-  isOpen, 
-  onClose, 
-  broker, 
-  onSubmit, 
-  isLoading 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  broker: any; 
-  onSubmit: (formData: Record<string, string>) => void; 
+const BrokerCredentialsModal = ({
+  isOpen,
+  onClose,
+  broker,
+  onSubmit,
+  isLoading,
+  savedBrokers
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  broker: any;
+  onSubmit: (formData: Record<string, string>) => void;
   isLoading: boolean;
+  savedBrokers: string[];
 }) => {
   const [formData, setFormData] = useState<Record<string, string>>({});
-  
+
   // Load saved credentials when broker changes
   useEffect(() => {
     if (broker) {
@@ -280,41 +282,46 @@ const BrokerCredentialsModal = ({
       }
     }
   }, [broker]);
-  
+
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
   };
-  
+
   if (!isOpen || !broker) return null;
-  
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div 
+      <div
         className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Connect {broker.name}</h2>
-          <button 
+          <h2 className="text-xl font-semibold">
+            {savedBrokers.includes(broker.id) ? `Update ${broker.name}` : `Connect ${broker.name}`}
+          </h2>
+          <button
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             onClick={onClose}
           >
             <X size={20} />
           </button>
         </div>
-        
+
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Enter your {broker.name} API credentials to connect your account.
+          {savedBrokers.includes(broker.id) 
+            ? `Update your ${broker.name} API credentials.`
+            : `Enter your ${broker.name} API credentials to connect your account.`
+          }
         </p>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {broker.fields.map((field: any) => (
             <div key={field.name} className="space-y-2">
@@ -330,13 +337,16 @@ const BrokerCredentialsModal = ({
               />
             </div>
           ))}
-          
+
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Connecting...' : 'Connect'}
+              {isLoading 
+                ? 'Processing...' 
+                : savedBrokers.includes(broker.id) ? 'Update' : 'Connect'
+              }
             </Button>
           </div>
         </form>
@@ -351,25 +361,30 @@ export default function BrokerAuthPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBroker, setSelectedBroker] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [connectedBrokers, setConnectedBrokers] = useState<string[]>([]);
-  
-  // Load connected brokers on mount
+  const [savedBrokers, setSavedBrokers] = useState<string[]>([]);
+
+  // Load saved brokers on mount
   useEffect(() => {
-    const connected: string[] = [];
+    const saved: string[] = [];
     brokers.forEach(broker => {
       if (localStorage.getItem(`broker_${broker.id}_authenticated`) === 'true') {
-        connected.push(broker.id);
+        saved.push(broker.id);
+        
+        // Initialize active status if not set
+        if (localStorage.getItem(`broker_${broker.id}_active`) === null) {
+          localStorage.setItem(`broker_${broker.id}_active`, 'true');
+        }
       }
     });
-    setConnectedBrokers(connected);
+    setSavedBrokers(saved);
   }, []);
-  
+
   // Filter brokers based on search query
   const filteredBrokers = brokers.filter(broker => 
     broker.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
-  // Handle broker selection
+
+  // Handle broker selection for adding or updating credentials
   const handleBrokerSelect = (brokerId: string) => {
     const broker = brokers.find(b => b.id === brokerId);
     if (broker) {
@@ -380,19 +395,19 @@ export default function BrokerAuthPage() {
       }, 0);
     }
   };
-  
-  // Handle form submission from modal
+
+  // Handle form submission from modal - save or update broker credentials
   const handleFormSubmit = (formData: Record<string, string>) => {
     setIsLoading(true);
     
     try {
-      // Save credentials to localStorage
+      // Save credentials to localStorage (in production, this would be saved to a database)
       localStorage.setItem(`broker_${selectedBroker.id}_credentials`, JSON.stringify(formData));
       localStorage.setItem(`broker_${selectedBroker.id}_authenticated`, 'true');
       
-      // Add the broker to connected brokers if not already connected
-      if (!connectedBrokers.includes(selectedBroker.id)) {
-        setConnectedBrokers(prev => [...prev, selectedBroker.id]);
+      // Add the broker to saved brokers if not already saved
+      if (!savedBrokers.includes(selectedBroker.id)) {
+        setSavedBrokers(prev => [...prev, selectedBroker.id]);
       }
       
       // Close the modal after a short delay
@@ -401,11 +416,35 @@ export default function BrokerAuthPage() {
         setIsModalOpen(false);
       }, 1000);
     } catch (error) {
-      console.error("Error connecting broker:", error);
+      console.error("Error saving broker credentials:", error);
       setIsLoading(false);
     }
   };
-  
+
+  // Handle broker deletion
+  const handleBrokerDelete = (brokerId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering parent click events
+    
+    // Remove from localStorage (in production, this would delete from database)
+    localStorage.removeItem(`broker_${brokerId}_credentials`);
+    localStorage.removeItem(`broker_${brokerId}_authenticated`);
+    
+    // Remove from saved brokers state
+    setSavedBrokers(prev => prev.filter(id => id !== brokerId));
+  };
+
+  // Handle broker toggle
+  const handleBrokerToggle = (brokerId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering parent click events
+    
+    // Toggle the broker's active status
+    const isActive = localStorage.getItem(`broker_${brokerId}_active`) === 'true';
+    localStorage.setItem(`broker_${brokerId}_active`, isActive ? 'false' : 'true');
+    
+    // Force a re-render
+    setSavedBrokers([...savedBrokers]);
+  };
+
   // Get broker initial for avatar
   const getBrokerInitial = (name: string) => {
     return name.charAt(0);
@@ -432,7 +471,7 @@ export default function BrokerAuthPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           {searchQuery && (
-            <button 
+            <button
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               onClick={() => setSearchQuery("")}
             >
@@ -440,52 +479,72 @@ export default function BrokerAuthPage() {
             </button>
           )}
         </div>
-        
-        {/* Connected brokers section */}
-        {connectedBrokers.length > 0 && (
+
+        {/* Saved brokers section */}
+        {savedBrokers.length > 0 && (
           <div>
-            <h2 className="text-lg font-medium mb-4">Connected Brokers</h2>
+            <h2 className="text-lg font-medium mb-4">Saved Brokers</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {brokers
-                .filter(broker => connectedBrokers.includes(broker.id))
-                .map(broker => (
-                  <Card key={broker.id} className="border overflow-hidden hover:shadow-md transition-all">
-                    <CardHeader className="p-4 pb-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="h-8 w-8 bg-primary/10 text-primary rounded-full flex items-center justify-center">
-                            {getBrokerInitial(broker.name)}
+                .filter(broker => savedBrokers.includes(broker.id))
+                .map(broker => {
+                  const isActive = localStorage.getItem(`broker_${broker.id}_active`) !== 'false';
+                  return (
+                    <Card key={broker.id} className="border overflow-hidden hover:shadow-md transition-all">
+                      <CardHeader className="p-4 pb-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="h-8 w-8 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+                              {getBrokerInitial(broker.name)}
+                            </div>
+                            <CardTitle className="text-base">{broker.name}</CardTitle>
                           </div>
-                          <CardTitle className="text-base">{broker.name}</CardTitle>
+                          <button
+                            onClick={(e) => handleBrokerToggle(broker.id, e)}
+                            className="text-primary hover:text-primary/80 transition-colors"
+                          >
+                            {isActive ?
+                              <ToggleRight className="h-6 w-6 text-green-500" /> :
+                              <ToggleLeft className="h-6 w-6 text-gray-400" />
+                            }
+                          </button>
                         </div>
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-2 pb-4">
-                      <p className="text-xs text-muted-foreground">Connected</p>
-                    </CardContent>
-                    <CardFooter className="p-4 pt-0 pb-4">
-                      <Button 
-                        className="w-full" 
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleBrokerSelect(broker.id)}
-                      >
-                        Manage
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
+                      </CardHeader>
+                      <CardContent className="p-4 pt-2 pb-4">
+                        <p className="text-xs text-muted-foreground">Saved</p>
+                      </CardContent>
+                      <CardFooter className="p-4 pt-0 pb-4 flex justify-between">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBrokerSelect(broker.id);
+                          }}
+                          className="text-gray-400 hover:text-primary transition-colors"
+                          title="Update credentials"
+                        >
+                          <Settings size={18} />
+                        </button>
+                        <button
+                          onClick={(e) => handleBrokerDelete(broker.id, e)}
+                          className="text-gray-400 hover:text-red-500 transition-colors"
+                          title="Delete broker"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </CardFooter>
+                    </Card>
+                  );
+                })}
             </div>
           </div>
         )}
-        
+
         {/* Available brokers section */}
         <div>
           <h2 className="text-lg font-medium mb-4">Available Brokers</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredBrokers
-              .filter(broker => !connectedBrokers.includes(broker.id))
+              .filter(broker => !savedBrokers.includes(broker.id))
               .map((broker) => (
                 <Card key={broker.id} className="border overflow-hidden hover:shadow-md transition-all">
                   <CardHeader className="p-4 pb-2">
@@ -500,11 +559,14 @@ export default function BrokerAuthPage() {
                     <p className="text-xs text-muted-foreground line-clamp-2">{broker.description}</p>
                   </CardContent>
                   <CardFooter className="p-4 pt-0 pb-4">
-                    <Button 
-                      className="w-full" 
+                    <Button
+                      className="w-full"
                       variant="outline"
                       size="sm"
-                      onClick={() => handleBrokerSelect(broker.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBrokerSelect(broker.id);
+                      }}
                     >
                       Connect
                     </Button>
@@ -520,7 +582,7 @@ export default function BrokerAuthPage() {
           </div>
         )}
       </div>
-      
+
       {/* Completely isolated modal */}
       <BrokerCredentialsModal
         isOpen={isModalOpen}
@@ -528,6 +590,7 @@ export default function BrokerAuthPage() {
         broker={selectedBroker}
         onSubmit={handleFormSubmit}
         isLoading={isLoading}
+        savedBrokers={savedBrokers}
       />
     </div>
   );
