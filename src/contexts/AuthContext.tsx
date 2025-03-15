@@ -15,6 +15,8 @@ type User = {
   isAdmin?: boolean;
   balance?: number;
   accessToken?: string;
+  refreshToken?: string;
+  loginTimestamp?: number;
 } | null;
 
 type AuthContextType = {
@@ -156,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Login function with improved error handling
+  // Login function with improved error handling and network resilience
   const login = async (emailOrUsername: string, password: string) => {
     clearError();
     try {
@@ -185,6 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Use the tryMultipleEndpoints function to attempt login on multiple endpoints
       const response = await tryMultipleEndpoints(async (instance) => {
+        console.log("Trying login with instance baseURL:", instance.defaults.baseURL);
         return await instance.post('/users/login', loginData);
       });
       
@@ -226,13 +229,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Create complete user object with token
         const userData = {
           ...data.data.user,
-          accessToken: data.data.accessToken
+          accessToken: data.data.accessToken,
+          refreshToken: data.data.refreshToken, // Store refresh token as well
+          loginTimestamp: Date.now() // Add timestamp for token freshness tracking
         };
         
         // Update state and localStorage
         setUser(userData);
-        localStorage.setItem("user", JSON.stringify(userData));
-        console.log("Login successful, user data stored");
+        
+        // Store in localStorage with proper error handling
+        try {
+          localStorage.setItem("user", JSON.stringify(userData));
+          console.log("Login successful, user data stored in localStorage");
+        } catch (storageError) {
+          console.error("Failed to store user data in localStorage:", storageError);
+          // Continue anyway since we have the user in state
+        }
         
         // Navigate to dashboard
         router.push("/dashboard");
@@ -243,7 +255,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      setError(error?.userFriendlyMessage || error?.response?.data?.message || "Failed to connect to the server. Please check your internet connection.");
+      
+      // Provide more specific error messages based on the error type
+      if (error?.code === "ERR_NETWORK" || error?.message?.includes("Network Error")) {
+        setError("Network error. Please check your internet connection and try again.");
+      } else if (error?.code === "ECONNABORTED" || error?.message?.includes("timeout")) {
+        setError("The server is taking too long to respond. Please try again later.");
+      } else if (error?.response?.status === 401) {
+        setError("Invalid username or password. Please try again.");
+      } else if (error?.response?.status === 404) {
+        setError("User not found. Please check your username or email.");
+      } else {
+        setError(error?.userFriendlyMessage || error?.response?.data?.message || "Failed to connect to the server. Please try the direct login page.");
+      }
+      
       return false;
     } finally {
       setIsLoading(false);

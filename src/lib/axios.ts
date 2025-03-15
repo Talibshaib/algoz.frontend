@@ -199,9 +199,31 @@ export async function tryMultipleEndpoints<T>(
   endpoints = getAllApiEndpoints()
 ): Promise<T> {
   let lastError: any = null;
+  let attemptCount = 0;
+  const maxAttempts = endpoints.length * 2; // Allow multiple attempts per endpoint
+  
+  // Shuffle endpoints to avoid always trying them in the same order
+  // This helps distribute load and find working endpoints faster
+  const shuffledEndpoints = [...endpoints].sort(() => Math.random() - 0.5);
+  
+  // Add the current working endpoint to the beginning if available
+  const currentWorkingEndpoint = getApiUrl();
+  if (currentWorkingEndpoint && shuffledEndpoints.includes(currentWorkingEndpoint)) {
+    // Remove it from its current position
+    const index = shuffledEndpoints.indexOf(currentWorkingEndpoint);
+    shuffledEndpoints.splice(index, 1);
+    // Add it to the beginning
+    shuffledEndpoints.unshift(currentWorkingEndpoint);
+  }
+  
+  console.log("Trying endpoints in order:", shuffledEndpoints);
   
   // Try each endpoint in sequence
-  for (const endpoint of endpoints) {
+  while (attemptCount < maxAttempts) {
+    // Get the next endpoint to try (cycling through the list)
+    const endpoint = shuffledEndpoints[attemptCount % shuffledEndpoints.length];
+    attemptCount++;
+    
     try {
       // Create a fresh axios instance for this attempt
       const instance = axios.create({
@@ -223,18 +245,22 @@ export async function tryMultipleEndpoints<T>(
           if (userData.accessToken) {
             instance.defaults.headers.common['Authorization'] = `Bearer ${userData.accessToken}`;
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error("Error parsing user data:", e);
+        }
       } else if (admin) {
         try {
           const adminData = JSON.parse(admin);
           if (adminData.accessToken) {
             instance.defaults.headers.common['Authorization'] = `Bearer ${adminData.accessToken}`;
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error("Error parsing admin data:", e);
+        }
       }
       
       // Try the request with this endpoint
-      console.log(`Trying endpoint: ${endpoint}`);
+      console.log(`Attempt ${attemptCount}/${maxAttempts}: Trying endpoint: ${endpoint}`);
       const result = await requestFn(instance);
       
       // If successful, save this endpoint as the working one
@@ -242,14 +268,31 @@ export async function tryMultipleEndpoints<T>(
       console.log(`Successfully connected to: ${endpoint}`);
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to connect to ${endpoint}:`, error);
+      
+      // If this is a 401/403 error, don't retry with other endpoints as it's likely an auth issue
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        console.log("Authentication error, not trying other endpoints");
+        throw error;
+      }
+      
+      // If this is a 404 Not Found for a specific resource, don't retry with other endpoints
+      if (error?.response?.status === 404 && !error.message?.includes("Network Error")) {
+        console.log("Resource not found, not trying other endpoints");
+        throw error;
+      }
+      
       lastError = error;
       // Continue to the next endpoint
+      
+      // Add a small delay between attempts to avoid overwhelming the network
+      await delay(300);
     }
   }
   
   // If we get here, all endpoints failed
+  console.error("All endpoints failed after", attemptCount, "attempts");
   throw lastError || new Error("Failed to connect to any API endpoint");
 }
 

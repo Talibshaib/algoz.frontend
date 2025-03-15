@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { MotionDiv } from "@/components/ui/motion"
 import { API_URL, getApiUrl } from "@/constants/URI"
 import { toast } from "sonner"
+import { checkAPIHealth } from "@/services/healthCheck"
 
 export default function LoginPage() {
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingServer, setIsCheckingServer] = useState(false);
   const [serverStatus, setServerStatus] = useState<"unknown" | "online" | "offline">("unknown");
+  const [networkIssueDetected, setNetworkIssueDetected] = useState(false);
   const { login, error: authError, clearError, user } = useAuth();
   const { login: adminLogin, error: adminAuthError, admin } = useAdminAuth();
   const router = useRouter();
@@ -38,25 +40,18 @@ export default function LoginPage() {
     }
   }, [user, admin, router]);
 
-  // Check server status on component mount
+  // Check server status on mount
   useEffect(() => {
     const checkServerStatus = async () => {
       setIsCheckingServer(true);
       try {
-        // Check if the server is reachable
-        const response = await fetch(`${API_URL}/health`, {
-          method: 'HEAD',
-          cache: 'no-store',
-        }).catch(() => null);
-        
-        if (response && response.ok) {
-          setServerStatus("online");
-        } else {
-          setServerStatus("offline");
-        }
+        const { isOnline } = await checkAPIHealth(true);
+        setServerStatus(isOnline ? "online" : "offline");
+        setNetworkIssueDetected(!isOnline);
       } catch (error) {
-        console.error("Server status check failed:", error);
+        console.error("Error checking server status:", error);
         setServerStatus("offline");
+        setNetworkIssueDetected(true);
       } finally {
         setIsCheckingServer(false);
       }
@@ -83,48 +78,34 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError("");
-    clearError?.();
     
-    // Check server status first
-    if (serverStatus === "offline") {
-      setLocalError("The server appears to be offline. Please try again later.");
-      return;
-    }
-    
-    // Validate inputs before submission
-    if (!validateInputs()) {
+    if (!emailOrUsername || !password) {
+      setLocalError("Please enter both email/username and password");
       return;
     }
     
     setIsLoading(true);
     
     try {
-      if (isAdminLogin) {
-        // Admin login
-        const adminSuccess = await adminLogin(emailOrUsername, password);
-        if (!adminSuccess) {
-          setLocalError(adminAuthError || "Invalid admin credentials");
-        }
-      } else {
-        // Regular user login
-        const success = await login(emailOrUsername, password);
-        if (!success) {
-          setLocalError(authError || "Invalid username/email or password");
-        }
-      }
-    } catch (err: any) {
-      console.error("Login error:", err);
+      let success;
       
-      // Handle network errors specifically
-      if (err.code === "ERR_NETWORK" || err.code === "ERR_NAME_NOT_RESOLVED") {
-        setLocalError("Unable to connect to the server. Please check your internet connection and try again.");
-        setServerStatus("offline");
-      } else if (err.userFriendlyMessage) {
-        // Use the user-friendly message if available
-        setLocalError(err.userFriendlyMessage);
+      if (isAdminLogin) {
+        success = await adminLogin(emailOrUsername, password);
       } else {
-        setLocalError("An unexpected error occurred. Please try again.");
+        success = await login(emailOrUsername, password);
       }
+      
+      if (!success) {
+        // If login failed and there might be network issues, suggest direct login
+        if (serverStatus === "offline" || networkIssueDetected) {
+          setLocalError((authError || adminAuthError || "") + 
+            " Network issues detected. Try the direct login option below.");
+        }
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setLocalError("An unexpected error occurred. Please try again.");
+      setNetworkIssueDetected(true);
     } finally {
       setIsLoading(false);
     }
@@ -264,8 +245,7 @@ export default function LoginPage() {
           </div>
           <Button 
             type="submit" 
-            color="primary" 
-            className="w-full"
+            className="w-full bg-black text-white"
             isLoading={isLoading}
             disabled={isLoading || serverStatus === "offline" || isCheckingServer}
           >
@@ -300,6 +280,32 @@ export default function LoginPage() {
             Facebook
           </Button>
         </div>
+        
+        {/* Network status indicator */}
+        {serverStatus !== "unknown" && (
+          <div className={`text-sm text-center ${serverStatus === "online" ? "text-green-500" : "text-red-500"}`}>
+            Server status: {serverStatus === "online" ? "Online" : "Connection issues detected"}
+          </div>
+        )}
+        
+        {/* Direct login option for users with network issues */}
+        {(networkIssueDetected || authError || localError) && (
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+            <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+              Having trouble logging in? Try our direct login page that tests multiple connection methods.
+            </p>
+            <Button 
+              as={Link}
+              href={isAdminLogin ? "/direct-admin-login" : "/direct-login"}
+              color="primary" 
+              variant="flat" 
+              fullWidth
+              size="sm"
+            >
+              Try Direct Login
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

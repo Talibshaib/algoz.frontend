@@ -1,7 +1,6 @@
 // Define all possible API endpoints
 export const API_ENDPOINTS = {
   MAIN: "https://algoz-backend-68rt.onrender.com/api/v1",
-  RAILWAY: "https://algozbackend-production.up.railway.app/api/v1",
   RENDER: "https://algoz-backend-68rt.onrender.com/api/v1",
   FALLBACK_IP: "http://34.125.238.251/api/v1",
   FALLBACK_IP_HTTPS: "https://34.125.238.251/api/v1",
