@@ -191,16 +191,16 @@ export default function Navbar() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <Badge content="New" color="primary" placement="top-right" classNames={{
+                {/* <Badge content="New" color="primary" placement="top-right" classNames={{
                   badge: "font-semibold text-[10px]"
-                }}>
+                }}> */}
                   <Dropdown>
                     <DropdownTrigger>
                       <ShinyButton className="relative"> 
                         Get Started
                       </ShinyButton>  
                     </DropdownTrigger>
-                    <DropdownMenu aria-label="Get Started Options" className="bg-white rounded-lg p-2 shadow-xl border border-gray-100">
+                    <DropdownMenu aria-label="Get Started Options" className="bg-white rounded-lg p-2">
                       <DropdownItem key="login" className="py-2 hover:bg-gray-50 rounded-lg transition-colors duration-200">
                         <Link href="/login" className="w-full block">
                           <div className="text-sm font-medium">Log In</div>
@@ -215,7 +215,7 @@ export default function Navbar() {
                       </DropdownItem>
                     </DropdownMenu>
                   </Dropdown>
-                </Badge>
+                {/* </Badge> */}
               </MotionDiv>
             </div>
           </div>

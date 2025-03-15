@@ -235,6 +235,7 @@ export default function LoginPage() {
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox 
+              isDisabled  //temprory
               id="adminLogin" 
               isSelected={isAdminLogin} 
               onValueChange={setIsAdminLogin}

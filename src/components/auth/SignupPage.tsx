@@ -109,7 +109,7 @@ export default function SignupPage() {
     
     try {
       console.log("Attempting signup with:", { fullName, email, username, password: "********" });
-      const success = await signup(fullName, email, username, password);
+      const success = await signup({ fullName, email, username, password });
       
       if (success) {
         // Show success message or redirect
@@ -261,7 +261,7 @@ export default function SignupPage() {
           
           <Button 
             type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+            className="w-full bg-black hover:bg-gray-800 text-white" 
             disabled={isLoading}
           >
             {isLoading ? "Creating Account..." : "Create Account"}
@@ -278,7 +278,7 @@ export default function SignupPage() {
         </div>
         
         <div className="grid grid-cols-2 gap-4">
-          <Button variant="bordered">
+          <Button variant="bordered" disabled>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -295,7 +295,7 @@ export default function SignupPage() {
             </svg>
             GitHub
           </Button>
-          <Button variant="bordered">
+          <Button variant="bordered" disabled>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
