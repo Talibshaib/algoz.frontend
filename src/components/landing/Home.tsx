@@ -11,6 +11,7 @@ import {
   MotionP
 } from "@/components/ui/motion"
 import MarqueeDemo from "./ReviewCard";
+import { MdCurrencyRupee } from "react-icons/md";
 
 export default function Home() {
   // Animation variants
@@ -526,66 +527,17 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2">TradingView Integration</h3>
+                <h3 className="text-xl font-bold mb-2">Basic</h3>
                 <p className="text-gray-600 mb-4">
-                  Seamlessly connect your TradingView charts and execute trades directly from the platform.
+                   You can use this coin to purchase our services.
                 </p>
               </div>
 
               <div className="text-3xl font-bold mb-6 text-blue-600">
-                $49 <span className="text-sm font-normal text-gray-500">/month</span>
+              1000 Credits<span className="text- font-normal text-gray-500">/₹999</span>
               </div>
 
-              <ul className="space-y-3 mb-8 flex-grow">
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-blue-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">Real-time data sync</span>
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-blue-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">Custom indicators</span>
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-blue-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">Automated trading</span>
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-blue-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">24/7 support</span>
-                </li>
-              </ul>
+              
 
               <MotionDiv
                 whileHover={{ scale: 1.03 }}
@@ -615,66 +567,17 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2">Pine Script Strategies</h3>
+                <h3 className="text-xl font-bold mb-2">Pro</h3>
                 <p className="text-gray-600 mb-4">
-                  Create a library of custom trading strategies or create your own using Pine Script.
+                  You can use this coin to purchase our services.
                 </p>
               </div>
 
               <div className="text-3xl font-bold mb-6 text-green-600">
-                $79 <span className="text-sm font-normal text-gray-500">/month</span>
+                2500 Credits<span className="text- font-normal text-gray-500">/₹2249</span>
               </div>
 
-              <ul className="space-y-3 mb-8 flex-grow">
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">Strategy library</span>
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">Backtesting tools</span>
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">Custom script editor</span>
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">Strategy optimization</span>
-                </li>
-              </ul>
+              
 
               <MotionDiv
                 whileHover={{ scale: 1.03 }}
@@ -696,70 +599,21 @@ export default function Home() {
             >
               <div className="mb-6">
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">  
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2">MQL Solutions</h3>
+                <h3 className="text-xl font-bold mb-2">Primium</h3>
                 <p className="text-gray-600 mb-4">
-                  Professional MetaTrader integration with custom MQL4/5 expert advisors and indicators.
+                  You can use this coin to purchase our services.
                 </p>
               </div>
 
               <div className="text-3xl font-bold mb-6 text-purple-600">
-                $99 <span className="text-sm font-normal text-gray-500">/month</span>
+                5000 Credits<span className="text- font-normal text-gray-500">/₹4499</span>
               </div>
 
-              <ul className="space-y-3 mb-8 flex-grow">
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-purple-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">MT4/MT5 Integration</span>
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-purple-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">Custom EA development</span>
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-purple-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">Indicator library</span>
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-3 text-purple-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">Priority support</span>
-                </li>
-              </ul>
+              
 
               <MotionDiv
                 whileHover={{ scale: 1.03 }}

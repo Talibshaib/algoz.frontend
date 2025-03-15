@@ -24,10 +24,8 @@ export default function PricingSection({
       coins: 1000,
       price: "₹999",
       features: [
-        "Access to basic trading features",
-        "Standard execution speed",
-        "Email support",
-        "Basic market analysis",
+        "You can use this coin to purchase our services",
+        "Purchased coins will not be refunded",
       ],
       buttonText: "Buy Now",
     },
@@ -36,32 +34,26 @@ export default function PricingSection({
       coins: 2500,
       price: "₹2,249",
       features: [
-        "All Basic features",
-        "Priority execution speed",
-        "Priority support",
-        "Advanced market analysis",
-        "Custom indicators",
+        "You can use this coin to purchase our services",
+        "Purchased coins will not be refunded",
       ],
       buttonText: "Buy Now",
       popular: true,
     },
     {
-      name: "Premium",
+      name: "Primium",
       coins: 5000,
       price: "₹4,499",
       features: [
-        "All Pro features",
-        "Ultra-fast execution",
-        "24/7 dedicated support",
-        "Premium indicators",
-        "Strategy automation",
+        "You can use this coin to purchase our services",
+        "Purchased coins will not be refunded",
       ],
       buttonText: "Buy Now",
     },
   ],
 }: PricingSectionProps) {
   return (
-    <div className="w-full py-12 bg-background">
+    <div className="w-full h-screen py-12 bg-background">
       <div className="container mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Z Coins Pricing</h2>
