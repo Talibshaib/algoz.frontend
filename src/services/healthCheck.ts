@@ -4,7 +4,8 @@ import { API_URL } from "@/constants/URI";
 // These could be different regions or fallback servers
 const FALLBACK_ENDPOINTS: string[] = [
   // Direct IP address access instead of domain name
-  "https://34.125.238.251/api/v1", // Railway app IP address
+  "https://34.125.238.251/api/v1", // IP address for backend
+  "https://algoz-backend-68rt.onrender.com/api/v1", // Render URL
   // Try the same domain with different protocols
   API_URL.replace("https://", "http://"),
   // Try without www if present

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axiosInstance from "@/lib/axios";
+import axiosInstance, { tryMultipleEndpoints } from "@/lib/axios";
 
 type Admin = {
   _id: string;
@@ -103,11 +103,21 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       // Determine if input is email or username
       const isEmail = emailOrUsername.includes('@');
       
-      // Call the backend API for admin login
-      const response = await axiosInstance.post('/admin/login', {
+      // Prepare login payload
+      const loginData = {
         email: isEmail ? emailOrUsername : undefined,
         username: !isEmail ? emailOrUsername : undefined,
         password
+      };
+      
+      console.log("Attempting admin login with:", { 
+        ...(isEmail ? { email: emailOrUsername } : { username: emailOrUsername }),
+        password: "********" 
+      });
+      
+      // Use tryMultipleEndpoints to attempt login on multiple endpoints
+      const response = await tryMultipleEndpoints(async (instance) => {
+        return await instance.post('/admin/login', loginData);
       });
       
       if (response.status === 200 && response.data.data) {
@@ -141,7 +151,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       console.error("Admin login error:", error);
-      setError(error?.response?.data?.message || "An error occurred during login");
+      setError(error?.userFriendlyMessage || error?.response?.data?.message || "Failed to connect to the server. Please check your internet connection.");
       return false;
     } finally {
       setIsLoading(false);

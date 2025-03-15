@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { API_URL } from "@/constants/URI";
-import axiosInstance from "@/lib/axios";
+import axiosInstance, { tryMultipleEndpoints } from "@/lib/axios";
 
 type User = {
   _id: string;
@@ -183,7 +183,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password: "********" 
       });
       
-      const response = await axiosInstance.post('/users/login', loginData);
+      // Use the tryMultipleEndpoints function to attempt login on multiple endpoints
+      const response = await tryMultipleEndpoints(async (instance) => {
+        return await instance.post('/users/login', loginData);
+      });
       
       console.log("Login response status:", response.status);
       
@@ -235,45 +238,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.push("/dashboard");
         return true;
       } else {
-        // Handle non-200 success responses
-        const errorMessage = data.message || "Login failed with status " + response.status;
-        console.error("Login failed:", errorMessage);
-        setError(errorMessage);
+        setError(data.message || "Login failed");
         return false;
       }
     } catch (error: any) {
-      // Handle axios errors
       console.error("Login error:", error);
-      
-      // Extract error message from response if available
-      let errorMessage = "An error occurred during login";
-      
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
-        
-        if (error.response.data && error.response.data.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.status === 401) {
-          errorMessage = "Invalid credentials";
-        } else if (error.response.status === 404) {
-          errorMessage = "User not found";
-        } else if (error.response.status >= 500) {
-          errorMessage = "Server error, please try again later";
-        }
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error("No response received:", error.request);
-        errorMessage = "No response from server, please check your connection";
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Error message:", error.message);
-        errorMessage = error.message || "Request failed";
-      }
-      
-      setError(errorMessage);
+      setError(error?.userFriendlyMessage || error?.response?.data?.message || "Failed to connect to the server. Please check your internet connection.");
       return false;
     } finally {
       setIsLoading(false);

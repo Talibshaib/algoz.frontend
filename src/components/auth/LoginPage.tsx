@@ -191,6 +191,14 @@ export default function LoginPage() {
               >
                 {isCheckingServer ? "Checking..." : "Retry Connection"}
               </Button>
+              <Link href="/direct-login">
+                <Button 
+                  size="sm"
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Try Direct Login
+                </Button>
+              </Link>
             </div>
           </MotionDiv>
         )}

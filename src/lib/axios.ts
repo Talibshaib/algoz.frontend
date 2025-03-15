@@ -1,5 +1,5 @@
-import axios, { AxiosError } from 'axios';
-import { API_URL, getApiUrl, setApiUrl } from '@/constants/URI';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import { API_URL, getApiUrl, setApiUrl, getAllApiEndpoints } from '@/constants/URI';
 
 // Define a custom error interface that includes the 'code' property
 interface NetworkError extends Error {
@@ -96,6 +96,12 @@ axiosInstance.interceptors.response.use(
     if (requestId) {
       retryCount.delete(requestId);
     }
+    
+    // If this was a successful request, save the working API URL
+    if (response.config.baseURL) {
+      setApiUrl(response.config.baseURL);
+    }
+    
     return response;
   },
   async (error: AxiosError & NetworkError) => {
@@ -186,5 +192,65 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Create a function to try multiple endpoints for a request
+export async function tryMultipleEndpoints<T>(
+  requestFn: (instance: AxiosInstance) => Promise<T>,
+  endpoints = getAllApiEndpoints()
+): Promise<T> {
+  let lastError: any = null;
+  
+  // Try each endpoint in sequence
+  for (const endpoint of endpoints) {
+    try {
+      // Create a fresh axios instance for this attempt
+      const instance = axios.create({
+        baseURL: endpoint,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true,
+        timeout: 10000, // Shorter timeout for endpoint testing
+      });
+      
+      // Copy auth headers from main instance if available
+      const user = localStorage.getItem('user');
+      const admin = localStorage.getItem('adminUser');
+      
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          if (userData.accessToken) {
+            instance.defaults.headers.common['Authorization'] = `Bearer ${userData.accessToken}`;
+          }
+        } catch (e) {}
+      } else if (admin) {
+        try {
+          const adminData = JSON.parse(admin);
+          if (adminData.accessToken) {
+            instance.defaults.headers.common['Authorization'] = `Bearer ${adminData.accessToken}`;
+          }
+        } catch (e) {}
+      }
+      
+      // Try the request with this endpoint
+      console.log(`Trying endpoint: ${endpoint}`);
+      const result = await requestFn(instance);
+      
+      // If successful, save this endpoint as the working one
+      setApiUrl(endpoint);
+      console.log(`Successfully connected to: ${endpoint}`);
+      
+      return result;
+    } catch (error) {
+      console.error(`Failed to connect to ${endpoint}:`, error);
+      lastError = error;
+      // Continue to the next endpoint
+    }
+  }
+  
+  // If we get here, all endpoints failed
+  throw lastError || new Error("Failed to connect to any API endpoint");
+}
 
 export default axiosInstance;
