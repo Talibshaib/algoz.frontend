@@ -14,7 +14,8 @@ import {
   Menu,
   KeyIcon,
   Bot,
-  LogOut
+  LogOut,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -466,6 +467,27 @@ export default function Sidebar({ className }: SidebarProps) {
             <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
               <HelpCircle className="h-5 w-5 min-w-5" />
               {open && <span className="ml-3 text-sm md:text-base">FAQ</span>}
+            </div>
+          </a>
+        </div>
+
+        {/* SECURITY SECTION */}
+        <div className="mb-4">
+          {open && <p className="text-xs text-muted-foreground mb-2 px-3">SECURITY</p>}
+          
+          <a
+            href="/dashboard/security"
+            className={cn(
+              "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+              activeItem === "security" && "bg-black text-white",
+              !open && "justify-center",
+              open && "space-x-3"
+            )}
+            onClick={(e) => handleNavigation(e, "/dashboard/security", "security")}
+          >
+            <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+              <Shield className="h-5 w-5 min-w-5" />
+              {open && <span className="text-sm md:text-base">Security</span>}
             </div>
           </a>
         </div>

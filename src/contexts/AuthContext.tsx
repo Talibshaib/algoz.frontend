@@ -18,6 +18,24 @@ export type User = {
   avatar?: string;
   coverImage?: string;
   balance?: number;
+  lastActivity?: number;
+  sessionId?: string;
+  passwordLastChanged?: string;
+  networkChange?: {
+    detected: boolean;
+    details?: {
+      riskLevel: string;
+      changes: string[];
+      previousNetwork: {
+        ip: string;
+        location: string;
+      };
+      currentNetwork: {
+        ip: string;
+        location: string;
+      };
+    };
+  };
 } | null;
 
 type AuthContextType = {
@@ -30,6 +48,9 @@ type AuthContextType = {
   clearError: () => void;
   refreshToken: () => Promise<boolean>;
   isTokenExpired: () => boolean;
+  validateSession: () => Promise<boolean>;
+  updateLastActivity: () => void;
+  requireAuth: (operation: string) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +58,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Token expiration constants
 const TOKEN_EXPIRY_BUFFER = 5 * 60 * 1000; // 5 minutes in milliseconds
 const DEFAULT_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes of inactivity
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize user state from sessionStorage if available (more secure than localStorage)
@@ -235,6 +257,92 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Function to update last activity timestamp
+  const updateLastActivity = () => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        lastActivity: Date.now()
+      };
+      setUser(updatedUser);
+      sessionStorage.setItem("user", JSON.stringify(updatedUser));
+    }
+  };
+
+  // Function to validate session
+  const validateSession = async (): Promise<boolean> => {
+    try {
+      // Check if user exists
+      if (!user) {
+        return false;
+      }
+
+      // Check if token is expired
+      if (isTokenExpired()) {
+        // Try to refresh the token
+        const refreshed = await refreshToken();
+        if (!refreshed) {
+          return false;
+        }
+      }
+
+      // Check for session timeout
+      if (user.lastActivity) {
+        const inactiveTime = Date.now() - user.lastActivity;
+        if (inactiveTime > SESSION_TIMEOUT) {
+          console.log("Session timeout due to inactivity");
+          await logout();
+          return false;
+        }
+      }
+
+      // Update last activity
+      updateLastActivity();
+
+      // Verify session with backend
+      try {
+        const response = await axiosInstance.get('/users/validate-session', {
+          params: { sessionId: user.sessionId }
+        });
+        return response.status === 200;
+      } catch (error) {
+        console.error("Session validation failed:", error);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error validating session:", error);
+      return false;
+    }
+  };
+
+  // Function to require authentication for sensitive operations
+  const requireAuth = async (operation: string): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      // Log the sensitive operation attempt
+      console.log(`Attempting sensitive operation: ${operation}`);
+      
+      // Validate the session
+      const isValid = await validateSession();
+      
+      if (!isValid) {
+        setError("Your session has expired. Please log in again.");
+        await logout();
+        return false;
+      }
+      
+      // For high-risk operations, we could add additional verification here
+      // such as password re-entry or 2FA
+      
+      return true;
+    } catch (error) {
+      console.error(`Auth check failed for operation ${operation}:`, error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Function to login
   const login = async (emailOrUsername: string, password: string) => {
     try {
@@ -265,6 +373,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Check for success status
       if (response.status === 200 || response.status === 201) {
+        // Check if MFA is required
+        if (data.data?.requireMFA) {
+          // Store user ID for MFA verification
+          sessionStorage.setItem("pendingMfaUserId", data.data.userId);
+          
+          // Check if MFA is required due to network change
+          if (data.data.networkChanged) {
+            sessionStorage.setItem("networkChangeDetails", JSON.stringify(data.data.networkChangeDetails));
+            // Redirect to network verification page
+            router.push("/auth/network-verification");
+          } else {
+            // Redirect to regular MFA verification page
+            router.push("/auth/mfa");
+          }
+          return false;
+        }
+        
         // Validate response data structure
         if (!data.data) {
           console.error("Missing data.data in response:", data);
@@ -286,13 +411,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return false;
         }
         
+        // Check for network change
+        if (data.data.networkChange?.detected) {
+          console.log("Network change detected:", data.data.networkChange);
+          
+          // Create user object with network change information
+          const userData = {
+            ...data.data.user,
+            accessToken: data.data.accessToken,
+            refreshToken: data.data.refreshToken,
+            loginTimestamp: Date.now(),
+            tokenExpiry: Date.now() + DEFAULT_TOKEN_EXPIRY,
+            lastActivity: Date.now(),
+            sessionId: data.data.sessionId || `session-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+            networkChange: data.data.networkChange
+          };
+          
+          // Update state and sessionStorage
+          setUser(userData);
+          
+          try {
+            sessionStorage.setItem("user", JSON.stringify(userData));
+          } catch (storageError) {
+            console.error("Failed to store user data in sessionStorage:", storageError);
+          }
+          
+          // If high risk, redirect to network verification page
+          if (data.data.networkChange.details?.riskLevel === 'high' || 
+              (data.data.networkChange.details?.riskLevel === 'medium' && data.data.user.mfaEnabled)) {
+            router.push("/auth/network-verification");
+          } else {
+            // Show network change notification
+            router.push("/dashboard?network_change=true");
+          }
+          return true;
+        }
+        
         // Create complete user object with token
         const userData = {
           ...data.data.user,
           accessToken: data.data.accessToken,
-          refreshToken: data.data.refreshToken, // Store refresh token as well
-          loginTimestamp: Date.now(), // Add timestamp for token freshness tracking
-          tokenExpiry: Date.now() + DEFAULT_TOKEN_EXPIRY // Calculate token expiry
+          refreshToken: data.data.refreshToken,
+          loginTimestamp: Date.now(),
+          tokenExpiry: Date.now() + DEFAULT_TOKEN_EXPIRY,
+          lastActivity: Date.now(),
+          sessionId: data.data.sessionId || `session-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`
         };
         
         // Update state and sessionStorage
@@ -432,6 +595,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Add activity tracking to the useEffect
+  useEffect(() => {
+    // Add event listeners for user activity
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    
+    const handleUserActivity = () => {
+      updateLastActivity();
+    };
+    
+    // Add event listeners
+    activityEvents.forEach(event => {
+      window.addEventListener(event, handleUserActivity);
+    });
+    
+    // Set up periodic session validation
+    const sessionCheckInterval = setInterval(() => {
+      if (user) {
+        validateSession().catch(console.error);
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+    
+    // Cleanup function
+    return () => {
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, handleUserActivity);
+      });
+      clearInterval(sessionCheckInterval);
+    };
+  }, [user]); // Add user as a dependency
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -442,7 +635,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       error, 
       clearError, 
       refreshToken,
-      isTokenExpired
+      isTokenExpired,
+      validateSession,
+      updateLastActivity,
+      requireAuth
     }}>
       {children}
     </AuthContext.Provider>

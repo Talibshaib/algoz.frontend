@@ -12,7 +12,7 @@ interface NetworkError extends Error {
 
 // Create axios instance with base URL and default headers
 const instance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://algoz-backend-68rt.onrender.com/api/v1',
+  baseURL: getApiUrl() || 'https://algoz-backend-68rt.onrender.com/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -89,7 +89,12 @@ const refreshToken = async (): Promise<string | null> => {
     
     // Make refresh token request
     const endpoint = isAdmin ? '/admin/refresh-token' : '/users/refresh-token';
-    const response = await axios.post(`${getApiUrl()}${endpoint}`, { refreshToken });
+    const response = await axios.post(`${getApiUrl()}${endpoint}`, { refreshToken }, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
     
     if (response.status === 200 && response.data.data && response.data.data.accessToken) {
       const newToken = response.data.data.accessToken;
@@ -138,9 +143,17 @@ const refreshToken = async (): Promise<string | null> => {
   }
 };
 
+// Update baseURL when API URL changes
+export const updateBaseURL = (url: string) => {
+  instance.defaults.baseURL = url;
+};
+
 // Add request interceptor to add auth token
 instance.interceptors.request.use(
   (config) => {
+    // Update baseURL with the latest API URL
+    config.baseURL = getApiUrl();
+    
     // Ensure withCredentials is set
     config.withCredentials = true;
     
@@ -195,6 +208,13 @@ instance.interceptors.response.use(
     return response;
   },
   async (error) => {
+    const originalRequest = error.config;
+    
+    // Prevent infinite retry loops
+    if (originalRequest && originalRequest._retry) {
+      return Promise.reject(error);
+    }
+    
     // Handle network errors
     if (error.code === 'ERR_NETWORK') {
       console.error('Network error detected:', error);
@@ -215,10 +235,13 @@ instance.interceptors.response.use(
           setApiUrl(nextEndpoint);
           console.log(`Switching to endpoint: ${nextEndpoint} due to network error`);
           
+          // Update axios baseURL
+          updateBaseURL(nextEndpoint);
+          
           // If this is a request that can be retried, retry with the new endpoint
-          if (error.config) {
-            error.config.baseURL = nextEndpoint;
-            return axios(error.config);
+          if (originalRequest) {
+            originalRequest.baseURL = nextEndpoint;
+            return axios(originalRequest);
           }
         } catch (retryError) {
           console.error('Error while trying to switch endpoints:', retryError);
@@ -226,29 +249,146 @@ instance.interceptors.response.use(
       }
     }
     
+    // Handle CORS errors
+    if (error.message && error.message.includes('Network Error')) {
+      console.error('CORS error detected:', error);
+      
+      // Try to switch to a different endpoint
+      try {
+        // Get all endpoints
+        const endpoints = getAllApiEndpoints();
+        // Get current endpoint
+        const currentEndpoint = getApiUrl();
+        // Find the next endpoint to try
+        const currentIndex = endpoints.indexOf(currentEndpoint);
+        const nextIndex = (currentIndex + 1) % endpoints.length;
+        const nextEndpoint = endpoints[nextIndex];
+        
+        // Set the new endpoint
+        setApiUrl(nextEndpoint);
+        console.log(`Switching to endpoint: ${nextEndpoint} due to CORS error`);
+        
+        // Update axios baseURL
+        updateBaseURL(nextEndpoint);
+        
+        // If this is a request that can be retried, retry with the new endpoint
+        if (originalRequest) {
+          originalRequest.baseURL = nextEndpoint;
+          return axios(originalRequest);
+        }
+      } catch (retryError) {
+        console.error('Error while trying to switch endpoints:', retryError);
+      }
+    }
+    
     // Handle 401 Unauthorized errors
     if (error.response && error.response.status === 401) {
-      // Try to refresh the token if possible
+      // Skip token refresh for login/logout endpoints
+      const isAuthEndpoint = originalRequest.url?.includes('/login') || 
+                            originalRequest.url?.includes('/logout') ||
+                            originalRequest.url?.includes('/refresh-token');
+      
+      if (isAuthEndpoint) {
+        return Promise.reject(error);
+      }
+      
+      // Mark this request as retried
+      if (originalRequest) {
+        originalRequest._retry = true;
+      }
+      
+      // If we're not already refreshing the token
       if (!isRefreshing) {
+        isRefreshing = true;
+        
         try {
           const newToken = await refreshToken();
-          if (newToken && error.config) {
-            // Retry the request with the new token
-            error.config.headers.Authorization = `Bearer ${newToken}`;
-            return axios(error.config);
+          
+          if (newToken) {
+            // Update the failed request with the new token
+            if (originalRequest) {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              
+              // Notify all pending requests that token is refreshed
+              onTokenRefreshed(newToken);
+              
+              // Retry the original request
+              return axios(originalRequest);
+            }
+          } else {
+            // If refresh failed, redirect to login
+            if (typeof window !== 'undefined') {
+              // Clear user data
+              sessionStorage.removeItem('user');
+              sessionStorage.removeItem('adminUser');
+              
+              // Only redirect if we're not already on the login page
+              if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+              }
+            }
           }
         } catch (refreshError) {
           console.error('Error refreshing token:', refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        // If we're already refreshing, add this request to the queue
+        if (originalRequest) {
+          return new Promise(resolve => {
+            subscribeTokenRefresh(token => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(axios(originalRequest));
+            });
+          });
         }
       }
+    }
+    
+    // Add user-friendly error messages
+    if (error.response) {
+      const networkError = error as NetworkError;
       
-      // If token refresh failed or we're already refreshing, redirect to login
-      if (typeof window !== 'undefined') {
-        // Clear user data
-        sessionStorage.removeItem('user');
-        // Redirect to login page
-        window.location.href = '/login';
+      // Extract error message from response if available
+      if (error.response.data && error.response.data.message) {
+        networkError.userFriendlyMessage = error.response.data.message;
+      } else {
+        // Default messages based on status code
+        switch (error.response.status) {
+          case 400:
+            networkError.userFriendlyMessage = 'Invalid request. Please check your input.';
+            break;
+          case 401:
+            networkError.userFriendlyMessage = 'Your session has expired. Please log in again.';
+            break;
+          case 403:
+            networkError.userFriendlyMessage = 'You do not have permission to access this resource.';
+            break;
+          case 404:
+            networkError.userFriendlyMessage = 'The requested resource was not found.';
+            break;
+          case 429:
+            networkError.userFriendlyMessage = 'Too many requests. Please try again later.';
+            break;
+          case 500:
+          case 502:
+          case 503:
+          case 504:
+            networkError.userFriendlyMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            networkError.userFriendlyMessage = 'An unexpected error occurred.';
+        }
       }
+    } else if (error.request) {
+      // Request was made but no response received
+      const networkError = error as NetworkError;
+      networkError.userFriendlyMessage = 'No response from server. Please check your internet connection.';
+    } else {
+      // Something happened in setting up the request
+      const networkError = error as NetworkError;
+      networkError.userFriendlyMessage = 'Failed to send request. Please try again.';
     }
     
     return Promise.reject(error);

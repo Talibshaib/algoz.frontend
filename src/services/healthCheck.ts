@@ -1,4 +1,4 @@
-import { API_URL } from "@/constants/URI";
+import { API_URL, getApiUrl, setApiUrl, getAllApiEndpoints } from "@/constants/URI";
 
 // List of alternative endpoints to try if the main one fails
 // These could be different regions or fallback servers
@@ -49,7 +49,7 @@ export async function checkAPIHealth(forceCheck = false): Promise<{isOnline: boo
 
   // Try the main endpoint first
   try {
-    const apiUrl = new URL(API_URL);
+    const apiUrl = new URL(getApiUrl());
     const baseUrl = `${apiUrl.protocol}//${apiUrl.host}`;
     
     const result = await checkEndpoint(baseUrl);
@@ -83,6 +83,10 @@ export async function checkAPIHealth(forceCheck = false): Promise<{isOnline: boo
         const lastIp = ipMatch ? ipMatch[0] : null;
         
         updateDNSCache(true, baseUrl, lastIp);
+        
+        // Update the API URL to use this working endpoint
+        setApiUrl(fallbackUrl);
+        
         return { isOnline: true, endpoint: baseUrl };
       }
     } catch (error) {
@@ -108,21 +112,24 @@ async function checkEndpoint(baseUrl: string): Promise<boolean> {
     
     for (const path of healthPaths) {
       try {
+        // Use no-cors mode to avoid CORS errors during health checks
         const response = await fetch(`${baseUrl}${path}`, {
           method: 'HEAD',
+          mode: 'no-cors', // This allows the request to succeed even with CORS issues
           cache: 'no-store',
           signal: controller.signal,
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache',
             'Expires': '0',
-          }
+          },
+          credentials: 'omit' // Don't send credentials for health checks
         });
         
-        if (response.ok) {
-          clearTimeout(timeoutId);
-          return true;
-        }
+        // With no-cors mode, we can't access response properties
+        // But if we get here without an error, the server is reachable
+        clearTimeout(timeoutId);
+        return true;
       } catch (error) {
         // Continue to the next path
         console.log(`Path ${path} failed, trying next...`);
@@ -193,6 +200,9 @@ export async function setCustomEndpoint(endpoint: string): Promise<boolean> {
       if (typeof window !== 'undefined') {
         localStorage.setItem('customApiEndpoint', endpoint);
       }
+      
+      // Set as current API URL
+      setApiUrl(endpoint);
       
       return true;
     }

@@ -34,7 +34,8 @@ export function NetworkStatus({ onStatusChange, className = "" }: NetworkStatusP
       }
 
       // Use our improved health check service
-      const { isOnline: apiOnline } = await checkAPIHealth(true);
+      const result = await checkAPIHealth(true);
+      const apiOnline = result.isOnline;
       
       setIsOnline(apiOnline);
       if (onStatusChange) onStatusChange(apiOnline);

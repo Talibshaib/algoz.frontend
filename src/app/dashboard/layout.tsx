@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { HealthCheck } from "@/components/ui/HealthCheck"
 import { toast } from "sonner"
 import { checkAPIHealth } from "@/services/healthCheck"
+import NetworkChangeAlert from "@/components/security/NetworkChangeAlert"
 
 export default function DashboardLayout({
   children,
@@ -87,6 +88,7 @@ export default function DashboardLayout({
         </div>
       )}
       {children}
+      <NetworkChangeAlert />
     </div>
   )
 }

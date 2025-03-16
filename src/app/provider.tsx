@@ -18,8 +18,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // Then check server status
     const checkServerStatus = async () => {
       try {
-        const { isOnline } = await checkAPIHealth();
-        setIsServerOnline(isOnline);
+        const result = await checkAPIHealth();
+        setIsServerOnline(result.isOnline);
       } catch (error) {
         console.error("Failed to check server status:", error);
         setIsServerOnline(false);
@@ -31,8 +31,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // Set up periodic health checks
     const intervalId = setInterval(async () => {
       try {
-        const { isOnline } = await checkAPIHealth();
-        setIsServerOnline(isOnline);
+        const result = await checkAPIHealth();
+        setIsServerOnline(result.isOnline);
       } catch (error) {
         console.error("Periodic health check failed:", error);
       }
