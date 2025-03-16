@@ -1,147 +1,198 @@
-import axios from 'axios';
+import axios from '@/lib/axios';
+import { AxiosError } from 'axios';
 
-// Define the base API URL - replace with your actual API URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-
-// Define broker interface
-export interface BrokerCredentials {
-  id: string;
+// Define broker interfaces
+export interface BrokerField {
   name: string;
-  isActive: boolean;
-  credentials: Record<string, string>;
-  createdAt?: string;
-  updatedAt?: string;
+  label: string;
+  type: string;
 }
 
-// Get all saved brokers
-export const getSavedBrokers = async (): Promise<BrokerCredentials[]> => {
-  try {
-    const response = await axios.get(`${API_URL}/brokers`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching brokers:', error);
-    throw error;
-  }
-};
+export interface Broker {
+  id: string;
+  name: string;
+  logo?: string;
+  description?: string;
+  fields: BrokerField[];
+}
 
-// Save a new broker
-export const saveBroker = async (
-  brokerId: string, 
-  brokerName: string, 
-  credentials: Record<string, string>
-): Promise<BrokerCredentials> => {
-  try {
-    const response = await axios.post(`${API_URL}/brokers`, {
-      id: brokerId,
-      name: brokerName,
-      credentials,
-      isActive: true
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error saving broker:', error);
-    throw error;
-  }
-};
-
-// Update broker credentials
-export const updateBroker = async (
-  brokerId: string, 
-  credentials: Record<string, string>
-): Promise<BrokerCredentials> => {
-  try {
-    const response = await axios.put(`${API_URL}/brokers/${brokerId}`, {
-      credentials
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error updating broker:', error);
-    throw error;
-  }
-};
-
-// Delete a broker
-export const deleteBroker = async (brokerId: string): Promise<void> => {
-  try {
-    await axios.delete(`${API_URL}/brokers/${brokerId}`);
-  } catch (error) {
-    console.error('Error deleting broker:', error);
-    throw error;
-  }
-};
-
-// Toggle broker active status
-export const toggleBrokerStatus = async (
-  brokerId: string, 
-  isActive: boolean
-): Promise<BrokerCredentials> => {
-  try {
-    const response = await axios.patch(`${API_URL}/brokers/${brokerId}/toggle`, {
-      isActive
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error toggling broker status:', error);
-    throw error;
-  }
-};
-
-export interface BrokerConnection {
+export interface SavedBroker {
   id: string;
   brokerId: string;
-  userId: string;
-  status: 'active' | 'inactive' | 'error';
+  name: string;
+  logo?: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 /**
- * Connect a broker by saving API credentials
+ * Get all available brokers
  */
-export const connectBroker = async (credentials: BrokerCredentials): Promise<BrokerConnection> => {
+export const getAvailableBrokers = async (): Promise<Broker[]> => {
   try {
-    const response = await axios.post(`${API_URL}/broker/connect`, credentials);
+    console.log('Fetching available brokers...');
+    const response = await axios.get('/api/v1/brokers/available');
+    console.log('Available brokers response:', response.status, response.statusText);
     return response.data.data;
   } catch (error) {
-    console.error('Error connecting broker:', error);
+    console.error('Error fetching available brokers:', error);
+    if (error instanceof Error) {
+      const axiosError = error as AxiosError;
+      console.error('Error details:', {
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        url: axiosError.config?.url,
+        method: axiosError.config?.method
+      });
+    }
     throw error;
   }
 };
 
 /**
- * Get all connected brokers for the current user
+ * Get all saved brokers for the current user
  */
-export const getConnectedBrokers = async (): Promise<BrokerConnection[]> => {
+export const getSavedBrokers = async (): Promise<SavedBroker[]> => {
   try {
-    const response = await axios.get(`${API_URL}/broker/connections`);
+    console.log('Fetching saved brokers...');
+    const response = await axios.get('/api/v1/brokers/saved');
+    console.log('Saved brokers response:', response.status, response.statusText);
     return response.data.data;
   } catch (error) {
-    console.error('Error fetching connected brokers:', error);
+    console.error('Error fetching saved brokers:', error);
+    if (error instanceof Error) {
+      const axiosError = error as AxiosError;
+      console.error('Error details:', {
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        url: axiosError.config?.url,
+        method: axiosError.config?.method
+      });
+    }
     throw error;
   }
 };
 
 /**
- * Disconnect a broker connection
+ * Save broker credentials
  */
-export const disconnectBroker = async (connectionId: string): Promise<void> => {
+export const saveBrokerCredentials = async (
+  brokerId: string,
+  credentials: Record<string, string>
+): Promise<SavedBroker> => {
   try {
-    await axios.delete(`${API_URL}/broker/connections/${connectionId}`);
+    console.log(`Saving credentials for broker ${brokerId}...`);
+    const response = await axios.post('/api/v1/brokers', {
+      brokerId,
+      credentials
+    });
+    console.log('Save broker response:', response.status, response.statusText);
+    return response.data.data;
   } catch (error) {
-    console.error('Error disconnecting broker:', error);
+    console.error('Error saving broker credentials:', error);
+    if (error instanceof Error) {
+      const axiosError = error as AxiosError;
+      console.error('Error details:', {
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        url: axiosError.config?.url,
+        method: axiosError.config?.method
+      });
+    }
     throw error;
   }
 };
 
 /**
- * Test a broker connection
+ * Update broker credentials
  */
-export const testBrokerConnection = async (connectionId: string): Promise<{ status: string; message: string }> => {
+export const updateBrokerCredentials = async (
+  id: string,
+  credentials: Record<string, string>
+): Promise<SavedBroker> => {
   try {
-    const response = await axios.post(`${API_URL}/broker/connections/${connectionId}/test`);
+    console.log(`Updating credentials for broker ${id}...`);
+    const response = await axios.put(`/api/v1/brokers/${id}`, {
+      credentials
+    });
+    console.log('Update broker response:', response.status, response.statusText);
     return response.data.data;
   } catch (error) {
-    console.error('Error testing broker connection:', error);
+    console.error('Error updating broker credentials:', error);
+    if (error instanceof Error) {
+      const axiosError = error as AxiosError;
+      console.error('Error details:', {
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        url: axiosError.config?.url,
+        method: axiosError.config?.method
+      });
+    }
+    throw error;
+  }
+};
+
+/**
+ * Delete broker credentials
+ */
+export const deleteBrokerCredentials = async (id: string): Promise<void> => {
+  try {
+    console.log(`Deleting broker ${id}...`);
+    const response = await axios.delete(`/api/v1/brokers/${id}`);
+    console.log('Delete broker response:', response.status, response.statusText);
+  } catch (error) {
+    console.error('Error deleting broker credentials:', error);
+    if (error instanceof Error) {
+      const axiosError = error as AxiosError;
+      console.error('Error details:', {
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        url: axiosError.config?.url,
+        method: axiosError.config?.method
+      });
+    }
+    throw error;
+  }
+};
+
+/**
+ * Toggle broker active status
+ */
+export const toggleBrokerStatus = async (
+  id: string,
+  isActive: boolean
+): Promise<SavedBroker> => {
+  try {
+    console.log(`Toggling broker ${id} to ${isActive ? 'active' : 'inactive'}...`);
+    // We don't need to send isActive since the backend will toggle the current value
+    // But we keep the parameter for backward compatibility
+    const response = await axios.put(`/api/v1/brokers/${id}/toggle`);
+    console.log('Toggle broker response:', response.status, response.statusText);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error toggling broker status:', error);
+    if (error instanceof Error) {
+      const axiosError = error as AxiosError;
+      console.error('Error details:', {
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        url: axiosError.config?.url,
+        method: axiosError.config?.method
+      });
+    }
     throw error;
   }
 }; 

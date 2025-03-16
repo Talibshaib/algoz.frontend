@@ -255,8 +255,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ? { email: emailOrUsername, password } 
         : { username: emailOrUsername, password };
       
-      // Make login request
-      const response = await axiosInstance.post('/users/login', loginData);
+      // Make login request using tryMultipleEndpoints to handle network issues
+      const response = await tryMultipleEndpoints(async (axios) => {
+        return await axios.post('/users/login', loginData);
+      });
       
       // Get response data
       const data = response.data;
@@ -315,18 +317,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error("Login error:", error);
       
-      // Handle different error scenarios
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        const errorMessage = error.response.data?.message || "Login failed";
+      // Handle different types of errors
+      if (error.code === 'ERR_NETWORK') {
+        setError("Network error. Please check your internet connection and try again.");
+      } else if (error.response) {
+        // Server responded with an error status
+        const errorMessage = error.response.data?.message || error.response.statusText || "Authentication failed";
         setError(errorMessage);
       } else if (error.request) {
-        // The request was made but no response was received
-        setError("No response from server. Please check your internet connection.");
+        // Request was made but no response received
+        setError("No response from server. Please try again later.");
       } else {
-        // Something happened in setting up the request that triggered an Error
-        setError("An error occurred during login. Please try again.");
+        // Something else went wrong
+        setError(error.message || "An unexpected error occurred");
       }
       
       return false;

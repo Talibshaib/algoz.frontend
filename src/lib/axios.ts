@@ -10,13 +10,16 @@ interface NetworkError extends Error {
   userFriendlyMessage?: string;
 }
 
-// Create an axios instance with default config
-const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://algoz-backend-68rt.onrender.com/api/v1",
-  timeout: 15000,
+// Create axios instance with base URL and default headers
+const instance = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://algoz-backend-68rt.onrender.com/api/v1',
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
+  // Add withCredentials to handle CORS properly
+  withCredentials: true,
+  // Increase timeout for better reliability
+  timeout: 15000,
 });
 
 // Helper function to delay execution
@@ -135,27 +138,17 @@ const refreshToken = async (): Promise<string | null> => {
   }
 };
 
-// Request interceptor
-axiosInstance.interceptors.request.use(
-  async (config) => {
-    // Generate a unique request ID for tracking retries
-    const requestId = `${config.method}-${config.url}-${Date.now()}`;
+// Add request interceptor to add auth token
+instance.interceptors.request.use(
+  (config) => {
+    // Ensure withCredentials is set
+    config.withCredentials = true;
     
-    // Check if we're retrying and track count
-    if (!retryCount.has(requestId)) {
-      retryCount.set(requestId, 0);
-      // Store the requestId in the config for the response interceptor
-      config.headers["X-Request-ID"] = requestId;
-    }
-    
-    // Always use the most up-to-date API URL
-    config.baseURL = getApiUrl();
-    
-    // Get tokens from sessionStorage
+    // Get token from sessionStorage
     let token = null;
     
     if (typeof window !== 'undefined') {
-      // Check for user token
+      // Try to get user token first
       const user = sessionStorage.getItem('user');
       if (user) {
         try {
@@ -168,7 +161,7 @@ axiosInstance.interceptors.request.use(
         }
       }
       
-      // If no user token, check for admin token
+      // If no user token, try admin token
       if (!token) {
         const admin = sessionStorage.getItem('adminUser');
         if (admin) {
@@ -184,7 +177,7 @@ axiosInstance.interceptors.request.use(
       }
     }
     
-    // Set Authorization header if token exists
+    // If token exists, add to headers
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -196,92 +189,66 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor
-axiosInstance.interceptors.response.use(
+// Add response interceptor to handle auth errors
+instance.interceptors.response.use(
   (response) => {
-    // Clear retry count for successful requests
-    const requestId = response.config.headers["X-Request-ID"];
-    if (requestId) {
-      retryCount.delete(requestId);
-    }
-    
-    // If this response is from a working endpoint, store it
-    if (typeof window !== 'undefined' && response.config.baseURL) {
-      sessionStorage.setItem('workingApiEndpoint', response.config.baseURL);
-    }
-    
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
-    const requestId = originalRequest?.headers?.["X-Request-ID"];
-    
-    // Handle token expiration (401 errors)
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      // Prevent multiple simultaneous token refreshes
+    // Handle network errors
+    if (error.code === 'ERR_NETWORK') {
+      console.error('Network error detected:', error);
+      
+      // If we're not already refreshing, try to use a different endpoint
       if (!isRefreshing) {
-        isRefreshing = true;
-        
-        const newToken = await refreshToken();
-        
-        isRefreshing = false;
-        
-        if (newToken) {
-          // Update the original request with the new token
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          originalRequest._retry = true;
+        try {
+          // Get all endpoints
+          const endpoints = getAllApiEndpoints();
+          // Get current endpoint
+          const currentEndpoint = getApiUrl();
+          // Find the next endpoint to try
+          const currentIndex = endpoints.indexOf(currentEndpoint);
+          const nextIndex = (currentIndex + 1) % endpoints.length;
+          const nextEndpoint = endpoints[nextIndex];
           
-          // Notify all waiting requests that token has been refreshed
-          onTokenRefreshed(newToken);
+          // Set the new endpoint
+          setApiUrl(nextEndpoint);
+          console.log(`Switching to endpoint: ${nextEndpoint} due to network error`);
           
-          // Retry the original request
-          return axiosInstance(originalRequest);
-        } else {
-          // If refresh failed, clear auth data
-          if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('user');
-            sessionStorage.removeItem('adminUser');
+          // If this is a request that can be retried, retry with the new endpoint
+          if (error.config) {
+            error.config.baseURL = nextEndpoint;
+            return axios(error.config);
           }
-          
-          // Redirect to login page if in browser
-          if (typeof window !== 'undefined') {
-            window.location.href = '/login';
-          }
+        } catch (retryError) {
+          console.error('Error while trying to switch endpoints:', retryError);
         }
-      } else {
-        // If another request is already refreshing the token, wait for it
-        return new Promise(resolve => {
-          subscribeTokenRefresh(token => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            originalRequest._retry = true;
-            resolve(axiosInstance(originalRequest));
-          });
-        });
       }
     }
     
-    // Handle retry logic for network errors and 5xx server errors
-    if (
-      (error.code === 'ECONNABORTED' || 
-       error.code === 'ERR_NETWORK' || 
-       error.response?.status >= 500) && 
-      requestId
-    ) {
-      const currentRetryCount = retryCount.get(requestId) || 0;
-      
-      if (currentRetryCount < MAX_RETRIES) {
-        retryCount.set(requestId, currentRetryCount + 1);
-        
-        // Exponential backoff
-        const delay = Math.pow(2, currentRetryCount) * 1000;
-        
-        await new Promise(resolve => setTimeout(resolve, delay));
-        
-        return axiosInstance(originalRequest);
+    // Handle 401 Unauthorized errors
+    if (error.response && error.response.status === 401) {
+      // Try to refresh the token if possible
+      if (!isRefreshing) {
+        try {
+          const newToken = await refreshToken();
+          if (newToken && error.config) {
+            // Retry the request with the new token
+            error.config.headers.Authorization = `Bearer ${newToken}`;
+            return axios(error.config);
+          }
+        } catch (refreshError) {
+          console.error('Error refreshing token:', refreshError);
+        }
       }
       
-      // Clean up retry count if we're not retrying anymore
-      retryCount.delete(requestId);
+      // If token refresh failed or we're already refreshing, redirect to login
+      if (typeof window !== 'undefined') {
+        // Clear user data
+        sessionStorage.removeItem('user');
+        // Redirect to login page
+        window.location.href = '/login';
+      }
     }
     
     return Promise.reject(error);
@@ -391,4 +358,4 @@ export async function tryMultipleEndpoints<T>(
   throw lastError || new Error("Failed to connect to any API endpoint");
 }
 
-export default axiosInstance;
+export default instance;

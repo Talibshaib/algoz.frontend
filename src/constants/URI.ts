@@ -2,6 +2,7 @@
 export const API_ENDPOINTS = {
   MAIN: "https://algoz-backend-68rt.onrender.com/api/v1",
   RENDER: "https://algoz-backend-68rt.onrender.com/api/v1",
+  RAILWAY: "https://algobackend-production.up.railway.app/api/v1",
   FALLBACK_IP: "http://34.125.238.251/api/v1",
   FALLBACK_IP_HTTPS: "https://34.125.238.251/api/v1",
   FALLBACK_IP_PORT: "http://34.125.238.251:8000/api/v1",
@@ -9,7 +10,7 @@ export const API_ENDPOINTS = {
 };
 
 // Default API URL
-export const API_URL = API_ENDPOINTS.MAIN;
+export const API_URL = API_ENDPOINTS.RAILWAY;
 
 // Get all available endpoints as an array for connection attempts
 export function getAllApiEndpoints(): string[] {

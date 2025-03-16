@@ -7,39 +7,21 @@ import { useRouter } from "next/navigation";
 import { CheckCircle, Search, X, Settings, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/use-toast";
+import { 
+  getAvailableBrokers,
+  getSavedBrokers, 
+  saveBrokerCredentials, 
+  updateBrokerCredentials, 
+  deleteBrokerCredentials, 
+  toggleBrokerStatus,
+  Broker,
+  SavedBroker,
+  BrokerField
+} from "@/services/brokerService";
 
-// Define broker data - include all brokers
-const brokers = [
-  {
-    id: "spaisa",
-    name: "SPAISA",
-    logo: "/brokers/spaisa.png",
-    description: "Connect your SPAISA account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
-  {
-    id: "aliceblue",
-    name: "ALICEBLUE",
-    logo: "/brokers/aliceblue.png",
-    description: "Connect your ALICEBLUE account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
-  {
-    id: "alpaca",
-    name: "ALPACA",
-    logo: "/brokers/alpaca.png",
-    description: "Connect your ALPACA account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
+// Define default brokers to use as fallback when API fails
+const defaultBrokers: Broker[] = [
   {
     id: "angelone",
     name: "ANGELONE",
@@ -52,121 +34,42 @@ const brokers = [
     ]
   },
   {
-    id: "ats",
-    name: "ATS",
-    logo: "/brokers/ats.png",
-    description: "Connect your ATS account to automate trading.",
+    id: "zerodha",
+    name: "ZERODHA",
+    logo: "/brokers/zerodha.png",
+    description: "Connect your ZERODHA account to automate trading.",
     fields: [
       { name: "apiKey", label: "API Key", type: "text" },
       { name: "apiSecret", label: "API Secret", type: "password" },
     ]
   },
   {
-    id: "binance",
-    name: "BINANCE",
-    logo: "/brokers/binance.png",
-    description: "Connect your BINANCE account to automate trading.",
+    id: "upstox",
+    name: "UPSTOX",
+    logo: "/brokers/upstox.png",
+    description: "Connect your UPSTOX account to automate trading.",
     fields: [
       { name: "apiKey", label: "API Key", type: "text" },
       { name: "apiSecret", label: "API Secret", type: "password" },
     ]
   },
   {
-    id: "binancev2",
-    name: "BINANCEV2",
-    logo: "/brokers/binance.png",
-    description: "Connect your BINANCEV2 account to automate trading.",
+    id: "flattrade",
+    name: "FLATTRADE",
+    logo: "/brokers/flattrade.png",
+    description: "Connect your FlatTrade account to automate trading.",
     fields: [
       { name: "apiKey", label: "API Key", type: "text" },
       { name: "apiSecret", label: "API Secret", type: "password" },
+      { name: "toTp", label: "TO TP", type: "password" },
+      { name: "clientId", label: "Client ID", type: "text" },
     ]
   },
   {
-    id: "bitbns",
-    name: "BITBNS",
-    logo: "/brokers/bitbns.png",
-    description: "Connect your BITBNS account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
-  {
-    id: "bitmex",
-    name: "BITMEX",
-    logo: "/brokers/bitmex.png",
-    description: "Connect your BITMEX account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
-  {
-    id: "bybit",
-    name: "BYBIT",
-    logo: "/brokers/bybit.png",
-    description: "Connect your BYBIT account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
-  {
-    id: "coindcx",
-    name: "COINDCX",
-    logo: "/brokers/coindcx.png",
-    description: "Connect your COINDCX account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
-  {
-    id: "delta",
-    name: "DELTA",
-    logo: "/brokers/delta.png",
-    description: "Connect your DELTA account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
-  {
-    id: "dhanhq",
-    name: "DHANHQ",
-    logo: "/brokers/dhanhq.png",
-    description: "Connect your DHANHQ account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
-  {
-    id: "finvasia",
-    name: "FINVASIA",
-    logo: "/brokers/finvasia.png",
-    description: "Connect your FINVASIA account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-      { name: "vendorCode", label: "Vendor Code", type: "text" },
-    ]
-  },
-  {
-    id: "forex",
-    name: "FOREX",
-    logo: "/brokers/forex.png",
-    description: "Connect your FOREX account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
-  {
-    id: "ftx",
-    name: "FTX",
-    logo: "/brokers/ftx.png",
-    description: "Connect your FTX account to automate trading.",
+    id: "aliceblue",
+    name: "ALICEBLUE",
+    logo: "/brokers/aliceblue.png",
+    description: "Connect your ALICEBLUE account to automate trading.",
     fields: [
       { name: "apiKey", label: "API Key", type: "text" },
       { name: "apiSecret", label: "API Secret", type: "password" },
@@ -202,49 +105,6 @@ const brokers = [
       { name: "password", label: "Password", type: "password" },
       { name: "server", label: "Server", type: "text" },
     ]
-  },
-  {
-    id: "metatrader4",
-    name: "METATRADER 4",
-    logo: "/brokers/mt4.png",
-    description: "Connect your MetaTrader 4 account to automate trading.",
-    fields: [
-      { name: "login", label: "Login", type: "text" },
-      { name: "password", label: "Password", type: "password" },
-      { name: "server", label: "Server", type: "text" },
-    ]
-  },
-  {
-    id: "upstox",
-    name: "UPSTOX",
-    logo: "/brokers/upstox.png",
-    description: "Connect your UPSTOX account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
-  {
-    id: "zerodha",
-    name: "ZERODHA",
-    logo: "/brokers/zerodha.png",
-    description: "Connect your ZERODHA account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-    ]
-  },
-  {
-    id: "flattrade",
-    name: "FLATTRADE",
-    logo: "/brokers/flattrade.png",
-    description: "Connect your FlatTrade account to automate trading.",
-    fields: [
-      { name: "apiKey", label: "API Key", type: "text" },
-      { name: "apiSecret", label: "API Secret", type: "password" },
-      { name: "toTp", label: "TO TP", type: "password" },
-      { name: "clientId", label: "Client ID", type: "text" },
-    ]
   }
 ];
 
@@ -259,27 +119,17 @@ const BrokerCredentialsModal = ({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  broker: any;
+  broker: Broker | null;
   onSubmit: (formData: Record<string, string>) => void;
   isLoading: boolean;
-  savedBrokers: string[];
+  savedBrokers: SavedBroker[];
 }) => {
   const [formData, setFormData] = useState<Record<string, string>>({});
 
-  // Load saved credentials when broker changes
+  // Reset form data when broker changes
   useEffect(() => {
     if (broker) {
-      const savedCredentials = localStorage.getItem(`broker_${broker.id}_credentials`);
-      if (savedCredentials) {
-        try {
-          setFormData(JSON.parse(savedCredentials));
-        } catch (e) {
-          console.error("Error parsing saved credentials", e);
-          setFormData({});
-        }
-      } else {
-        setFormData({});
-      }
+      setFormData({});
     }
   }, [broker]);
 
@@ -297,6 +147,9 @@ const BrokerCredentialsModal = ({
 
   if (!isOpen || !broker) return null;
 
+  // Check if this broker is already saved
+  const isSaved = savedBrokers.some(b => b.brokerId === broker.id);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div
@@ -305,7 +158,7 @@ const BrokerCredentialsModal = ({
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">
-            {savedBrokers.includes(broker.id) ? `Update ${broker.name}` : `Connect ${broker.name}`}
+            {isSaved ? `Update ${broker.name}` : `Connect ${broker.name}`}
           </h2>
           <button
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -316,14 +169,14 @@ const BrokerCredentialsModal = ({
         </div>
 
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          {savedBrokers.includes(broker.id) 
+          {isSaved 
             ? `Update your ${broker.name} API credentials.`
             : `Enter your ${broker.name} API credentials to connect your account.`
           }
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {broker.fields.map((field: any) => (
+          {broker.fields.map((field: BrokerField) => (
             <div key={field.name} className="space-y-2">
               <Label htmlFor={field.name}>{field.label}</Label>
               <Input
@@ -339,13 +192,13 @@ const BrokerCredentialsModal = ({
           ))}
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading 
                 ? 'Processing...' 
-                : savedBrokers.includes(broker.id) ? 'Update' : 'Connect'
+                : isSaved ? 'Update' : 'Connect'
               }
             </Button>
           </div>
@@ -359,90 +212,264 @@ export default function BrokerAuthPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedBroker, setSelectedBroker] = useState<any>(null);
+  const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [savedBrokers, setSavedBrokers] = useState<string[]>([]);
+  const [savedBrokers, setSavedBrokers] = useState<SavedBroker[]>([]);
+  const [availableBrokers, setAvailableBrokers] = useState<Broker[]>([]);
 
-  // Load saved brokers on mount
+  // Load brokers on mount
   useEffect(() => {
-    const saved: string[] = [];
-    brokers.forEach(broker => {
-      if (localStorage.getItem(`broker_${broker.id}_authenticated`) === 'true') {
-        saved.push(broker.id);
+    const fetchBrokers = async () => {
+      try {
+        setIsLoading(true);
         
-        // Initialize active status if not set
-        if (localStorage.getItem(`broker_${broker.id}_active`) === null) {
-          localStorage.setItem(`broker_${broker.id}_active`, 'true');
+        // Fetch saved brokers from API
+        try {
+          const savedBrokersData = await getSavedBrokers();
+          setSavedBrokers(savedBrokersData);
+        } catch (error) {
+          console.error("Error fetching saved brokers:", error);
+          
+          // Load locally saved brokers as fallback
+          const localBrokers = loadLocalBrokers();
+          setSavedBrokers(localBrokers);
+          
+          if (localBrokers.length > 0) {
+            toast.info(`Loaded ${localBrokers.length} locally saved brokers (API unavailable)`);
+          } else {
+            setSavedBrokers([]);
+          }
         }
+        
+        // Fetch available brokers from API
+        try {
+          const availableBrokersData = await getAvailableBrokers();
+          setAvailableBrokers(availableBrokersData);
+        } catch (error) {
+          console.error("Error fetching available brokers:", error);
+          // Use default brokers as fallback
+          setAvailableBrokers(defaultBrokers);
+          toast.info("Using default broker list as fallback");
+        }
+      } catch (error: any) {
+        console.error("Error in broker initialization:", error);
+        // Ensure we at least have the default brokers
+        setAvailableBrokers(defaultBrokers);
+        toast.error("Failed to initialize brokers properly: " + (error.message || "Unknown error"));
+      } finally {
+        setIsLoading(false);
       }
-    });
-    setSavedBrokers(saved);
+    };
+
+    fetchBrokers();
   }, []);
 
+  // Load locally saved brokers from localStorage
+  const loadLocalBrokers = (): SavedBroker[] => {
+    const localBrokers: SavedBroker[] = [];
+    
+    // Check localStorage for saved brokers
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.endsWith('_authenticated') && localStorage.getItem(key) === 'true') {
+        const brokerId = key.replace('broker_', '').replace('_authenticated', '');
+        
+        // Find the broker in default brokers
+        const defaultBroker = defaultBrokers.find(b => b.id === brokerId);
+        if (defaultBroker) {
+          const isActive = localStorage.getItem(`broker_${brokerId}_active`) !== 'false';
+          
+          localBrokers.push({
+            id: `local_${brokerId}`,
+            brokerId: brokerId,
+            name: defaultBroker.name,
+            logo: defaultBroker.logo,
+            isActive: isActive,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+        }
+      }
+    }
+    
+    return localBrokers;
+  };
+
   // Filter brokers based on search query
-  const filteredBrokers = brokers.filter(broker => 
+  const filteredBrokers = availableBrokers.filter(broker => 
     broker.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Handle broker selection for adding or updating credentials
   const handleBrokerSelect = (brokerId: string) => {
-    const broker = brokers.find(b => b.id === brokerId);
+    const broker = availableBrokers.find(b => b.id === brokerId);
     if (broker) {
       setSelectedBroker(broker);
-      // Use setTimeout to ensure this runs after the current call stack is clear
-      setTimeout(() => {
-        setIsModalOpen(true);
-      }, 0);
+      setIsModalOpen(true);
     }
   };
 
   // Handle form submission from modal - save or update broker credentials
-  const handleFormSubmit = (formData: Record<string, string>) => {
+  const handleFormSubmit = async (formData: Record<string, string>) => {
+    if (!selectedBroker) return;
+    
     setIsLoading(true);
     
     try {
-      // Save credentials to localStorage (in production, this would be saved to a database)
-      localStorage.setItem(`broker_${selectedBroker.id}_credentials`, JSON.stringify(formData));
-      localStorage.setItem(`broker_${selectedBroker.id}_authenticated`, 'true');
+      // Check if this broker is already saved
+      const savedBroker = savedBrokers.find(b => b.brokerId === selectedBroker.id);
       
-      // Add the broker to saved brokers if not already saved
-      if (!savedBrokers.includes(selectedBroker.id)) {
-        setSavedBrokers(prev => [...prev, selectedBroker.id]);
+      if (savedBroker) {
+        try {
+          // Update existing credentials via API
+          await updateBrokerCredentials(savedBroker.id, formData);
+          
+          // Update the broker in state
+          setSavedBrokers(prev => 
+            prev.map(b => b.id === savedBroker.id 
+              ? { ...b, updatedAt: new Date().toISOString() } 
+              : b
+            )
+          );
+          
+          toast.success(`${selectedBroker.name} credentials updated successfully`);
+        } catch (error: any) {
+          console.error("API error updating broker credentials:", error);
+          
+          // Fallback to localStorage
+          localStorage.setItem(`broker_${selectedBroker.id}_credentials`, JSON.stringify(formData));
+          
+          // Update the broker in state anyway
+          setSavedBrokers(prev => 
+            prev.map(b => b.id === savedBroker.id 
+              ? { ...b, updatedAt: new Date().toISOString() } 
+              : b
+            )
+          );
+          
+          toast.info(`${selectedBroker.name} credentials saved locally (API unavailable)`);
+        }
+      } else {
+        try {
+          // Save new credentials via API
+          const newBroker = await saveBrokerCredentials(selectedBroker.id, formData);
+          
+          // Add the new broker to state
+          setSavedBrokers(prev => [...prev, newBroker]);
+          
+          toast.success(`${selectedBroker.name} connected successfully`);
+        } catch (error: any) {
+          console.error("API error saving broker credentials:", error);
+          
+          // Fallback to localStorage
+          localStorage.setItem(`broker_${selectedBroker.id}_credentials`, JSON.stringify(formData));
+          localStorage.setItem(`broker_${selectedBroker.id}_authenticated`, 'true');
+          
+          // Create a local broker object
+          const localBroker: SavedBroker = {
+            id: `local_${selectedBroker.id}`,
+            brokerId: selectedBroker.id,
+            name: selectedBroker.name,
+            logo: selectedBroker.logo,
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          
+          // Add the local broker to state
+          setSavedBrokers(prev => [...prev, localBroker]);
+          
+          toast.info(`${selectedBroker.name} connected locally (API unavailable)`);
+        }
       }
       
-      // Close the modal after a short delay
-      setTimeout(() => {
-        setIsLoading(false);
-        setIsModalOpen(false);
-      }, 1000);
-    } catch (error) {
+      // Close the modal
+      setIsModalOpen(false);
+    } catch (error: any) {
       console.error("Error saving broker credentials:", error);
+      toast.error("Failed to save credentials: " + (error.response?.data?.message || error.message || "Unknown error"));
+    } finally {
       setIsLoading(false);
     }
   };
 
   // Handle broker deletion
-  const handleBrokerDelete = (brokerId: string, e: React.MouseEvent) => {
+  const handleBrokerDelete = async (brokerId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering parent click events
     
-    // Remove from localStorage (in production, this would delete from database)
-    localStorage.removeItem(`broker_${brokerId}_credentials`);
-    localStorage.removeItem(`broker_${brokerId}_authenticated`);
-    
-    // Remove from saved brokers state
-    setSavedBrokers(prev => prev.filter(id => id !== brokerId));
+    try {
+      // Find the broker to get its name for the success message
+      const broker = savedBrokers.find(b => b.id === brokerId);
+      if (!broker) return;
+      
+      try {
+        // Delete broker from API
+        await deleteBrokerCredentials(brokerId);
+      } catch (error) {
+        console.error("API error deleting broker:", error);
+        
+        // Fallback to localStorage if it's a local broker
+        if (brokerId.startsWith('local_')) {
+          const actualBrokerId = brokerId.replace('local_', '');
+          localStorage.removeItem(`broker_${actualBrokerId}_credentials`);
+          localStorage.removeItem(`broker_${actualBrokerId}_authenticated`);
+          localStorage.removeItem(`broker_${actualBrokerId}_active`);
+        } else {
+          // If it's not a local broker and API failed, show warning
+          toast.error("API unavailable. Changes may not persist after reload.");
+        }
+      }
+      
+      // Remove from state regardless of API success
+      setSavedBrokers(prev => prev.filter(b => b.id !== brokerId));
+      
+      toast.success(`${broker.name} deleted successfully`);
+    } catch (error: any) {
+      console.error("Error deleting broker:", error);
+      toast.error("Failed to delete broker: " + (error.response?.data?.message || error.message || "Unknown error"));
+    }
   };
 
   // Handle broker toggle
-  const handleBrokerToggle = (brokerId: string, e: React.MouseEvent) => {
+  const handleBrokerToggle = async (brokerId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering parent click events
     
-    // Toggle the broker's active status
-    const isActive = localStorage.getItem(`broker_${brokerId}_active`) === 'true';
-    localStorage.setItem(`broker_${brokerId}_active`, isActive ? 'false' : 'true');
-    
-    // Force a re-render
-    setSavedBrokers([...savedBrokers]);
+    try {
+      // Find the broker in state
+      const broker = savedBrokers.find(b => b.id === brokerId);
+      if (!broker) return;
+      
+      try {
+        // Toggle the broker's active status via API
+        const updatedBroker = await toggleBrokerStatus(brokerId, !broker.isActive);
+        
+        // Update the broker in state
+        setSavedBrokers(prev => 
+          prev.map(b => b.id === updatedBroker.id ? updatedBroker : b)
+        );
+      } catch (error) {
+        console.error("API error toggling broker status:", error);
+        
+        // Fallback to localStorage
+        if (brokerId.startsWith('local_')) {
+          const actualBrokerId = brokerId.replace('local_', '');
+          const isActive = localStorage.getItem(`broker_${actualBrokerId}_active`) === 'true';
+          localStorage.setItem(`broker_${actualBrokerId}_active`, isActive ? 'false' : 'true');
+        }
+        
+        // Update the broker in state anyway
+        setSavedBrokers(prev => 
+          prev.map(b => b.id === brokerId ? { ...b, isActive: !broker.isActive } : b)
+        );
+        
+        toast.info("API unavailable. Changes saved locally.");
+      }
+      
+      toast.success(`Broker ${!broker.isActive ? 'activated' : 'deactivated'} successfully`);
+    } catch (error: any) {
+      console.error("Error toggling broker status:", error);
+      toast.error("Failed to update broker status: " + (error.response?.data?.message || error.message || "Unknown error"));
+    }
   };
 
   // Get broker initial for avatar
@@ -480,103 +507,112 @@ export default function BrokerAuthPage() {
           )}
         </div>
 
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3 text-gray-600">Loading brokers...</span>
+          </div>
+        )}
+
         {/* Saved brokers section */}
-        {savedBrokers.length > 0 && (
+        {!isLoading && savedBrokers.length > 0 && (
           <div>
             <h2 className="text-lg font-medium mb-4">Saved Brokers</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {brokers
-                .filter(broker => savedBrokers.includes(broker.id))
-                .map(broker => {
-                  const isActive = localStorage.getItem(`broker_${broker.id}_active`) !== 'false';
-                  return (
-                    <Card key={broker.id} className="border overflow-hidden hover:shadow-md transition-all">
-                      <CardHeader className="p-4 pb-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="h-8 w-8 bg-primary/10 text-primary rounded-full flex items-center justify-center">
-                              {getBrokerInitial(broker.name)}
-                            </div>
-                            <CardTitle className="text-base">{broker.name}</CardTitle>
-                          </div>
-                          <button
-                            onClick={(e) => handleBrokerToggle(broker.id, e)}
-                            className="text-primary hover:text-primary/80 transition-colors"
-                          >
-                            {isActive ?
-                              <ToggleRight className="h-6 w-6 text-green-500" /> :
-                              <ToggleLeft className="h-6 w-6 text-gray-400" />
-                            }
-                          </button>
+              {savedBrokers.map(broker => (
+                <Card key={broker.id} className="border overflow-hidden hover:shadow-md transition-all">
+                  <CardHeader className="p-4 pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-8 w-8 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+                          {getBrokerInitial(broker.name)}
                         </div>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-2 pb-4">
-                        <p className="text-xs text-muted-foreground">Saved</p>
-                      </CardContent>
-                      <CardFooter className="p-4 pt-0 pb-4 flex justify-between">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleBrokerSelect(broker.id);
-                          }}
-                          className="text-gray-400 hover:text-primary transition-colors"
-                          title="Update credentials"
-                        >
-                          <Settings size={18} />
-                        </button>
-                        <button
-                          onClick={(e) => handleBrokerDelete(broker.id, e)}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
-                          title="Delete broker"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </CardFooter>
-                    </Card>
-                  );
-                })}
+                        <CardTitle className="text-base">{broker.name}</CardTitle>
+                      </div>
+                      <button
+                        onClick={(e) => handleBrokerToggle(broker.id, e)}
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        disabled={isLoading}
+                      >
+                        {broker.isActive ?
+                          <ToggleRight className="h-6 w-6 text-green-500" /> :
+                          <ToggleLeft className="h-6 w-6 text-gray-400" />
+                        }
+                      </button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-2 pb-4">
+                    <p className="text-xs text-muted-foreground">Saved</p>
+                  </CardContent>
+                  <CardFooter className="p-4 pt-0 pb-4 flex justify-between">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBrokerSelect(broker.brokerId);
+                      }}
+                      className="text-gray-400 hover:text-primary transition-colors"
+                      title="Update credentials"
+                      disabled={isLoading}
+                    >
+                      <Settings size={18} />
+                    </button>
+                    <button
+                      onClick={(e) => handleBrokerDelete(broker.id, e)}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                      title="Delete broker"
+                      disabled={isLoading}
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </CardFooter>
+                </Card>
+              ))}
             </div>
           </div>
         )}
 
         {/* Available brokers section */}
-        <div>
-          <h2 className="text-lg font-medium mb-4">Available Brokers</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredBrokers
-              .filter(broker => !savedBrokers.includes(broker.id))
-              .map((broker) => (
-                <Card key={broker.id} className="border overflow-hidden hover:shadow-md transition-all">
-                  <CardHeader className="p-4 pb-2">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 bg-primary/10 text-primary rounded-full flex items-center justify-center">
-                        {getBrokerInitial(broker.name)}
+        {!isLoading && (
+          <div>
+            <h2 className="text-lg font-medium mb-4">Available Brokers</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredBrokers
+                .filter(broker => !savedBrokers.some(saved => saved.brokerId === broker.id))
+                .map((broker) => (
+                  <Card key={broker.id} className="border overflow-hidden hover:shadow-md transition-all">
+                    <CardHeader className="p-4 pb-2">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-8 w-8 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+                          {getBrokerInitial(broker.name)}
+                        </div>
+                        <CardTitle className="text-base">{broker.name}</CardTitle>
                       </div>
-                      <CardTitle className="text-base">{broker.name}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-2 pb-4">
-                    <p className="text-xs text-muted-foreground line-clamp-2">{broker.description}</p>
-                  </CardContent>
-                  <CardFooter className="p-4 pt-0 pb-4">
-                    <Button
-                      className="w-full"
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBrokerSelect(broker.id);
-                      }}
-                    >
-                      Connect
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                    </CardHeader>
+                    <CardContent className="p-4 pt-2 pb-4">
+                      <p className="text-xs text-muted-foreground line-clamp-2">{broker.description}</p>
+                    </CardContent>
+                    <CardFooter className="p-4 pt-0 pb-4">
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBrokerSelect(broker.id);
+                        }}
+                        disabled={isLoading}
+                      >
+                        Connect
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {filteredBrokers.length === 0 && (
+        {!isLoading && filteredBrokers.length === 0 && (
           <div className="text-center py-8">
             <p className="text-muted-foreground">No brokers found matching your search.</p>
           </div>
