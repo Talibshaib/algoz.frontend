@@ -139,9 +139,6 @@ export function DashboardHeader() {
                     Settings
                   </Link>
                 </DropdownItem>
-                <DropdownItem key="logout" startContent={<LogOut size={18} />} onClick={handleLogout}>
-                  Logout
-                </DropdownItem>
               </DropdownMenu>
             </Dropdown>
           </div>
