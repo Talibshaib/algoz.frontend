@@ -13,12 +13,19 @@ const WebhookUrl = () => {
   const [webhookUrl, setWebhookUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState<boolean>(false);
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  
+  // Set mounted state to true after component mounts
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
   // Fetch webhook URL when component mounts or user changes
   useEffect(() => {
     const fetchWebhookUrl = async () => {
-      if (!user) return;
+      if (!user || !mounted) return;
       
       setIsLoading(true);
       setError(null);
@@ -36,7 +43,7 @@ const WebhookUrl = () => {
         console.log("Using access token:", user.accessToken.substring(0, 10) + "...");
         
         // Make API request with explicit Authorization header
-        const response = await axiosInstance.get('/webhook/url', {
+        const response = await axiosInstance.get('/api/v1/webhook/url', {
           headers: {
             Authorization: `Bearer ${user.accessToken}`
           }
@@ -72,6 +79,8 @@ const WebhookUrl = () => {
               },
               duration: 10000,
             });
+          } else if (err.response.status === 404) {
+            setError("Failed to load webhook URL: Not Found - /webhook/url");
           } else {
             setError(`Failed to load webhook URL: ${err.response.data?.message || err.message}`);
           }
@@ -86,14 +95,14 @@ const WebhookUrl = () => {
     };
     
     // Only fetch if user is authenticated and not in loading state
-    if (user && !authLoading) {
+    if (user && !authLoading && mounted) {
       fetchWebhookUrl();
-    } else if (!authLoading && !user) {
+    } else if (!authLoading && !user && mounted) {
       // If not loading and no user, we shouldn't be here
       // Dashboard layout should handle redirect, but just in case
       setIsLoading(false);
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, mounted]);
 
   const handleRegenerateWebhook = async () => {
     if (!user || !user.accessToken) {
@@ -105,7 +114,7 @@ const WebhookUrl = () => {
     setError(null);
     
     try {
-      const response = await axiosInstance.post('/webhook/regenerate', {}, {
+      const response = await axiosInstance.post('/api/v1/webhook/regenerate', {}, {
         headers: {
           Authorization: `Bearer ${user.accessToken}`
         }
@@ -171,6 +180,11 @@ const WebhookUrl = () => {
       });
   };
 
+  // Don't render anything on the server
+  if (!mounted) {
+    return null;
+  }
+
   // Show loading state while authentication is in progress
   if (authLoading) {
     return (
@@ -217,7 +231,6 @@ const WebhookUrl = () => {
           </div>
         )}
         
-        {/* Regenerate button removed as requested */}
         <div className="flex items-center gap-2">
           <Button
             variant="outline"

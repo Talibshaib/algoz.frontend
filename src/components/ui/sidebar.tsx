@@ -74,6 +74,7 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
+    const [mounted, setMounted] = React.useState(false)
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
@@ -88,25 +89,34 @@ const SidebarProvider = React.forwardRef<
           _setOpen(openState)
         }
 
-        // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        // Only set cookie on client-side
+        if (typeof document !== 'undefined') {
+          document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        }
       },
       [setOpenProp, open]
     )
 
+    // Set mounted state to true after component mounts
+    React.useEffect(() => {
+      setMounted(true)
+    }, [])
+
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
       // Check if an input field is focused
-      const activeElement = document.activeElement;
-      if (activeElement) {
-        const tagName = activeElement.tagName.toLowerCase();
-        
-        // Don't toggle if an input field is focused
-        if (tagName === 'input' || 
-            tagName === 'textarea' || 
-            tagName === 'select' || 
-            (activeElement as HTMLElement).isContentEditable) {
-          return;
+      if (typeof document !== 'undefined') {
+        const activeElement = document.activeElement;
+        if (activeElement) {
+          const tagName = activeElement.tagName.toLowerCase();
+          
+          // Don't toggle if an input field is focused
+          if (tagName === 'input' || 
+              tagName === 'textarea' || 
+              tagName === 'select' || 
+              (activeElement as HTMLElement).isContentEditable) {
+            return;
+          }
         }
       }
       
@@ -119,6 +129,8 @@ const SidebarProvider = React.forwardRef<
 
     // Adds a keyboard shortcut to toggle the sidebar.
     React.useEffect(() => {
+      if (typeof window === 'undefined') return;
+      
       const handleKeyDown = (event: KeyboardEvent) => {
         if (
           event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
@@ -163,6 +175,11 @@ const SidebarProvider = React.forwardRef<
       }),
       [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
     )
+
+    // Don't render anything on the server or until mounted on client
+    if (!mounted) {
+      return null;
+    }
 
     return (
       <SidebarContext.Provider value={contextValue}>
