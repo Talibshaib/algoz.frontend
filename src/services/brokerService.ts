@@ -34,7 +34,27 @@ export const getAvailableBrokers = async (): Promise<Broker[]> => {
     console.log('Fetching available brokers...');
     const response = await axios.get('/api/v1/brokers/available');
     console.log('Available brokers response:', response.status, response.statusText);
-    return response.data.data;
+    
+    // Get brokers from response
+    const brokers = response.data.data;
+    
+    // Check if Dhan is in the available brokers
+    const hasDhan = brokers.some((broker: Broker) => broker.id === 'dhan');
+    
+    // If Dhan is not in the available brokers, add it
+    if (!hasDhan) {
+      brokers.push({
+        id: 'dhan',
+        name: 'DHAN',
+        description: 'Connect your Dhan account to automate trading.',
+        fields: [
+          { name: 'partner_id', label: 'Partner ID', type: 'text' },
+          { name: 'partner_secret', label: 'Partner Secret', type: 'password' }
+        ]
+      });
+    }
+    
+    return brokers;
   } catch (error) {
     console.error('Error fetching available brokers:', error);
     if (error instanceof Error) {
@@ -48,7 +68,17 @@ export const getAvailableBrokers = async (): Promise<Broker[]> => {
         method: axiosError.config?.method
       });
     }
-    throw error;
+    
+    // Return a default list with Dhan if the API call fails
+    return [{
+      id: 'dhan',
+      name: 'DHAN',
+      description: 'Connect your Dhan account to automate trading.',
+      fields: [
+        { name: 'partner_id', label: 'Partner ID', type: 'text' },
+        { name: 'partner_secret', label: 'Partner Secret', type: 'password' }
+      ]
+    }];
   }
 };
 
@@ -182,6 +212,32 @@ export const toggleBrokerStatus = async (
     return response.data.data;
   } catch (error) {
     console.error('Error toggling broker status:', error);
+    if (error instanceof Error) {
+      const axiosError = error as AxiosError;
+      console.error('Error details:', {
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        url: axiosError.config?.url,
+        method: axiosError.config?.method
+      });
+    }
+    throw error;
+  }
+};
+
+/**
+ * Authenticate with Dhan broker
+ */
+export const authenticateDhan = async (id: string): Promise<{ consentId: string }> => {
+  try {
+    console.log(`Authenticating with Dhan for broker ${id}...`);
+    const response = await axios.post(`/api/v1/brokers/${id}/dhan/authenticate`);
+    console.log('Dhan authentication response:', response.status, response.statusText);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error authenticating with Dhan:', error);
     if (error instanceof Error) {
       const axiosError = error as AxiosError;
       console.error('Error details:', {

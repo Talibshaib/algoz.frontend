@@ -19,6 +19,7 @@ import {
   SavedBroker,
   BrokerField
 } from "@/services/brokerService";
+import { DhanAuthButton } from "@/components/ui/dhan-auth-button";
 
 // Create a completely isolated modal component
 const BrokerCredentialsModal = ({
@@ -155,6 +156,23 @@ export default function BrokerManagementPage() {
         
         // Fetch available brokers
         const availableBrokersData = await getAvailableBrokers();
+        
+        // Check if Dhan is in the available brokers
+        const hasDhan = availableBrokersData.some(broker => broker.id === 'dhan');
+        
+        // If Dhan is not in the available brokers, add it
+        if (!hasDhan) {
+          availableBrokersData.push({
+            id: 'dhan',
+            name: 'DHAN',
+            description: 'Connect your Dhan account to automate trading.',
+            fields: [
+              { name: 'partner_id', label: 'Partner ID', type: 'text' },
+              { name: 'partner_secret', label: 'Partner Secret', type: 'password' }
+            ]
+          });
+        }
+        
         setAvailableBrokers(availableBrokersData);
       } catch (error: any) {
         console.error("Error fetching brokers:", error);
@@ -173,6 +191,39 @@ export default function BrokerManagementPage() {
       setLoadingBrokerId(null);
     };
   }, []);
+  
+  // Function to refresh brokers data
+  const refreshBrokers = async () => {
+    try {
+      // Fetch saved brokers
+      const savedBrokersData = await getSavedBrokers();
+      setSavedBrokers(savedBrokersData);
+      
+      // Fetch available brokers
+      const availableBrokersData = await getAvailableBrokers();
+      
+      // Check if Dhan is in the available brokers
+      const hasDhan = availableBrokersData.some(broker => broker.id === 'dhan');
+      
+      // If Dhan is not in the available brokers, add it
+      if (!hasDhan) {
+        availableBrokersData.push({
+          id: 'dhan',
+          name: 'DHAN',
+          description: 'Connect your Dhan account to automate trading.',
+          fields: [
+            { name: 'partner_id', label: 'Partner ID', type: 'text' },
+            { name: 'partner_secret', label: 'Partner Secret', type: 'password' }
+          ]
+        });
+      }
+      
+      setAvailableBrokers(availableBrokersData);
+    } catch (error: any) {
+      console.error("Error refreshing brokers:", error);
+      toast.error("Failed to refresh brokers: " + (error.response?.data?.message || error.message || "Unknown error"));
+    }
+  };
   
   // Filter brokers based on search query
   const filteredBrokers = availableBrokers.filter(broker => 
@@ -250,8 +301,8 @@ export default function BrokerManagementPage() {
       setLoadingBrokerId(brokerId);
       
       // Toggle the broker status via the service
-      await toggleBrokerStatus(brokerId, !savedBroker.isActive);
-
+      const updatedBroker = await toggleBrokerStatus(brokerId, !savedBroker.isActive);
+      
       // Update the broker in the state
       setSavedBrokers((prev) =>
         prev.map((broker) =>
@@ -260,7 +311,7 @@ export default function BrokerManagementPage() {
             : broker
         )
       );
-
+      
       toast.success(`Broker ${savedBroker.name} ${!savedBroker.isActive ? "activated" : "deactivated"} successfully`);
     } catch (error: any) {
       console.error("Error toggling broker status:", error);
@@ -360,18 +411,24 @@ export default function BrokerManagementPage() {
           <div>
             <h2 className="text-lg font-medium mb-4">Saved Brokers</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {savedBrokers.map(broker => {
-                return (
-                  <Card key={broker.id} className="border overflow-hidden hover:shadow-md transition-all">
-                    <CardHeader className="p-4 pb-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="h-8 w-8 bg-primary/10 text-primary rounded-full flex items-center justify-center">
-                            {getBrokerInitial(broker.name)}
-                          </div>
-                          <CardTitle className="text-base">{broker.name}</CardTitle>
+              {savedBrokers.map((broker) => (
+                <Card key={broker.id} className="border overflow-hidden hover:shadow-md transition-all">
+                  <CardHeader className="p-4 pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-8 w-8 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+                          {getBrokerInitial(broker.name)}
                         </div>
-                        {/* Toggle button to enable/disable the broker */}
+                        <CardTitle className="text-base">{broker.name}</CardTitle>
+                      </div>
+                      {/* Toggle button to enable/disable the broker */}
+                      {broker.brokerId === 'dhan' ? (
+                        <DhanAuthButton 
+                          brokerId={broker.id} 
+                          isActive={broker.isActive} 
+                          onSuccess={() => refreshBrokers()}
+                        />
+                      ) : (
                         <button
                           onClick={(e) => handleBrokerToggle(broker.id, e)}
                           className="text-primary hover:text-primary/80 transition-colors"
@@ -385,41 +442,41 @@ export default function BrokerManagementPage() {
                             <ToggleLeft className="h-6 w-6 text-gray-400" />
                           )}
                         </button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-2 pb-4">
-                      <p className="text-xs text-muted-foreground">Saved</p>
-                    </CardContent>
-                    <CardFooter className="p-4 pt-0 pb-4 flex justify-between">
-                      {/* Settings icon to update broker credentials */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleBrokerSelect(broker.brokerId);
-                        }}
-                        className="text-gray-400 hover:text-primary transition-colors"
-                        title="Update credentials"
-                        disabled={isLoading || loadingBrokerId === broker.id}
-                      >
-                        <Settings size={18} />
-                      </button>
-                      {/* Delete icon to remove saved broker */}
-                      <button
-                        onClick={(e) => handleBrokerDelete(broker.id, e)}
-                        className="text-gray-400 hover:text-red-500 transition-colors"
-                        title="Delete broker"
-                        disabled={isLoading || loadingBrokerId === broker.id}
-                      >
-                        {loadingBrokerId === broker.id ? (
-                          <div className="h-[18px] w-[18px] animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
-                        ) : (
-                          <Trash2 size={18} />
-                        )}
-                      </button>
-                    </CardFooter>
-                  </Card>
-                );
-              })}
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-2 pb-4">
+                    <p className="text-xs text-muted-foreground">Saved</p>
+                  </CardContent>
+                  <CardFooter className="p-4 pt-0 pb-4 flex justify-between">
+                    {/* Settings icon to update broker credentials */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBrokerSelect(broker.brokerId);
+                      }}
+                      className="text-gray-400 hover:text-primary transition-colors"
+                      title="Update credentials"
+                      disabled={isLoading || loadingBrokerId === broker.id}
+                    >
+                      <Settings size={18} />
+                    </button>
+                    {/* Delete icon to remove saved broker */}
+                    <button
+                      onClick={(e) => handleBrokerDelete(broker.id, e)}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                      title="Delete broker"
+                      disabled={isLoading || loadingBrokerId === broker.id}
+                    >
+                      {loadingBrokerId === broker.id ? (
+                        <div className="h-[18px] w-[18px] animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
+                      ) : (
+                        <Trash2 size={18} />
+                      )}
+                    </button>
+                  </CardFooter>
+                </Card>
+              ))}
             </div>
           </div>
         )}
