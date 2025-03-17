@@ -84,7 +84,14 @@ export default function LoginPage() {
         }
       } else {
         console.error("Login failed:", authError || adminAuthError);
-        setLocalError(authError || adminAuthError || "Login failed. Please check your credentials.");
+        
+        // Check if the error is related to rate limiting
+        const errorMessage = authError || adminAuthError || "Login failed. Please check your credentials.";
+        if (errorMessage.toLowerCase().includes("too many") || errorMessage.toLowerCase().includes("rate limit")) {
+          toast.error(errorMessage);
+        }
+        
+        setLocalError(errorMessage);
       }
     } catch (error) {
       console.error("Login error:", error);

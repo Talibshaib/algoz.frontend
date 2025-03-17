@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { API_URL, getApiUrl } from "@/constants/URI";
 import axiosInstance from "@/lib/axios";
+import { shouldAllowApiCall, getTimeUntilNextAllowedCall } from "@/utils/rateLimiter";
 
 // Define types
 export type User = {
@@ -52,10 +53,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     setError("");
     
+    // Check client-side rate limiting
+    const loginKey = `login_${emailOrUsername}`;
+    if (!shouldAllowApiCall(loginKey)) {
+      const waitTime = Math.ceil(getTimeUntilNextAllowedCall(loginKey) / 1000);
+      setError(`Too many login attempts. Please try again in ${waitTime} seconds.`);
+      setIsLoading(false);
+      return false;
+    }
+    
     try {
       console.log("Attempting login with:", emailOrUsername);
       
-      // Use the proxied API endpoint
+      // Use direct API endpoint
       const response = await axiosInstance.post(`/api/v1/auth/login`, {
         [emailOrUsername.includes('@') ? 'email' : 'username']: emailOrUsername,
         password
@@ -89,6 +99,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err: any) {
       console.error("Login error:", err);
+      
+      // Handle rate limiting specifically
+      if (err.response?.status === 429) {
+        setError("Too many login attempts. Please try again later.");
+        return false;
+      }
+      
+      // Handle other errors
       console.error("Response data:", err.response?.data);
       const errorMessage = err.response?.data?.message || err.message || "Login failed";
       setError(errorMessage);
@@ -123,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       const response = await axiosInstance.post(
-        `${getApiUrl()}/api/v1/users/register`,
+        `/api/v1/users/register`,
         formData,
         {
           headers: {
@@ -141,6 +159,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
     } catch (err: any) {
+      // Handle rate limiting specifically
+      if (err.response?.status === 429) {
+        setError("Too many registration attempts. Please try again later.");
+        return false;
+      }
+      
       const errorMessage = err.response?.data?.message || err.message || "Registration failed";
       setError(errorMessage);
       return false;
@@ -196,7 +220,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       return false;
-    } catch (err) {
+    } catch (err: any) {
+      // Handle rate limiting specifically
+      if (err.response?.status === 429) {
+        console.error("Token refresh rate limited. Will try again later.");
+        // Wait before retrying
+        return false;
+      }
+      
       console.error("Token refresh error:", err);
       return false;
     }

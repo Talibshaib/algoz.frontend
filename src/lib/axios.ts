@@ -3,6 +3,7 @@ import { getApiUrl } from '@/constants/URI';
 
 // Create axios instance with default headers
 const instance = axios.create({
+  baseURL: 'https://algoz-backend-68rt.onrender.com', // Direct backend URL
   headers: {
     'Content-Type': 'application/json',
   },
@@ -10,14 +11,9 @@ const instance = axios.create({
   withCredentials: true, // Enable sending cookies with requests
 });
 
-// Add request interceptor to handle CORS
+// Add request interceptor for debugging and error handling
 instance.interceptors.request.use(
   (config) => {
-    // Add CORS headers to every request
-    config.headers['Access-Control-Allow-Origin'] = '*';
-    config.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS';
-    config.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization';
-    
     // Log requests in development
     if (process.env.NODE_ENV === 'development') {
       console.log(`Request: ${config.method?.toUpperCase()} ${config.url}`, config.data || '');
@@ -44,6 +40,18 @@ instance.interceptors.response.use(
     if (process.env.NODE_ENV === 'development') {
       console.error('Response Error:', error.response?.status, error.response?.data || error.message);
     }
+    
+    // Handle rate limiting (429 Too Many Requests)
+    if (error.response?.status === 429) {
+      console.error('Rate limit exceeded. Please try again later.');
+      // You could implement a retry with exponential backoff here
+    }
+    
+    // Handle network errors
+    if (error.response?.status === 0 || error.code === 'ECONNABORTED') {
+      console.error('Network error or server not responding');
+    }
+    
     return Promise.reject(error);
   }
 );
