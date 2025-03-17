@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { API_URL } from "@/constants/URI";
-import axiosInstance, { tryMultipleEndpoints } from "@/lib/axios";
+import { API_URL, getApiUrl } from "@/constants/URI";
+import axiosInstance from "@/lib/axios";
 
 // Define types
 export type User = {
@@ -12,30 +12,10 @@ export type User = {
   email: string;
   fullName: string;
   accessToken: string;
-  refreshToken?: string;
-  loginTimestamp?: number;
-  tokenExpiry?: number;
   avatar?: string;
   coverImage?: string;
-  balance?: number;
-  lastActivity?: number;
-  sessionId?: string;
-  passwordLastChanged?: string;
-  networkChange?: {
-    detected: boolean;
-    details?: {
-      riskLevel: string;
-      changes: string[];
-      previousNetwork: {
-        ip: string;
-        location: string;
-      };
-      currentNetwork: {
-        ip: string;
-        location: string;
-      };
-    };
-  };
+  isAdmin?: boolean;
+  permissions?: string[];
 } | null;
 
 type AuthContextType = {
@@ -47,612 +27,254 @@ type AuthContextType = {
   error: string;
   clearError: () => void;
   refreshToken: () => Promise<boolean>;
-  isTokenExpired: () => boolean;
-  validateSession: () => Promise<boolean>;
-  updateLastActivity: () => void;
-  requireAuth: (operation: string) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Token expiration constants
-const TOKEN_EXPIRY_BUFFER = 5 * 60 * 1000; // 5 minutes in milliseconds
-const DEFAULT_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes of inactivity
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Initialize user state from sessionStorage if available (more secure than localStorage)
+  // Initialize user state from localStorage if available
   const [user, setUser] = useState<User>(() => {
     if (typeof window !== 'undefined') {
-      const savedUser = sessionStorage.getItem("user");
+      const savedUser = localStorage.getItem("user");
       return savedUser ? JSON.parse(savedUser) : null;
     }
     return null;
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
   // Function to clear error messages
   const clearError = () => setError("");
 
-  // Function to check if token is expired
-  const isTokenExpired = () => {
-    if (!user) return true;
+  // Login function
+  const login = async (emailOrUsername: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError("");
     
-    // If we have a tokenExpiry field, use it
-    if (user.tokenExpiry) {
-      return Date.now() >= user.tokenExpiry - TOKEN_EXPIRY_BUFFER;
-    }
-    
-    // Fallback: Check if token is older than the default expiry time
-    if (user.loginTimestamp) {
-      return Date.now() >= user.loginTimestamp + DEFAULT_TOKEN_EXPIRY - TOKEN_EXPIRY_BUFFER;
-    }
-    
-    // If we can't determine, assume it's expired to be safe
-    return true;
-  };
-
-  // Check if user is logged in on initial load
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        // Always prioritize the user data from sessionStorage
-        const savedUser = sessionStorage.getItem("user");
-        if (savedUser) {
-          try {
-            // If we have a user in sessionStorage, check token validity
-            const parsedUser = JSON.parse(savedUser);
-            
-            // Ensure the user object has an accessToken
-            if (!parsedUser.accessToken) {
-              console.error("No access token found in saved user data");
-              sessionStorage.removeItem("user");
-              setUser(null);
-              setIsLoading(false);
-              return;
-            }
-            
-            // Check if token is expired based on our local calculation
-            const tokenExpired = isTokenExpired();
-            if (tokenExpired) {
-              console.log("Token appears to be expired, attempting refresh");
-              // Try to refresh the token
-              const refreshed = await refreshTokenInternal();
-              if (!refreshed) {
-                console.log("Token refresh failed, logging out");
-                sessionStorage.removeItem("user");
-                setUser(null);
-                setIsLoading(false);
-                return;
-              }
-            } else {
-              // Token is still valid
-              setUser(parsedUser);
-              setIsLoading(false);
-              
-              // Perform a background verification without affecting the user experience
-              backgroundVerifyToken();
-            }
-          } catch (parseError) {
-            console.error("Error parsing saved user data:", parseError);
-            sessionStorage.removeItem("user");
-            setUser(null);
-            setIsLoading(false);
-          }
-        } else {
-          // No saved user, set loading to false immediately
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Auth check error:", error);
-        setIsLoading(false);
-      }
-    };
-    
-    // Background verification that doesn't affect user experience
-    const backgroundVerifyToken = async () => {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
-        
-        const response = await axiosInstance.get('/users/current-user', {
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.status === 200) {
-          // Only update user data if verification succeeds
-          const data = response.data;
-          if (data.data) {
-            // Create a default user object with empty values
-            const defaultUser: User = {
-              _id: "",
-              username: "",
-              email: "",
-              fullName: "",
-              accessToken: "",
-            };
-            
-            // Use the current user data or default values
-            const currentUser = user || defaultUser;
-            
-            const updatedUser = {
-              ...data.data,
-              accessToken: currentUser.accessToken,
-              refreshToken: currentUser.refreshToken,
-              loginTimestamp: currentUser.loginTimestamp,
-              tokenExpiry: currentUser.tokenExpiry
-            };
-            setUser(updatedUser);
-            sessionStorage.setItem("user", JSON.stringify(updatedUser));
-            console.log("User data refreshed successfully");
-          } else {
-            console.warn("Token verification succeeded but no user data in response");
-          }
-        }
-      } catch (error: any) {
-        // Silently handle errors in background verification
-        console.log("Background verification failed, using cached user data");
-        
-        // If we get a 401/403, the token might be invalid
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-          console.log("Token appears to be invalid, attempting refresh");
-          refreshTokenInternal();
-        }
-      }
-    };
-    
-    checkAuthStatus();
-  }, []);
-
-  // Internal function to refresh the token
-  const refreshTokenInternal = async () => {
     try {
-      if (!user || !user.refreshToken) {
-        console.error("No refresh token available");
-        return false;
-      }
+      console.log("Attempting login with:", emailOrUsername);
       
-      const response = await axiosInstance.post('/users/refresh-token', {
-        refreshToken: user.refreshToken
+      const response = await axiosInstance.post(`${getApiUrl()}/api/v1/auth/login`, {
+        [emailOrUsername.includes('@') ? 'email' : 'username']: emailOrUsername,
+        password
       });
       
-      if (response.status === 200 && response.data.data) {
-        const { accessToken, refreshToken } = response.data.data;
-        
-        if (accessToken) {
-          // Update user with new tokens
-          const updatedUser = { 
-            ...user, 
-            accessToken,
-            refreshToken: refreshToken || user.refreshToken,
-            loginTimestamp: Date.now(),
-            tokenExpiry: Date.now() + DEFAULT_TOKEN_EXPIRY
-          };
-          
-          setUser(updatedUser);
-          sessionStorage.setItem("user", JSON.stringify(updatedUser));
-          console.log("Token refreshed successfully");
-          return true;
-        }
-      }
-      return false;
-    } catch (error) {
-      console.error("Token refresh failed:", error);
-      return false;
-    }
-  };
-
-  // Public function to refresh the token
-  const refreshToken = async () => {
-    setIsLoading(true);
-    try {
-      const result = await refreshTokenInternal();
-      return result;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Function to update last activity timestamp
-  const updateLastActivity = () => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        lastActivity: Date.now()
-      };
-      setUser(updatedUser);
-      sessionStorage.setItem("user", JSON.stringify(updatedUser));
-    }
-  };
-
-  // Function to validate session
-  const validateSession = async (): Promise<boolean> => {
-    try {
-      // Check if user exists
-      if (!user) {
-        return false;
-      }
-
-      // Check if token is expired
-      if (isTokenExpired()) {
-        // Try to refresh the token
-        const refreshed = await refreshToken();
-        if (!refreshed) {
-          return false;
-        }
-      }
-
-      // Check for session timeout
-      if (user.lastActivity) {
-        const inactiveTime = Date.now() - user.lastActivity;
-        if (inactiveTime > SESSION_TIMEOUT) {
-          console.log("Session timeout due to inactivity");
-          await logout();
-          return false;
-        }
-      }
-
-      // Update last activity
-      updateLastActivity();
-
-      // Verify session with backend
-      try {
-        const response = await axiosInstance.get('/users/validate-session', {
-          params: { sessionId: user.sessionId }
-        });
-        return response.status === 200;
-      } catch (error) {
-        console.error("Session validation failed:", error);
-        return false;
-      }
-    } catch (error) {
-      console.error("Error validating session:", error);
-      return false;
-    }
-  };
-
-  // Function to require authentication for sensitive operations
-  const requireAuth = async (operation: string): Promise<boolean> => {
-    setIsLoading(true);
-    try {
-      // Log the sensitive operation attempt
-      console.log(`Attempting sensitive operation: ${operation}`);
+      console.log("Login response:", response.status);
+      const { data } = response;
       
-      // Validate the session
-      const isValid = await validateSession();
-      
-      if (!isValid) {
-        setError("Your session has expired. Please log in again.");
-        await logout();
-        return false;
-      }
-      
-      // For high-risk operations, we could add additional verification here
-      // such as password re-entry or 2FA
-      
-      return true;
-    } catch (error) {
-      console.error(`Auth check failed for operation ${operation}:`, error);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Function to login
-  const login = async (emailOrUsername: string, password: string) => {
-    try {
-      setIsLoading(true);
-      setError("");
-      
-      // Validate input
-      if (!emailOrUsername || !password) {
-        setError("Email/username and password are required");
-        return false;
-      }
-      
-      // Determine if input is email or username
-      const isEmail = emailOrUsername.includes('@');
-      
-      // Prepare login data
-      const loginData = isEmail 
-        ? { email: emailOrUsername, password } 
-        : { username: emailOrUsername, password };
-      
-      // Make login request using tryMultipleEndpoints to handle network issues
-      const response = await tryMultipleEndpoints(async (axios) => {
-        return await axios.post('/users/login', loginData);
-      });
-      
-      // Get response data
-      const data = response.data;
-      
-      // Check for success status
-      if (response.status === 200 || response.status === 201) {
-        // Check if MFA is required
-        if (data.data?.requireMFA) {
-          // Store user ID for MFA verification
-          sessionStorage.setItem("pendingMfaUserId", data.data.userId);
-          
-          // Check if MFA is required due to network change
-          if (data.data.networkChanged) {
-            sessionStorage.setItem("networkChangeDetails", JSON.stringify(data.data.networkChangeDetails));
-            // Redirect to network verification page
-            router.push("/auth/network-verification");
-          } else {
-            // Redirect to regular MFA verification page
-            router.push("/auth/mfa");
-          }
-          return false;
-        }
-        
-        // Validate response data structure
-        if (!data.data) {
-          console.error("Missing data.data in response:", data);
-          setError("Invalid server response format");
-          return false;
-        }
-        
-        // Check for user data
-        if (!data.data.user) {
-          console.error("Missing user data in response:", data.data);
-          setError("User data not found in response");
-          return false;
-        }
-        
-        // Check for access token
-        if (!data.data.accessToken) {
-          console.error("Missing access token in response:", data.data);
-          setError("Access token not found in response");
-          return false;
-        }
-        
-        // Check for network change
-        if (data.data.networkChange?.detected) {
-          console.log("Network change detected:", data.data.networkChange);
-          
-          // Create user object with network change information
-          const userData = {
-            ...data.data.user,
-            accessToken: data.data.accessToken,
-            refreshToken: data.data.refreshToken,
-            loginTimestamp: Date.now(),
-            tokenExpiry: Date.now() + DEFAULT_TOKEN_EXPIRY,
-            lastActivity: Date.now(),
-            sessionId: data.data.sessionId || `session-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
-            networkChange: data.data.networkChange
-          };
-          
-          // Update state and sessionStorage
-          setUser(userData);
-          
-          try {
-            sessionStorage.setItem("user", JSON.stringify(userData));
-          } catch (storageError) {
-            console.error("Failed to store user data in sessionStorage:", storageError);
-          }
-          
-          // If high risk, redirect to network verification page
-          if (data.data.networkChange.details?.riskLevel === 'high' || 
-              (data.data.networkChange.details?.riskLevel === 'medium' && data.data.user.mfaEnabled)) {
-            router.push("/auth/network-verification");
-          } else {
-            // Show network change notification
-            router.push("/dashboard?network_change=true");
-          }
-          return true;
-        }
-        
-        // Create complete user object with token
+      if (data.success) {
+        console.log("Login successful");
+        // Save user data to localStorage
         const userData = {
-          ...data.data.user,
+          _id: data.data.user._id,
+          username: data.data.user.username,
+          email: data.data.user.email,
+          fullName: data.data.user.fullName,
           accessToken: data.data.accessToken,
-          refreshToken: data.data.refreshToken,
-          loginTimestamp: Date.now(),
-          tokenExpiry: Date.now() + DEFAULT_TOKEN_EXPIRY,
-          lastActivity: Date.now(),
-          sessionId: data.data.sessionId || `session-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`
+          avatar: data.data.user.avatar,
+          coverImage: data.data.user.coverImage,
+          isAdmin: data.data.user.isAdmin,
+          permissions: data.data.user.permissions
         };
         
-        // Update state and sessionStorage
+        localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
-        
-        // Store in sessionStorage with proper error handling
-        try {
-          sessionStorage.setItem("user", JSON.stringify(userData));
-          console.log("Login successful, user data stored in sessionStorage");
-        } catch (storageError) {
-          console.error("Failed to store user data in sessionStorage:", storageError);
-          // Continue anyway since we have the user in state
-        }
-        
-        // Navigate to dashboard
-        router.push("/dashboard");
         return true;
       } else {
+        console.error("Login failed:", data.message);
         setError(data.message || "Login failed");
         return false;
       }
-    } catch (error: any) {
-      console.error("Login error:", error);
-      
-      // Handle different types of errors
-      if (error.code === 'ERR_NETWORK') {
-        setError("Network error. Please check your internet connection and try again.");
-      } else if (error.response) {
-        // Server responded with an error status
-        const errorMessage = error.response.data?.message || error.response.statusText || "Authentication failed";
-        setError(errorMessage);
-      } else if (error.request) {
-        // Request was made but no response received
-        setError("No response from server. Please try again later.");
-      } else {
-        // Something else went wrong
-        setError(error.message || "An unexpected error occurred");
-      }
-      
+    } catch (err: any) {
+      console.error("Login error:", err);
+      console.error("Response data:", err.response?.data);
+      const errorMessage = err.response?.data?.message || err.message || "Login failed";
+      setError(errorMessage);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Function to signup
-  const signup = async (userData: any) => {
+  // Signup function
+  const signup = async (userData: any): Promise<boolean> => {
+    setIsLoading(true);
+    setError("");
+    
     try {
-      setIsLoading(true);
-      setError("");
+      const formData = new FormData();
       
-      // Validate required fields
-      if (!userData.username || !userData.email || !userData.password || !userData.fullName) {
-        setError("All fields are required");
-        return false;
+      // Add text fields
+      formData.append("fullName", userData.fullName);
+      formData.append("email", userData.email);
+      formData.append("username", userData.username);
+      formData.append("password", userData.password);
+      
+      // Add avatar if provided
+      if (userData.avatar) {
+        formData.append("avatar", userData.avatar);
       }
       
-      // Make signup request
-      const response = await axiosInstance.post('/users/register', userData);
+      // Add cover image if provided
+      if (userData.coverImage) {
+        formData.append("coverImage", userData.coverImage);
+      }
       
-      // Get response data
-      const data = response.data;
+      const response = await axiosInstance.post(
+        `${getApiUrl()}/api/v1/users/register`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        }
+      );
       
-      // Check for success status
-      if (response.status === 200 || response.status === 201) {
-        // Navigate to login page on successful signup
-        router.push("/login");
+      const { data } = response;
+      
+      if (data.success) {
         return true;
       } else {
-        setError(data.message || "Signup failed");
+        setError(data.message || "Registration failed");
         return false;
       }
-    } catch (error: any) {
-      console.error("Signup error:", error);
-      
-      // Handle different error scenarios
-      if (error.response) {
-        const errorMessage = error.response.data?.message || "Signup failed";
-        setError(errorMessage);
-      } else if (error.request) {
-        setError("No response from server. Please check your internet connection.");
-      } else {
-        setError("An error occurred during signup. Please try again.");
-      }
-      
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || "Registration failed";
+      setError(errorMessage);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = async () => {
+  // Logout function
+  const logout = async (): Promise<boolean> => {
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true);
-
-      // Clear local state before calling the API
-      setUser(null);
-      sessionStorage.removeItem("user");
-
-      try {
-        // Set a timeout for the fetch request
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-        
-        const response = await axiosInstance.post('/users/logout', {}, {
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-
-        if (response.status === 200) {
-          // Success case - API call worked
-          console.log("Logout successful");
-        } else {
-          // API returned an error
-          console.error("Logout API error:", response.data?.message || "Unknown error");
-        }
-      } catch (apiError) {
-        // Network error or timeout - just log it
-        console.error("Logout API call failed:", apiError);
+      if (user) {
+        await axiosInstance.post(`${getApiUrl()}/api/v1/auth/logout`);
       }
       
-      // Always clear local state regardless of API response
+      // Clear user data from localStorage
+      localStorage.removeItem("user");
       setUser(null);
-      sessionStorage.removeItem("user");
-      router.push("/");
+      
+      // Redirect to login page
+      router.push("/login");
       return true;
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Even if there's an unexpected error, still clear local state
+    } catch (err) {
+      console.error("Logout error:", err);
+      
+      // Even if API call fails, clear local data
+      localStorage.removeItem("user");
       setUser(null);
-      sessionStorage.removeItem("user");
-      router.push("/");
+      router.push("/login");
       return true;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Add activity tracking to the useEffect
-  useEffect(() => {
-    // Add event listeners for user activity
-    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-    
-    const handleUserActivity = () => {
-      updateLastActivity();
-    };
-    
-    // Add event listeners
-    activityEvents.forEach(event => {
-      window.addEventListener(event, handleUserActivity);
-    });
-    
-    // Set up periodic session validation
-    const sessionCheckInterval = setInterval(() => {
-      if (user) {
-        validateSession().catch(console.error);
+  // Function to refresh the access token
+  const refreshToken = async (): Promise<boolean> => {
+    try {
+      const response = await axiosInstance.post(`${getApiUrl()}/api/v1/auth/refresh-token`);
+      
+      if (response.data.success && user) {
+        // Update user data with new tokens
+        const userData = {
+          ...user,
+          accessToken: response.data.data.accessToken
+        };
+        
+        localStorage.setItem("user", JSON.stringify(userData));
+        setUser(userData);
+        return true;
       }
-    }, 5 * 60 * 1000); // Check every 5 minutes
+      
+      return false;
+    } catch (err) {
+      console.error("Token refresh error:", err);
+      return false;
+    }
+  };
+
+  // Set up axios interceptor for token refresh
+  useEffect(() => {
+    const interceptor = axiosInstance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+        
+        // If error is 401 and not already retrying
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          
+          try {
+            // Try to refresh the token
+            const refreshed = await refreshToken();
+            
+            if (refreshed && user) {
+              // Update the authorization header
+              originalRequest.headers.Authorization = `Bearer ${user.accessToken}`;
+              return axiosInstance(originalRequest);
+            }
+          } catch (refreshError) {
+            console.error("Token refresh failed:", refreshError);
+            // If refresh failed, logout
+            await logout();
+            return Promise.reject(error);
+          }
+        }
+        
+        return Promise.reject(error);
+      }
+    );
     
-    // Cleanup function
+    // Clean up interceptor on unmount
     return () => {
-      activityEvents.forEach(event => {
-        window.removeEventListener(event, handleUserActivity);
-      });
-      clearInterval(sessionCheckInterval);
+      axiosInstance.interceptors.response.eject(interceptor);
     };
-  }, [user]); // Add user as a dependency
+  }, [user]);
+
+  // Set authorization header for all requests when user is logged in
+  useEffect(() => {
+    if (user && user.accessToken) {
+      axiosInstance.defaults.headers.common.Authorization = `Bearer ${user.accessToken}`;
+    } else {
+      delete axiosInstance.defaults.headers.common.Authorization;
+    }
+  }, [user]);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      signup, 
-      logout, 
-      isLoading, 
-      error, 
-      clearError, 
-      refreshToken,
-      isTokenExpired,
-      validateSession,
-      updateLastActivity,
-      requireAuth
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        signup,
+        logout,
+        isLoading,
+        error,
+        clearError,
+        refreshToken
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
-// Custom hook to use the auth context
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
+  
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
+  
   return context;
-}
+};
 
 // Helper function to check if we're in a browser environment
 export function isBrowser() {

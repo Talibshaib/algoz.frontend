@@ -1,13 +1,12 @@
 "use client"
 
-import React, { useState } from "react"
+import React from "react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
 import { useSidebar } from "@/components/ui/sidebar"
 import { useAuth } from "@/contexts/AuthContext"
 import Sidebar from "./Sidebar"
-import { HealthCheck } from "@/components/ui/HealthCheck"
 import { Bell, Settings, LogOut, User, Menu } from "lucide-react"
 
 // Import NextUI components
@@ -40,7 +39,6 @@ export function DashboardHeader() {
   const { user, logout } = useAuth()
   const pathname = usePathname()
   const { toggleSidebar, isMobile, setOpenMobile, openMobile } = useSidebar()
-  const [isServerOnline, setIsServerOnline] = useState(true)
 
   const handleLogout = async () => {
     await logout()
@@ -84,15 +82,6 @@ export function DashboardHeader() {
         </div>
         <div className="flex items-center justify-end space-x-2 sm:space-x-4">
           <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Server status indicator */}
-            <div className="hidden md:block">
-              <HealthCheck
-                compact={true}
-                onStatusChange={setIsServerOnline}
-                className="mr-2"
-              />
-            </div>
-
             {/* Notifications */}
             <Button
               isIconOnly
@@ -137,6 +126,9 @@ export function DashboardHeader() {
                   <Link href="/dashboard/settings" className="w-full block">
                     Settings
                   </Link>
+                </DropdownItem>
+                <DropdownItem key="logout" startContent={<LogOut size={18} />} onClick={handleLogout}>
+                  Logout
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>

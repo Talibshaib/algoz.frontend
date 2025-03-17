@@ -8,9 +8,8 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useAdminAuth } from "@/contexts/AdminAuthContext"
 import { useRouter } from "next/navigation"
 import { MotionDiv } from "@/components/ui/motion"
-import { API_URL, getApiUrl } from "@/constants/URI"
+import { getApiUrl } from "@/constants/URI"
 import { toast } from "sonner"
-import { checkAPIHealth } from "@/services/healthCheck"
 
 export default function LoginPage() {
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -18,9 +17,6 @@ export default function LoginPage() {
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [localError, setLocalError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingServer, setIsCheckingServer] = useState(false);
-  const [serverStatus, setServerStatus] = useState<"unknown" | "online" | "offline">("unknown");
-  const [networkIssueDetected, setNetworkIssueDetected] = useState(false);
   const { login, error: authError, clearError, user } = useAuth();
   const { login: adminLogin, error: adminAuthError, admin } = useAdminAuth();
   const router = useRouter();
@@ -39,26 +35,6 @@ export default function LoginPage() {
       router.replace("/admin");
     }
   }, [user, admin, router]);
-
-  // Check server status on mount
-  useEffect(() => {
-    const checkServerStatus = async () => {
-      setIsCheckingServer(true);
-      try {
-        const { isOnline } = await checkAPIHealth(true);
-        setServerStatus(isOnline ? "online" : "offline");
-        setNetworkIssueDetected(!isOnline);
-      } catch (error) {
-        console.error("Error checking server status:", error);
-        setServerStatus("offline");
-        setNetworkIssueDetected(true);
-      } finally {
-        setIsCheckingServer(false);
-      }
-    };
-    
-    checkServerStatus();
-  }, []);
   
   // Handle input validation
   const validateInputs = () => {
@@ -79,33 +55,40 @@ export default function LoginPage() {
     e.preventDefault();
     setLocalError("");
     
-    if (!emailOrUsername || !password) {
-      setLocalError("Please enter both email/username and password");
+    if (!validateInputs()) {
       return;
     }
     
     setIsLoading(true);
     
     try {
+      console.log("Attempting login with:", emailOrUsername, "isAdmin:", isAdminLogin);
+      
       let success;
       
       if (isAdminLogin) {
         success = await adminLogin(emailOrUsername, password);
       } else {
+        // Use the simplified login function
         success = await login(emailOrUsername, password);
       }
       
-      if (!success) {
-        // If login failed and there might be network issues, suggest direct login
-        if (serverStatus === "offline" || networkIssueDetected) {
-          setLocalError((authError || adminAuthError || "") + 
-            " Network issues detected. Try the direct login option below.");
+      console.log("Login result:", success);
+      
+      if (success) {
+        toast.success("Login successful!");
+        if (isAdminLogin) {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
         }
+      } else {
+        console.error("Login failed:", authError || adminAuthError);
+        setLocalError(authError || adminAuthError || "Login failed. Please check your credentials.");
       }
     } catch (error) {
       console.error("Login error:", error);
       setLocalError("An unexpected error occurred. Please try again.");
-      setNetworkIssueDetected(true);
     } finally {
       setIsLoading(false);
     }
@@ -113,35 +96,6 @@ export default function LoginPage() {
   
   // Determine which error to display (local or from context)
   const displayError = localError || (isAdminLogin ? adminAuthError : authError);
-  
-  // Function to retry server connection
-  const retryServerConnection = async () => {
-    setIsCheckingServer(true);
-    setLocalError("");
-    
-    try {
-      // Check if the server is reachable
-      const response = await fetch(`${API_URL}/health`, {
-        method: 'HEAD',
-        cache: 'no-store',
-      }).catch(() => null);
-      
-      if (response && response.ok) {
-        setServerStatus("online");
-        toast.success("Successfully connected to server");
-        setLocalError("");
-      } else {
-        setServerStatus("offline");
-        setLocalError("Still unable to connect to the server. The service might be temporarily unavailable.");
-      }
-    } catch (error) {
-      console.error("Server retry failed:", error);
-      setServerStatus("offline");
-      setLocalError("Still unable to connect to the server. Please try again later.");
-    } finally {
-      setIsCheckingServer(false);
-    }
-  };
   
   return (
     <div className="flex h-screen max-w-screen items-center justify-center">
@@ -151,40 +105,7 @@ export default function LoginPage() {
           <p className="text-muted-foreground">Enter your credentials to access your account</p>
         </div>
         
-        {serverStatus === "offline" && (
-          <MotionDiv
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 text-sm bg-amber-100 border border-amber-200 text-amber-800 rounded-md"
-          >
-            <p className="font-medium mb-2">Server Connection Issue</p>
-            <p className="mb-3">We're having trouble connecting to our servers. This could be due to:</p>
-            <ul className="list-disc pl-5 mb-3 space-y-1">
-              <li>Temporary server maintenance</li>
-              <li>Network connectivity issues</li>
-            </ul>
-            <div className="flex flex-wrap gap-2">
-              <Button 
-                size="sm"
-                className="bg-amber-600 text-white hover:bg-amber-700"
-                onClick={retryServerConnection}
-                disabled={isCheckingServer}
-              >
-                {isCheckingServer ? "Checking..." : "Retry Connection"}
-              </Button>
-              <Link href="/direct-login">
-                <Button 
-                  size="sm"
-                  className="bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  Try Direct Login
-                </Button>
-              </Link>
-            </div>
-          </MotionDiv>
-        )}
-        
-        {displayError && serverStatus !== "offline" && (
+        {displayError && (
           <MotionDiv
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -209,7 +130,6 @@ export default function LoginPage() {
               isInvalid={!!localError && !emailOrUsername.trim()}
               color={localError && !emailOrUsername.trim() ? "danger" : "default"}
               required 
-              disabled={serverStatus === "offline" || isCheckingServer}
             />
           </div>
           <div className="grid gap-2">
@@ -230,7 +150,6 @@ export default function LoginPage() {
               isInvalid={!!localError && !password}
               color={localError && !password ? "danger" : "default"}
               required
-              disabled={serverStatus === "offline" || isCheckingServer}
             />
           </div>
           <div className="flex items-center space-x-2">
@@ -239,7 +158,6 @@ export default function LoginPage() {
               id="adminLogin" 
               isSelected={isAdminLogin} 
               onValueChange={setIsAdminLogin}
-              disabled={serverStatus === "offline" || isCheckingServer}
             >
               Login as Admin
             </Checkbox>
@@ -248,7 +166,6 @@ export default function LoginPage() {
             type="submit" 
             className="w-full bg-black text-white"
             isLoading={isLoading}
-            disabled={isLoading || serverStatus === "offline" || isCheckingServer}
           >
             {isLoading ? "Logging in..." : "Login"}
           </Button>
@@ -281,32 +198,6 @@ export default function LoginPage() {
             Facebook
           </Button>
         </div>
-        
-        {/* Network status indicator */}
-        {serverStatus !== "unknown" && (
-          <div className={`text-sm text-center ${serverStatus === "online" ? "text-green-500" : "text-red-500"}`}>
-            Server status: {serverStatus === "online" ? "Online" : "Connection issues detected"}
-          </div>
-        )}
-        
-        {/* Direct login option for users with network issues */}
-        {(networkIssueDetected || authError || localError) && (
-          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-            <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
-              Having trouble logging in? Try our direct login page that tests multiple connection methods.
-            </p>
-            <Button 
-              as={Link}
-              href={isAdminLogin ? "/direct-admin-login" : "/direct-login"}
-              color="primary" 
-              variant="flat" 
-              fullWidth
-              size="sm"
-            >
-              Try Direct Login
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );

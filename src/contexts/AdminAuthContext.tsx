@@ -244,43 +244,21 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         
         // Update state and sessionStorage
         setAdmin(adminData);
+        sessionStorage.setItem("adminUser", JSON.stringify(adminData));
         
         // Set the token in axios defaults
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${adminData.accessToken}`;
         
-        // Store in sessionStorage with proper error handling
-        try {
-          sessionStorage.setItem("adminUser", JSON.stringify(adminData));
-          console.log("Admin login successful, data stored in sessionStorage");
-        } catch (storageError) {
-          console.error("Failed to store admin data in sessionStorage:", storageError);
-          // Continue anyway since we have the admin in state
-        }
-        
-        // Navigate to dashboard
-        router.push("/dashboard");
         return true;
       } else {
+        // Handle non-success status
         setError(data.message || "Login failed");
         return false;
       }
     } catch (error: any) {
+      // Handle errors
       console.error("Admin login error:", error);
-      
-      // Handle different error scenarios
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        const errorMessage = error.response.data?.message || "Login failed";
-        setError(errorMessage);
-      } else if (error.request) {
-        // The request was made but no response was received
-        setError("No response from server. Please check your internet connection.");
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        setError("An error occurred during login. Please try again.");
-      }
-      
+      setError(error.response?.data?.message || error.message || "Login failed");
       return false;
     } finally {
       setIsLoading(false);

@@ -8,6 +8,7 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import { MotionDiv } from "@/components/ui/motion"
+import { toast } from "sonner"
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -108,17 +109,22 @@ export default function SignupPage() {
     setIsLoading(true);
     
     try {
-      console.log("Attempting signup with:", { fullName, email, username, password: "********" });
-      const success = await signup({ fullName, email, username, password });
+      // Use the simplified signup function
+      const success = await signup({ 
+        fullName, 
+        email, 
+        username, 
+        password 
+      });
       
       if (success) {
-        // Show success message or redirect
+        toast.success("Account created successfully!");
         router.push("/login?registered=true");
       } else {
         setLocalError(authError || "Failed to create account. Please try again.");
       }
-    } catch (err) {
-      console.error("Signup error:", err);
+    } catch (error) {
+      console.error("Signup error:", error);
       setLocalError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -127,7 +133,7 @@ export default function SignupPage() {
 
   // Determine which error to display (local or from context)
   const displayError = localError || authError;
-
+  
   return (
     <div className="flex h-screen max-w-screen items-center justify-center">
       <div className="mx-auto grid w-full max-w-[400px] gap-6">
@@ -263,6 +269,7 @@ export default function SignupPage() {
             type="submit" 
             className="w-full bg-black hover:bg-gray-800 text-white" 
             disabled={isLoading}
+            isLoading={isLoading}
           >
             {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
