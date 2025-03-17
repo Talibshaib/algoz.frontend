@@ -55,7 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Attempting login with:", emailOrUsername);
       
-      const response = await axiosInstance.post(`${getApiUrl()}/api/v1/auth/login`, {
+      // Use the proxied API endpoint
+      const response = await axiosInstance.post(`/api/v1/auth/login`, {
         [emailOrUsername.includes('@') ? 'email' : 'username']: emailOrUsername,
         password
       });
@@ -154,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     try {
       if (user) {
-        await axiosInstance.post(`${getApiUrl()}/api/v1/auth/logout`);
+        await axiosInstance.post(`/api/v1/auth/logout`);
       }
       
       // Clear user data from localStorage
@@ -180,7 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Function to refresh the access token
   const refreshToken = async (): Promise<boolean> => {
     try {
-      const response = await axiosInstance.post(`${getApiUrl()}/api/v1/auth/refresh-token`);
+      const response = await axiosInstance.post(`/api/v1/auth/refresh-token`);
       
       if (response.data.success && user) {
         // Update user data with new tokens
