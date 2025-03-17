@@ -17,6 +17,7 @@ export type User = {
   coverImage?: string;
   isAdmin?: boolean;
   permissions?: string[];
+  sessionId?: string;
 } | null;
 
 type AuthContextType = {
@@ -86,7 +87,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           avatar: data.data.user.avatar,
           coverImage: data.data.user.coverImage,
           isAdmin: data.data.user.isAdmin,
-          permissions: data.data.user.permissions
+          permissions: data.data.user.permissions,
+          sessionId: data.data.sessionId || data.data.user.sessionId
         };
         
         localStorage.setItem("user", JSON.stringify(userData));
@@ -211,7 +213,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Update user data with new tokens
         const userData = {
           ...user,
-          accessToken: response.data.data.accessToken
+          accessToken: response.data.data.accessToken,
+          // Preserve sessionId or update it if provided in the response
+          sessionId: response.data.data.sessionId || user.sessionId
         };
         
         localStorage.setItem("user", JSON.stringify(userData));

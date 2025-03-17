@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import axiosInstance from '@/lib/axios';
+import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 import { 
   Card, 
   CardHeader, 
@@ -43,6 +45,9 @@ export function SessionManager() {
   const [error, setError] = useState('');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [terminatingSession, setTerminatingSession] = useState('');
+  const [terminatingAllSessions, setTerminatingAllSessions] = useState(false);
+  const [showTerminateModal, setShowTerminateModal] = useState(false);
 
   // Fetch sessions on component mount
   useEffect(() => {
@@ -54,8 +59,16 @@ export function SessionManager() {
       setLoading(true);
       setError('');
       
+      // If sessionId is not available, fetch without it or show a message
+      if (!user?.sessionId) {
+        console.warn('Session ID not available. User may need to log in again.');
+        setError('Session information not available. Please log out and log in again.');
+        setLoading(false);
+        return;
+      }
+      
       const response = await axiosInstance.get('/users/sessions', {
-        params: { currentSessionId: user?.sessionId }
+        params: { currentSessionId: user.sessionId }
       });
       
       if (response.status === 200 && response.data.data) {
@@ -71,49 +84,53 @@ export function SessionManager() {
 
   const handleTerminateSession = async (session: Session) => {
     try {
-      setLoading(true);
+      setTerminatingSession(session.sessionId);
       
-      const response = await axiosInstance.post('/users/terminate-session', {
-        sessionId: session.sessionId
-      }, {
-        params: { currentSessionId: user?.sessionId }
+      // Don't allow terminating the current session through this method
+      if (!user?.sessionId || session.isCurrent) {
+        toast.error("You cannot terminate your current session this way. Please use the logout button instead.");
+        return;
+      }
+      
+      const response = await axiosInstance.delete(`/users/sessions/${session.sessionId}`, {
+        params: { currentSessionId: user.sessionId }
       });
       
       if (response.status === 200) {
-        // If terminating current session, log out
-        if (session.isCurrent) {
-          await logout();
-          return;
-        }
-        
-        // Otherwise, refresh the sessions list
+        toast.success("Session terminated successfully");
         fetchSessions();
       }
     } catch (error) {
       console.error('Error terminating session:', error);
-      setError('Failed to terminate session. Please try again.');
+      toast.error("Failed to terminate session. Please try again.");
     } finally {
-      setLoading(false);
-      onClose();
+      setTerminatingSession('');
+      setShowTerminateModal(false);
     }
   };
 
   const handleTerminateAllOtherSessions = async () => {
     try {
-      setLoading(true);
+      setTerminatingAllSessions(true);
       
-      const response = await axiosInstance.post('/users/terminate-all-sessions', {}, {
-        params: { currentSessionId: user?.sessionId }
+      if (!user?.sessionId) {
+        toast.error("Session information not available. Please log out and log in again.");
+        return;
+      }
+      
+      const response = await axiosInstance.delete('/users/sessions', {
+        params: { currentSessionId: user.sessionId }
       });
       
       if (response.status === 200) {
+        toast.success("All other sessions terminated successfully");
         fetchSessions();
       }
     } catch (error) {
       console.error('Error terminating all sessions:', error);
-      setError('Failed to terminate sessions. Please try again.');
+      toast.error("Failed to terminate sessions. Please try again.");
     } finally {
-      setLoading(false);
+      setTerminatingAllSessions(false);
     }
   };
 
@@ -265,7 +282,7 @@ export function SessionManager() {
             <Button 
               color="danger" 
               onPress={() => selectedSession && handleTerminateSession(selectedSession)}
-              isLoading={loading}
+              isLoading={terminatingSession === selectedSession?.sessionId}
             >
               Sign Out
             </Button>
