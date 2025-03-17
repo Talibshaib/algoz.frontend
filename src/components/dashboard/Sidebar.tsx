@@ -151,14 +151,14 @@ export default function Sidebar({ className }: SidebarProps) {
           {open && <p className="text-xs text-muted-foreground mb-2 px-3">FEATURES</p>}
           
           <a
-            href="/dashboard/brockerauth"
+            href="/dashboard/broker-management"
             className={cn(
               "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-              activeItem === "brokerauth" && "bg-black text-white",
+              activeItem === "broker-management" && "bg-black text-white",
               !open && "justify-center",
               open && "space-x-3"
             )}
-            onClick={(e) => handleNavigation(e, "/dashboard/brockerauth", "brokerauth")}
+            onClick={(e) => handleNavigation(e, "/dashboard/broker-management", "broker-management")}
           >
             <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
               <KeyIcon className="h-5 w-5 min-w-5" />

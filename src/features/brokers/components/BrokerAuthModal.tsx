@@ -9,23 +9,43 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { saveBrokerCredentials } from "@/services/brokerService";
 
-interface DhanAuthModalProps {
+export interface BrokerField {
+  name: string;
+  label: string;
+  type: string;
+}
+
+interface BrokerAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  brokerId: string;
+  brokerName: string;
+  fields: BrokerField[];
+  description?: string;
 }
 
-export const DhanAuthModal: React.FC<DhanAuthModalProps> = ({
+export const BrokerAuthModal: React.FC<BrokerAuthModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  brokerId,
+  brokerName,
+  fields,
+  description
 }) => {
-  const [formData, setFormData] = useState<Record<string, string>>({
-    partner_id: "",
-    partner_secret: "",
-  });
+  const [formData, setFormData] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Initialize form data based on fields
+  useEffect(() => {
+    const initialData: Record<string, string> = {};
+    fields.forEach(field => {
+      initialData[field.name] = "";
+    });
+    setFormData(initialData);
+  }, [fields]);
 
   // Handle escape key press
   useEffect(() => {
@@ -76,7 +96,9 @@ export const DhanAuthModal: React.FC<DhanAuthModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.partner_id || !formData.partner_secret) {
+    // Validate all fields are filled
+    const missingFields = fields.filter(field => !formData[field.name]);
+    if (missingFields.length > 0) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -84,14 +106,15 @@ export const DhanAuthModal: React.FC<DhanAuthModalProps> = ({
     setIsLoading(true);
     
     try {
-      await saveBrokerCredentials("dhan", formData);
-      toast.success("Dhan credentials saved successfully");
+      console.log(`Saving ${brokerName} credentials:`, formData);
+      await saveBrokerCredentials(brokerId, formData);
+      toast.success(`${brokerName} credentials saved successfully`);
       onSuccess();
       onClose();
     } catch (error: any) {
-      console.error("Error saving Dhan credentials:", error);
+      console.error(`Error saving ${brokerName} credentials:`, error);
       const errorMessage = error.response?.data?.message || error.message || "Unknown error";
-      toast.error(`Failed to save Dhan credentials: ${errorMessage}`);
+      toast.error(`Failed to save ${brokerName} credentials: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -100,13 +123,13 @@ export const DhanAuthModal: React.FC<DhanAuthModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" suppressHydrationWarning>
       <div
         ref={modalRef}
         className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Connect to Dhan</h2>
+          <h2 className="text-xl font-semibold">Connect to {brokerName}</h2>
           <button
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             onClick={onClose}
@@ -116,35 +139,25 @@ export const DhanAuthModal: React.FC<DhanAuthModalProps> = ({
         </div>
 
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Enter your Dhan Partner ID and Partner Secret to connect your account.
+          {description || `Enter your ${brokerName} credentials to connect your account.`}
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="partner_id">Partner ID</Label>
-            <Input
-              id="partner_id"
-              name="partner_id"
-              type="text"
-              placeholder="Enter your Partner ID"
-              value={formData.partner_id}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="partner_secret">Partner Secret</Label>
-            <Input
-              id="partner_secret"
-              name="partner_secret"
-              type="password"
-              placeholder="Enter your Partner Secret"
-              value={formData.partner_secret}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-6" suppressHydrationWarning>
+          {fields.map((field) => (
+            <div key={field.name} className="space-y-2">
+              <Label htmlFor={field.name}>{field.label}</Label>
+              <Input
+                id={field.name}
+                name={field.name}
+                type={field.type}
+                placeholder={`Enter your ${field.label.toLowerCase()}`}
+                value={formData[field.name] || ""}
+                onChange={handleInputChange}
+                required
+                suppressHydrationWarning
+              />
+            </div>
+          ))}
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
@@ -165,4 +178,4 @@ export const DhanAuthModal: React.FC<DhanAuthModalProps> = ({
       </div>
     </div>
   );
-};
+}; 

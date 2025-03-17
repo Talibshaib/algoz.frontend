@@ -41,6 +41,9 @@ export const getAvailableBrokers = async (): Promise<Broker[]> => {
     // Check if Dhan is in the available brokers
     const hasDhan = brokers.some((broker: Broker) => broker.id === 'dhan');
     
+    // Check if MetaTrader 5 is in the available brokers
+    const hasMetaTrader5 = brokers.some((broker: Broker) => broker.id === 'metatrader5');
+    
     // If Dhan is not in the available brokers, add it
     if (!hasDhan) {
       brokers.push({
@@ -50,6 +53,20 @@ export const getAvailableBrokers = async (): Promise<Broker[]> => {
         fields: [
           { name: 'partner_id', label: 'Partner ID', type: 'text' },
           { name: 'partner_secret', label: 'Partner Secret', type: 'password' }
+        ]
+      });
+    }
+    
+    // If MetaTrader 5 is not in the available brokers, add it
+    if (!hasMetaTrader5) {
+      brokers.push({
+        id: 'metatrader5',
+        name: 'MetaTrader 5',
+        description: 'Connect your MetaTrader 5 account for automated trading.',
+        fields: [
+          { name: 'server', label: 'Server', type: 'text' },
+          { name: 'login', label: 'Login', type: 'text' },
+          { name: 'password', label: 'Password', type: 'password' }
         ]
       });
     }
@@ -69,16 +86,28 @@ export const getAvailableBrokers = async (): Promise<Broker[]> => {
       });
     }
     
-    // Return a default list with Dhan if the API call fails
-    return [{
-      id: 'dhan',
-      name: 'DHAN',
-      description: 'Connect your Dhan account to automate trading.',
-      fields: [
-        { name: 'partner_id', label: 'Partner ID', type: 'text' },
-        { name: 'partner_secret', label: 'Partner Secret', type: 'password' }
-      ]
-    }];
+    // Return a default list with Dhan and MetaTrader 5 if the API call fails
+    return [
+      {
+        id: 'dhan',
+        name: 'DHAN',
+        description: 'Connect your Dhan account to automate trading.',
+        fields: [
+          { name: 'partner_id', label: 'Partner ID', type: 'text' },
+          { name: 'partner_secret', label: 'Partner Secret', type: 'password' }
+        ]
+      },
+      {
+        id: 'metatrader5',
+        name: 'MetaTrader 5',
+        description: 'Connect your MetaTrader 5 account for automated trading.',
+        fields: [
+          { name: 'server', label: 'Server', type: 'text' },
+          { name: 'login', label: 'Login', type: 'text' },
+          { name: 'password', label: 'Password', type: 'password' }
+        ]
+      }
+    ];
   }
 };
 
@@ -116,12 +145,25 @@ export const saveBrokerCredentials = async (
   credentials: Record<string, string>
 ): Promise<SavedBroker> => {
   try {
-    console.log(`Saving credentials for broker ${brokerId}...`);
+    console.log(`Saving credentials for broker ${brokerId}...`, credentials);
+    
+    // Validate credentials based on broker type
+    if (brokerId === 'dhan') {
+      if (!credentials.partner_id || !credentials.partner_secret) {
+        throw new Error('Partner ID and Partner Secret are required for Dhan broker');
+      }
+    } else if (brokerId === 'metatrader5') {
+      if (!credentials.server || !credentials.login || !credentials.password) {
+        throw new Error('Server, Login, and Password are required for MetaTrader 5 broker');
+      }
+    }
+    
     const response = await axios.post('/api/v1/brokers', {
       brokerId,
       credentials
     });
-    console.log('Save broker response:', response.status, response.statusText);
+    
+    console.log('Save broker response:', response.status, response.statusText, response.data);
     return response.data.data;
   } catch (error) {
     console.error('Error saving broker credentials:', error);
@@ -238,6 +280,32 @@ export const authenticateDhan = async (id: string): Promise<{ consentId: string 
     return response.data.data;
   } catch (error) {
     console.error('Error authenticating with Dhan:', error);
+    if (error instanceof Error) {
+      const axiosError = error as AxiosError;
+      console.error('Error details:', {
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        url: axiosError.config?.url,
+        method: axiosError.config?.method
+      });
+    }
+    throw error;
+  }
+};
+
+/**
+ * Authenticate with MetaTrader 5 broker
+ */
+export const authenticateMetaTrader5 = async (id: string): Promise<{ connected: boolean }> => {
+  try {
+    console.log(`Authenticating with MetaTrader 5 for broker ${id}...`);
+    const response = await axios.post(`/api/v1/brokers/${id}/metatrader5/authenticate`);
+    console.log('MetaTrader 5 authentication response:', response.status, response.statusText);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error authenticating with MetaTrader 5:', error);
     if (error instanceof Error) {
       const axiosError = error as AxiosError;
       console.error('Error details:', {
