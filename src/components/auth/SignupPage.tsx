@@ -43,7 +43,14 @@ export default function SignupPage() {
 
   // Validate password strength
   const isStrongPassword = (password: string) => {
-    return password.length >= 8;
+    // Check if password meets all requirements:
+    // 1. At least 8 characters long
+    // 2. Contains at least one uppercase letter
+    // 3. Contains at least one lowercase letter
+    // 4. Contains at least one number
+    // 5. Contains at least one special character (@$!%*?&)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
   };
 
   // Handle input validation
@@ -79,7 +86,7 @@ export default function SignupPage() {
     }
     
     if (!isStrongPassword(password)) {
-      setLocalError("Password must be at least 8 characters long");
+      setLocalError("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)");
       return false;
     }
     
@@ -219,7 +226,9 @@ export default function SignupPage() {
               required 
             />
             {password && !isStrongPassword(password) && (
-              <p className="text-xs text-amber-600">Password must be at least 8 characters long</p>
+              <div className="text-xs text-muted-foreground mt-1">
+                Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&).
+              </div>
             )}
           </div>
           
