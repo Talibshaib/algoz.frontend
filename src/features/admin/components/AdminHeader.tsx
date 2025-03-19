@@ -6,7 +6,7 @@ import { Menu } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useSidebar } from "@/components/ui/sidebar"
-import { useAdminAuth } from "@/contexts/AdminAuthContext"
+import { signOut } from "@/features/auth/utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,12 +18,15 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import AdminSidebar from "./AdminSidebar"
+import { AdminSidebar } from "./AdminSidebar"
 
 export function AdminHeader() {
   const { theme, setTheme } = useTheme()
-  const { logout } = useAdminAuth()
   const { toggleSidebar, isMobile, setOpenMobile, openMobile } = useSidebar()
+  
+  const handleLogout = async () => {
+    await signOut();
+  };
   
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -73,7 +76,7 @@ export function AdminHeader() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>Admin Settings</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => logout()}>
+              <DropdownMenuItem onClick={handleLogout}>
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>

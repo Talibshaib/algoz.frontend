@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import supabase from "@/lib/supabase";
 import {
   Search,
   Filter,
@@ -47,7 +47,6 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const { getAdminToken } = useAdminAuth();
 
   // Fetch users from the backend
   useEffect(() => {

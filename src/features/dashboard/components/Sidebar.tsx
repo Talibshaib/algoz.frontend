@@ -38,7 +38,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/AuthContext";
+import { signOut } from "@/features/auth/utils";
 
 interface SidebarProps {
   className?: string;
@@ -49,7 +49,6 @@ export default function Sidebar({ className }: SidebarProps) {
   const { open, toggleSidebar, isMobile, openMobile, setOpenMobile } = useSidebar();
   const router = useRouter();
   const pathname = usePathname();
-  const { logout } = useAuth();
   
   // Local state
   const [activeItem, setActiveItem] = useState<string | null>(null);
@@ -98,13 +97,11 @@ export default function Sidebar({ className }: SidebarProps) {
   };
 
   // Handle logout
-  const handleLogout = (e: React.MouseEvent) => {
+  const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    logout().then(() => {
-      toast.success("Logged out successfully");
-    });
+    await signOut();
   };
 
   // Handle input focus

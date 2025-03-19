@@ -24,15 +24,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { signOut } from "@/features/auth/utils";
 
 interface AdminSidebarProps {
   className?: string;
 }
 
-export default function AdminSidebar({ className }: AdminSidebarProps) {
+export function AdminSidebar({ className }: AdminSidebarProps) {
   const { open, toggleSidebar, isMobile, openMobile, setOpenMobile } = useSidebar();
-  const { logout } = useAdminAuth();
   const [activeItem, setActiveItem] = React.useState<string | null>(null);
   
   const handleItemClick = (itemName: string) => {
@@ -40,6 +39,10 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
     if (isMobile) {
       setOpenMobile(false);
     }
+  };
+  
+  const handleLogout = async () => {
+    await signOut();
   };
 
   return (
@@ -183,7 +186,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
         </Link>
 
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className={cn(
             "flex w-full items-center space-x-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors text-left",
             activeItem === "logout" && "bg-black text-white"
@@ -193,8 +196,6 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
           <LogOut className="h-5 w-5" />
           {open && <span>Logout</span>}
         </button>
-
-        {/* Removed User Dashboard link as requested */}
       </nav>
     </div>
   );

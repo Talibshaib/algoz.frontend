@@ -5,6 +5,7 @@ import "./globals.css"
 import { Providers } from "./provider"
 import { ThemeProvider } from "@/components/ui/theme-provider"
 import { ToastProvider } from "@/components/ui/toast"
+import { RouteGuard } from "@/features/auth"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -42,7 +43,9 @@ export default function RootLayout({
         <Providers>
           <ThemeProvider>
             <ToastProvider>
-              {children}
+              <RouteGuard>
+                {children}
+              </RouteGuard>
             </ToastProvider>
           </ThemeProvider>
         </Providers>

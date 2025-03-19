@@ -1,88 +1,86 @@
-# AlgoZ - Advanced Algorithmic Trading Platform
+# AlgoZ Frontend
 
-## Overview
-
-AlgoZ is a powerful algorithmic trading platform designed to automate trading strategies across multiple financial markets. Our platform connects to various brokers and exchanges, allowing traders to execute strategies based on technical indicators, market data, and custom algorithms.
-
-## Features
-
-### Trading Capabilities
-- **TradingView Integration**: Execute trades directly from TradingView charts using webhooks
-- **Scalping Tools**: High-frequency trading tools optimized for short-term positions
-- **Copy Trading**: Follow and automatically replicate trades from successful traders
-- **Strategy Builder**: Create custom trading strategies using Pine Script, MQL, and AFL
-
-### Platform Benefits
-- **Broker Authentication**: Secure connection to multiple brokers and exchanges
-- **Real-time Analytics**: Monitor performance metrics and trading history
-- **Risk Management**: Set stop-loss, take-profit, and position sizing rules
-- **Automated Execution**: Run strategies 24/7 without manual intervention
+This is the frontend for the AlgoZ application, a trading platform that connects to various brokers and exchanges.
 
 ## Technology Stack
 
-### Frontend
-- Next.js (React framework)
+- Next.js with React
 - TypeScript
 - Tailwind CSS
+- Supabase for database and authentication
 - Radix UI components
 
-### Backend
-- Node.js
-- Express.js
-- MongoDB
-- JWT authentication
-- WebSocket for real-time data
+## Environment Variables
+
+Make sure to set the following environment variables in your `.env.local` file:
+
+```bash
+# API URLs
+NEXT_PUBLIC_API_URL=https://algoz-backend-68rt.onrender.com/api/v1
+NEXT_PUBLIC_API_URL_HTTPS=https://algoz-backend-68rt.onrender.com/api/v1
+NEXT_PUBLIC_FALLBACK_API_URL=https://algoz-backend-68rt.onrender.com/api/v1
+NEXT_PUBLIC_FALLBACK_API_URL_HTTPS=https://algoz-backend-68rt.onrender.com/api/v1
+NEXT_PUBLIC_FALLBACK_API_URL_WITH_PORT=https://algoz-backend-68rt.onrender.com/api/v1
+NEXT_PUBLIC_LOCAL_API_URL=http://localhost:8000/api/v1
+
+# MetaAPI configuration
+NEXT_PUBLIC_METAAPI_TOKEN=your_metaapi_token_here
+
+# Environment
+NEXT_PUBLIC_ENVIRONMENT=development
+
+# Supabase credentials
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Database URL (if using Prisma)
+DATABASE_URL=postgresql://postgres:password@project-ref.supabase.co:5432/postgres
+```
 
 ## Getting Started
 
-### Prerequisites
-- Node.js (v16+)
-- MongoDB
-- API keys for supported brokers
+First, install the dependencies:
 
-### Installation
-
-1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/algo_Z.git
-cd algo_Z
-```
-
-2. Install backend dependencies
-```bash
-cd backend
 npm install
+# or
+yarn install
 ```
 
-3. Install frontend dependencies
+Then, run the development server:
+
 ```bash
-cd ../frontend
-npm install
+npm run dev
+# or
+yarn dev
 ```
 
-4. Set up environment variables
-   - Create `.env` files in both frontend and backend directories
-   - Configure database connection, API keys, and authentication settings
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-5. Start development servers
-```bash
-# In backend directory
-npm run dev
+## Key Features
 
-# In frontend directory
-npm run dev
-```
+- Secure authentication with JWT and Supabase
+- Connection to multiple trading brokers
+- Real-time market data
+- Trading strategy execution
+- Admin dashboard for platform management
 
-6. Access the application at `http://localhost:3000`
+## Project Structure
 
-## Deployment
+- `src/app`: Next.js app router pages
+- `src/components`: Reusable UI components
+- `src/contexts`: React context providers (auth, theme, etc.)
+- `src/hooks`: Custom React hooks
+- `src/lib`: Utilities and libraries (axios, supabase)
+- `src/services`: API service functions
+- `src/utils`: Helper functions and utilities
+- `src/types`: TypeScript type definitions
+- `public`: Static assets
 
-For production deployment instructions, please refer to the [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) file.
+## Learn More
 
-## Support
+To learn more about the technologies used in this project:
 
-For technical support or feature requests, please contact our support team at support@algoz.com or visit the FAQ section in the application.
-
-## License
-
-Copyright © 2023 AlgoZ. All rights reserved.
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Documentation](https://reactjs.org/)
+- [Supabase Documentation](https://supabase.io/docs)
