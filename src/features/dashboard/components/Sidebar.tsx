@@ -207,35 +207,35 @@ export default function Sidebar({ className }: SidebarProps) {
                 <div className="mt-1 space-y-1">
                   <a
                     href="/dashboard/webhook"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => handleNavigation(e, "/dashboard/webhook", "tradingview")}
                   >
                     Webhook URL
                   </a>
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Symbol
                   </a>
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     JSON
                   </a>
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Trade Logs
                   </a>
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Manage
@@ -276,14 +276,14 @@ export default function Sidebar({ className }: SidebarProps) {
                 <div className="mt-1 space-y-1">
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Trade Panel
                   </a>
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Manage
@@ -324,14 +324,14 @@ export default function Sidebar({ className }: SidebarProps) {
                 <div className="mt-1 space-y-1">
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Strategy
                   </a>
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Manage
@@ -372,21 +372,21 @@ export default function Sidebar({ className }: SidebarProps) {
                 <div className="mt-1 space-y-1">
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Pine Script
                   </a>
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     MQL
                   </a>
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     AFL
@@ -429,21 +429,21 @@ export default function Sidebar({ className }: SidebarProps) {
                 <div className="mt-1 space-y-1">
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     NSE/BSE
                   </a>
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Forex
                   </a>
                   <a
                     href="#"
-                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Crypto
