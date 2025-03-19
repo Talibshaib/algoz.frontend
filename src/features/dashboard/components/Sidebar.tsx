@@ -15,7 +15,8 @@ import {
   KeyIcon,
   Bot,
   LogOut,
-  Shield
+  Shield,
+  ChevronDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -114,6 +115,16 @@ export default function Sidebar({ className }: SidebarProps) {
     setIsInputFocused(false);
   };
 
+  // Custom AccordionTrigger to show the chevron on the right
+  const CustomAccordionTrigger = ({ className, children, ...props }: any) => (
+    <AccordionTrigger {...props} className={className}>
+      <div className="flex items-center justify-between w-full">
+        {children}
+        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+      </div>
+    </AccordionTrigger>
+  );
+
   return (
     <div
       className={cn(
@@ -128,13 +139,13 @@ export default function Sidebar({ className }: SidebarProps) {
         <a
           href="/dashboard"
           className={cn(
-            "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-            activeItem === "dashboard" && "bg-black text-white"
+            "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
+            activeItem === "dashboard" ? "bg-black text-white" : ""
           )}
           onClick={(e) => handleNavigation(e, "/dashboard", "dashboard")}
         >
           <LayoutDashboard className="h-5 w-5 min-w-5" />
-          {open && <span className="ml-3 text-sm md:text-base">Dashboard</span>}
+          {open && <span className="ml-3 text-sm font-medium">Dashboard</span>}
         </a>
 
         {open && (
@@ -150,254 +161,294 @@ export default function Sidebar({ className }: SidebarProps) {
           <a
             href="/dashboard/broker-management"
             className={cn(
-              "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-              activeItem === "broker-management" && "bg-black text-white",
+              "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
+              activeItem === "broker-management" ? "bg-black text-white" : "",
               !open && "justify-center",
-              open && "space-x-3"
+              open && "justify-between"
             )}
             onClick={(e) => handleNavigation(e, "/dashboard/broker-management", "broker-management")}
           >
-            <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+            <div className="flex items-center space-x-3">
               <KeyIcon className="h-5 w-5 min-w-5" />
-              {open && <span className="text-sm md:text-base">Api Credentials</span>}
+              {open && <span className="text-sm font-medium">Api Credentials</span>}
             </div>
           </a>
 
           <Accordion type="single" collapsible className="w-full space-y-2">
             <AccordionItem value="tradingview" className="border-none">
-              <AccordionTrigger
+              <div
                 className={cn(
-                  "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                  activeItem === "tradingview" && "bg-black text-white",
-                  !open && "justify-center",
-                  open && "space-x-3"
+                  "flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors",
+                  activeItem === "tradingview" ? "bg-black text-white" : ""
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setActiveItem("tradingview");
+                  setActiveItem(activeItem === "tradingview" ? null : "tradingview");
                 }}
               >
-                <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                <div className="flex items-center space-x-3">
                   <LineChart className="h-5 w-5 min-w-5" />
-                  {open && <span className="text-sm md:text-base">TradingView</span>}
+                  {open && <span className="text-sm font-medium">TradingView</span>}
                 </div>
-              </AccordionTrigger>
-              {open && (
-                <AccordionContent>
-                  <div className="pl-11 space-y-2">
-                    <a
-                      href="/dashboard/webhook"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => handleNavigation(e, "/dashboard/webhook", "tradingview")}
-                    >
-                      Webhook URL
-                    </a>
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Symbol
-                    </a>
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      JSON
-                    </a>
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Trade Logs
-                    </a>
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Manage
-                    </a>
-                  </div>
-                </AccordionContent>
+                {open && (
+                  <ChevronDown 
+                    className={cn(
+                      "h-4 w-4 shrink-0 transition-transform duration-200",
+                      activeItem === "tradingview" ? "text-white" : ""
+                    )}
+                    data-state={activeItem === "tradingview" ? "open" : "closed"}
+                    style={{
+                      transform: activeItem === "tradingview" ? "rotate(180deg)" : "rotate(0deg)"
+                    }}
+                  />
+                )}
+              </div>
+              {open && activeItem === "tradingview" && (
+                <div className="mt-1 space-y-1">
+                  <a
+                    href="/dashboard/webhook"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => handleNavigation(e, "/dashboard/webhook", "tradingview")}
+                  >
+                    Webhook URL
+                  </a>
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Symbol
+                  </a>
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    JSON
+                  </a>
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Trade Logs
+                  </a>
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Manage
+                  </a>
+                </div>
               )}
             </AccordionItem>
 
             <AccordionItem value="scalping" className="border-none">
-              <AccordionTrigger
+              <div
                 className={cn(
-                  "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                  activeItem === "scalping" && "bg-black text-white",
-                  !open && "justify-center",
-                  open && "space-x-3"
+                  "flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors",
+                  activeItem === "scalping" ? "bg-black text-white" : ""
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setActiveItem("scalping");
+                  setActiveItem(activeItem === "scalping" ? null : "scalping");
                 }}
               >
-                <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                <div className="flex items-center space-x-3">
                   <Zap className="h-5 w-5 min-w-5" />
-                  {open && <span className="text-sm md:text-base">Scalping Tool</span>}
+                  {open && <span className="text-sm font-medium">Scalping Tool</span>}
                 </div>
-              </AccordionTrigger>
-              {open && (
-                <AccordionContent>
-                  <div className="pl-11 space-y-2">
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Trade Panel
-                    </a>
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Manage
-                    </a>
-                  </div>
-                </AccordionContent>
+                {open && (
+                  <ChevronDown 
+                    className={cn(
+                      "h-4 w-4 shrink-0 transition-transform duration-200",
+                      activeItem === "scalping" ? "text-white" : ""
+                    )}
+                    data-state={activeItem === "scalping" ? "open" : "closed"}
+                    style={{
+                      transform: activeItem === "scalping" ? "rotate(180deg)" : "rotate(0deg)"
+                    }}
+                  />
+                )}
+              </div>
+              {open && activeItem === "scalping" && (
+                <div className="mt-1 space-y-1">
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Trade Panel
+                  </a>
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Manage
+                  </a>
+                </div>
               )}
             </AccordionItem>
 
             <AccordionItem value="copytrading" className="border-none">
-              <AccordionTrigger
+              <div
                 className={cn(
-                  "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                  activeItem === "copytrading" && "bg-black text-white",
-                  !open && "justify-center",
-                  open && "space-x-3"
+                  "flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors",
+                  activeItem === "copytrading" ? "bg-black text-white" : ""
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setActiveItem("copytrading");
+                  setActiveItem(activeItem === "copytrading" ? null : "copytrading");
                 }}
               >
-                <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                <div className="flex items-center space-x-3">
                   <Copy className="h-5 w-5 min-w-5" />
-                  {open && <span className="text-sm md:text-base">Copy Trading</span>}
+                  {open && <span className="text-sm font-medium">Copy Trading</span>}
                 </div>
-              </AccordionTrigger>
-              {open && (
-                <AccordionContent>
-                  <div className="pl-11 space-y-2">
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Strategy
-                    </a>
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Manage
-                    </a>
-                  </div>
-                </AccordionContent>
+                {open && (
+                  <ChevronDown 
+                    className={cn(
+                      "h-4 w-4 shrink-0 transition-transform duration-200",
+                      activeItem === "copytrading" ? "text-white" : ""
+                    )}
+                    data-state={activeItem === "copytrading" ? "open" : "closed"}
+                    style={{
+                      transform: activeItem === "copytrading" ? "rotate(180deg)" : "rotate(0deg)"
+                    }}
+                  />
+                )}
+              </div>
+              {open && activeItem === "copytrading" && (
+                <div className="mt-1 space-y-1">
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Strategy
+                  </a>
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Manage
+                  </a>
+                </div>
               )}
             </AccordionItem>
 
             <AccordionItem value="strategy" className="border-none">
-              <AccordionTrigger
+              <div
                 className={cn(
-                  "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                  activeItem === "strategy" && "bg-black text-white",
-                  !open && "justify-center",
-                  open && "space-x-3"
+                  "flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors",
+                  activeItem === "strategy" ? "bg-black text-white" : ""
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setActiveItem("strategy");
+                  setActiveItem(activeItem === "strategy" ? null : "strategy");
                 }}
               >
-                <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                <div className="flex items-center space-x-3">
                   <LineChart className="h-5 w-5 min-w-5" />
-                  {open && <span className="text-sm md:text-base">Strategy</span>}
+                  {open && <span className="text-sm font-medium">Strategy</span>}
                 </div>
-              </AccordionTrigger>
-              {open && (
-                <AccordionContent>
-                  <div className="pl-11 space-y-2">
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Pine Script
-                    </a>
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      MQL
-                    </a>
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      AFL
-                    </a>
-                  </div>
-                </AccordionContent>
+                {open && (
+                  <ChevronDown 
+                    className={cn(
+                      "h-4 w-4 shrink-0 transition-transform duration-200",
+                      activeItem === "strategy" ? "text-white" : ""
+                    )}
+                    data-state={activeItem === "strategy" ? "open" : "closed"}
+                    style={{
+                      transform: activeItem === "strategy" ? "rotate(180deg)" : "rotate(0deg)"
+                    }}
+                  />
+                )}
+              </div>
+              {open && activeItem === "strategy" && (
+                <div className="mt-1 space-y-1">
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Pine Script
+                  </a>
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    MQL
+                  </a>
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    AFL
+                  </a>
+                </div>
               )}
             </AccordionItem>
           </Accordion>
 
           <Accordion type="single" collapsible className="w-full space-y-2">
             <AccordionItem value="bots" className="border-none">
-              <AccordionTrigger
+              <div
                 className={cn(
-                  "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-                  activeItem === "bots" && "bg-black text-white",
-                  !open && "justify-center",
-                  open && "space-x-3"
+                  "flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors",
+                  activeItem === "bots" ? "bg-black text-white" : ""
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setActiveItem("bots");
+                  setActiveItem(activeItem === "bots" ? null : "bots");
                 }}
               >
-                <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+                <div className="flex items-center space-x-3">
                   <Bot className="h-5 w-5 min-w-5" />
-                  {open && <span className="text-sm md:text-base">Bots</span>}
+                  {open && <span className="text-sm font-medium">Bots</span>}
                 </div>
-              </AccordionTrigger>
-              {open && (
-                <AccordionContent>
-                  <div className="pl-11 space-y-2">
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      NSE/BSE
-                    </a>
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Forex
-                    </a>
-                    <a
-                      href="#"
-                      className="block py-2 hover:text-primary transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Crypto
-                    </a>
-                  </div>
-                </AccordionContent>
+                {open && (
+                  <ChevronDown 
+                    className={cn(
+                      "h-4 w-4 shrink-0 transition-transform duration-200",
+                      activeItem === "bots" ? "text-white" : ""
+                    )}
+                    data-state={activeItem === "bots" ? "open" : "closed"}
+                    style={{
+                      transform: activeItem === "bots" ? "rotate(180deg)" : "rotate(0deg)"
+                    }}
+                  />
+                )}
+              </div>
+              {open && activeItem === "bots" && (
+                <div className="mt-1 space-y-1">
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    NSE/BSE
+                  </a>
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Forex
+                  </a>
+                  <a
+                    href="#"
+                    className="block pl-11 py-1.5 text-sm hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Crypto
+                  </a>
+                </div>
               )}
             </AccordionItem>
           </Accordion>
@@ -405,16 +456,16 @@ export default function Sidebar({ className }: SidebarProps) {
           <a
             href="/dashboard/pricing"
             className={cn(
-              "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-              activeItem === "pricing" && "bg-black text-white",
+              "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
+              activeItem === "pricing" ? "bg-black text-white" : "",
               !open && "justify-center",
-              open && "space-x-3"
+              open && "justify-between"
             )}
             onClick={(e) => handleNavigation(e, "/dashboard/pricing", "pricing")}
           >
-            <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+            <div className="flex items-center space-x-3">
               <CreditCard className="h-5 w-5 min-w-5" />
-              {open && <span className="ml-3 text-sm md:text-base">Pricing</span>}
+              {open && <span className="text-sm font-medium">Pricing</span>}
             </div>
           </a>
         </div>
@@ -432,38 +483,38 @@ export default function Sidebar({ className }: SidebarProps) {
           <a
             href="#"
             className={cn(
-              "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-              activeItem === "contact" && "bg-black text-white",
+              "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
+              activeItem === "contact" ? "bg-black text-white" : "",
               !open && "justify-center",
-              open && "space-x-3"
+              open && "justify-between"
             )}
             onClick={(e) => {
               e.stopPropagation();
               setActiveItem("contact");
             }}
           >
-            <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+            <div className="flex items-center space-x-3">
               <HeadphonesIcon className="h-5 w-5 min-w-5" />
-              {open && <span className="ml-3 text-sm md:text-base">Contact Us</span>}
+              {open && <span className="text-sm font-medium">Contact Us</span>}
             </div>
           </a>
 
           <a
             href="#"
             className={cn(
-              "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-              activeItem === "faq" && "bg-black text-white",
+              "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
+              activeItem === "faq" ? "bg-black text-white" : "",
               !open && "justify-center",
-              open && "space-x-3"
+              open && "justify-between"
             )}
             onClick={(e) => {
               e.stopPropagation();
               setActiveItem("faq");
             }}
           >
-            <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+            <div className="flex items-center space-x-3">
               <HelpCircle className="h-5 w-5 min-w-5" />
-              {open && <span className="ml-3 text-sm md:text-base">FAQ</span>}
+              {open && <span className="text-sm font-medium">FAQ</span>}
             </div>
           </a>
         </div>
@@ -475,16 +526,16 @@ export default function Sidebar({ className }: SidebarProps) {
           <a
             href="/dashboard/security"
             className={cn(
-              "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
-              activeItem === "security" && "bg-black text-white",
+              "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
+              activeItem === "security" ? "bg-black text-white" : "",
               !open && "justify-center",
-              open && "space-x-3"
+              open && "justify-between"
             )}
             onClick={(e) => handleNavigation(e, "/dashboard/security", "security")}
           >
-            <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+            <div className="flex items-center space-x-3">
               <Shield className="h-5 w-5 min-w-5" />
-              {open && <span className="text-sm md:text-base">Security</span>}
+              {open && <span className="text-sm font-medium">Security</span>}
             </div>
           </a>
         </div>
@@ -495,15 +546,15 @@ export default function Sidebar({ className }: SidebarProps) {
         <a
           href="#"
           className={cn(
-            "flex items-center px-3 py-2 rounded-lg hover:bg-accent transition-colors",
+            "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
             !open && "justify-center",
-            open && "space-x-3"
+            open && "justify-between"
           )}
           onClick={handleLogout}
         >
-          <div className={cn("flex items-center", open ? "space-x-3" : "justify-center w-full")}>
+          <div className="flex items-center space-x-3">
             <LogOut className="h-5 w-5 min-w-5" />
-            {open && <span className="ml-3 text-sm md:text-base">Logout</span>}
+            {open && <span className="text-sm font-medium">Logout</span>}
           </div>
         </a>
       </div>
