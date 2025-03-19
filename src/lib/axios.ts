@@ -55,6 +55,19 @@ instance.interceptors.request.use(
         console.log(`Request: ${config.method?.toUpperCase()} ${config.url}`);
       }
       
+      // Prevent API path duplication
+      if (config.url) {
+        // Fix double /api/v1 paths
+        if (config.url.includes('/api/v1/api/v1')) {
+          config.url = config.url.replace('/api/v1/api/v1', '/api/v1');
+        }
+        
+        // Fix other potential duplications
+        if (config.url.startsWith('/api') && config.baseURL?.includes('/api')) {
+          config.url = config.url.replace(/^\/api/, '');
+        }
+      }
+      
       // Skip authentication for public routes
       const isPublicRoute = publicRoutes.some(route => config.url?.includes(route));
       if (isPublicRoute) {

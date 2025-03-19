@@ -13,7 +13,6 @@ export const useAuthenticatedApi = () => {
   const [token, setToken] = useState<string | null>(null);
   const [axiosInstance] = useState(() => {
     const instance = axios.create({
-      baseURL: '/api', // API base URL
       headers: {
         'Content-Type': 'application/json',
       }
