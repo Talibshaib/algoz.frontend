@@ -75,26 +75,26 @@ const ReviewCard = ({
 }) => {
   return (
     <MotionDiv
-      whileHover={{ y: -5, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)" }}
+      whileHover={{ y: -5, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1)" }}
       transition={{ duration: 0.2 }}
     >
       <figure
         className={cn(
-          "relative h-full w-72 cursor-pointer overflow-hidden rounded-xl border p-6 mx-2",
-          // light styles
-          "border-gray-200 bg-white shadow-sm hover:border-gray-300",
-          // dark styles
-          "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
+          "relative h-full w-72 cursor-pointer overflow-hidden rounded-xl p-6 mx-2",
+          "border border-gray-100 bg-white shadow-md hover:border-gray-200",
+          "backdrop-blur-sm bg-opacity-80"
         )}
       >
         <div className="flex flex-row items-center gap-3 mb-3">
-          <img 
-            className="rounded-full border-2 border-gray-100" 
-            width="48" 
-            height="48" 
-            alt={`${name}'s avatar`} 
-            src={img} 
-          />
+          <div className="rounded-full border-2 border-gray-100 p-0.5 bg-gradient-to-br from-orange-100 to-amber-100">
+            <img 
+              className="rounded-full" 
+              width="48" 
+              height="48" 
+              alt={`${name}'s avatar`} 
+              src={img} 
+            />
+          </div>
           <div className="flex flex-col">
             <figcaption className="text-sm font-semibold text-gray-900">
               {name}
@@ -108,14 +108,14 @@ const ReviewCard = ({
             <Star 
               key={i} 
               size={16} 
-              className={i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} 
+              className={i < rating ? "text-amber-400 fill-amber-400" : "text-gray-200"} 
             />
           ))}
         </div>
         
         <blockquote className="mt-2 text-sm text-gray-700 leading-relaxed">"{body}"</blockquote>
         
-        <p className="mt-4 text-xs font-medium text-blue-600">{username}</p>
+        <p className="mt-4 text-xs font-medium text-orange-600">{username}</p>
       </figure>
     </MotionDiv>
   );
@@ -128,7 +128,7 @@ export default function MarqueeDemo() {
         <span className="inline-block px-4 py-1 rounded-full bg-black bg-opacity-5 text-sm font-medium text-gray-800 mb-3">
           TESTIMONIALS
         </span>
-        <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+        <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-orange-500 to-amber-600 bg-clip-text text-transparent">
           What Our Users Say
         </h2>
       </div>

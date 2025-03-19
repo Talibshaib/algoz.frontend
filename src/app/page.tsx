@@ -56,7 +56,7 @@ export default function Hero() {
             repeat: Infinity,
             repeatType: "loop"
           }}
-          className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+          className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-600 bg-clip-text text-transparent"
         >
           AlgoZ
         </MotionDiv>
@@ -73,7 +73,7 @@ export default function Hero() {
       {/* Scroll to top button */}
       {showScrollTop && (
         <MotionDiv
-          className="fixed bottom-8 right-8 w-12 h-12 bg-black rounded-full flex items-center justify-center z-50 cursor-pointer shadow-lg"
+          className="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-600 rounded-full flex items-center justify-center z-50 cursor-pointer shadow-lg"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}

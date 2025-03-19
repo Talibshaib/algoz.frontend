@@ -51,17 +51,17 @@ export default function Home() {
     <main className="flex min-h-screen flex-col">
       {/* Hero Section */}
       <MotionSection
-        className="relative py-24 md:py-32 overflow-hidden"
+        className="relative py-28 md:py-36 overflow-hidden"
         initial="hidden"
         animate="visible"
         variants={fadeIn}
       >
-        {/* Background Elements */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 z-0"></div>
-
+        {/* Background Gradient */}
+        <div className="absolute inset-0 bg-white z-0"></div>
+        
         {/* Animated Background Shapes */}
         <MotionDiv
-          className="absolute top-20 left-10 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 z-0"
+          className="absolute top-20 left-10 w-64 h-64 bg-[#FFA559] rounded-full mix-blend-multiply filter blur-xl opacity-70 z-0"
           animate={{
             x: [0, 30, 0],
             y: [0, 40, 0],
@@ -74,7 +74,7 @@ export default function Home() {
         />
 
         <MotionDiv
-          className="absolute bottom-10 right-10 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 z-0"
+          className="absolute bottom-10 right-10 w-72 h-72 bg-[#FFA559] rounded-full mix-blend-multiply filter blur-xl opacity-70 z-0"
           animate={{
             x: [0, -40, 0],
             y: [0, 30, 0],
@@ -87,7 +87,7 @@ export default function Home() {
         />
 
         <MotionDiv
-          className="absolute top-1/2 right-1/4 w-48 h-48 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-60 z-0"
+          className="absolute top-1/2 right-1/4 w-48 h-48 bg-[#FFA559] rounded-full mix-blend-multiply filter blur-xl opacity-60 z-0"
           animate={{
             x: [0, 50, 0],
             y: [0, -30, 0],
@@ -100,18 +100,18 @@ export default function Home() {
         />
 
         {/* Content */}
-        <div className="container mx-auto px-4 text-center relative z-10">
+        <div className="container mx-auto px-6 relative z-10 text-center">
           <MotionDiv
-            className="inline-block mb-3 px-4 py-1 rounded-full bg-black bg-opacity-5 backdrop-blur-sm border border-gray-200"
+            className="inline-block mb-5 px-5 py-2 rounded-full bg-white bg-opacity-90 backdrop-blur-sm border border-[#F5F5F5] shadow-sm"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <span className="text-sm font-medium text-gray-800">Revolutionizing Algorithmic Trading</span>
+            <span className="text-sm font-medium text-[#333333]">Revolutionizing Algorithmic Trading</span>
           </MotionDiv>
 
           <MotionH1
-            className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-blue-800 to-purple-900 bg-clip-text text-transparent"
+            className="text-5xl md:text-6xl font-bold mb-8 bg-gradient-to-r from-[#333333] via-[#FF6B00] to-[#D35400] bg-clip-text text-transparent"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
@@ -120,7 +120,7 @@ export default function Home() {
           </MotionH1>
 
           <MotionP
-            className="text-gray-700 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
+            className="text-[#333333] text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.4 }}
@@ -130,43 +130,31 @@ export default function Home() {
           </MotionP>
 
           <MotionDiv
-            className="flex flex-col sm:flex-row gap-5 justify-center mb-12"
+            className="flex flex-wrap justify-center gap-6 mb-16"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
+            transition={{ duration: 0.7, delay: 0.6 }}
           >
-            <MotionDiv
-              whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-              whileTap={{ scale: 0.95 }}
+            <Button
+              className="bg-[#FF6B00] hover:bg-[#D35400] text-white font-medium px-8 py-5 rounded-xl shadow-lg hover:shadow-xl transform transition-all hover:-translate-y-1"
+              endContent={<ArrowRight size={18} />}
             >
-              <Button
-                className="bg-black hover:bg-gray-800 text-white font-medium px-8 py-6 h-12 text-base shadow-sm"
-                endContent={<ArrowRight className="h-4 w-4 ml-1" />}
-              >
-                Start Copy Trading
-              </Button>
-            </MotionDiv>
-            <MotionDiv
-              whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-              whileTap={{ scale: 0.95 }}
+              Start Trading Now
+            </Button>
+            <Button
+              className="bg-white text-[#333333] font-medium px-8 py-5 rounded-xl border border-[#F5F5F5] shadow-sm hover:shadow-md transform transition-all hover:-translate-y-1"
             >
-              <Button
-                variant="bordered"
-                className="border-gray-300 hover:bg-gray-50 font-medium px-8 py-6 h-12 text-base"
-              >
-                Browse Strategies
-              </Button>
-            </MotionDiv>
+              Try Demo
+            </Button>
           </MotionDiv>
 
-          {/* Trusted By Section */}
           <MotionDiv
             className="flex flex-col items-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.8 }}
           >
-            <p className="text-sm text-gray-500 mb-4">TRUSTED BY LEADING TRADING FIRMS</p>
+            <p className="text-sm text-[#333333] mb-4">TRUSTED BY LEADING TRADING FIRMS</p>
             <div className="flex flex-wrap justify-center gap-8 opacity-70">
               <img src="https://placehold.co/120x40/gray/white?text=TradeFirm" alt="Trading Firm" className="h-8" />
               <img src="https://placehold.co/120x40/gray/white?text=QuantCap" alt="Quant Capital" className="h-8" />
@@ -186,127 +174,84 @@ export default function Home() {
 
       {/* Stats Section */}
       <MotionSection
-        className="py-24 bg-white relative overflow-hidden"
+        className="py-24 bg-white relative"
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
+        viewport={{ once: true, amount: 0.1 }}
         variants={staggerContainer}
       >
-        {/* Background Elements */}
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-white opacity-70"></div>
-
-        {/* Decorative Elements */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-100 via-purple-100 to-blue-50"></div>
-
-        <div className="container mx-auto px-4 relative z-10">
-          <MotionDiv
-            className="text-center max-w-3xl mx-auto mb-16"
-            variants={itemFadeIn}
+        <div className="container mx-auto px-6">
+          <MotionDiv 
+            className="grid grid-cols-1 md:grid-cols-3 gap-10"
+            variants={staggerContainer}
           >
-            <div className="inline-block mb-3 px-4 py-1 rounded-full bg-black bg-opacity-5 border border-gray-200">
-              <span className="text-sm font-medium text-gray-800">OUR IMPACT</span>
-            </div>
-            <MotionH2
-              className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent"
-              variants={itemFadeIn}
-            >
-              Trading at Scale
-            </MotionH2>
-            <MotionP
-              className="text-gray-600 text-lg"
-              variants={itemFadeIn}
-            >
-              Join thousands of traders who trust our platform for reliable, high-performance trading
-            </MotionP>
-          </MotionDiv>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
+            {/* Stat 1 */}
             <MotionDiv
-              className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center"
+              className="bg-[#F5F5F5] rounded-2xl p-8 shadow-lg border border-[#F5F5F5] backdrop-blur-sm bg-opacity-80 hover:transform hover:-translate-y-2 transition-all duration-300"
               variants={itemFadeIn}
-              whileHover={{ y: -5, boxShadow: "0 15px 30px -5px rgba(0, 0, 0, 0.1)" }}
-              transition={{ duration: 0.3 }}
+              whileHover={{ y: -5, boxShadow: "0 25px 50px -12px rgba(211, 84, 0, 0.3)" }}
             >
-              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+              <div className="flex items-center mb-6">
+                <div className="w-14 h-14 rounded-lg bg-[#FF6B00] flex items-center justify-center mr-5 shadow-md">
+                  <Zap className="text-white" size={24} />
+                </div>
+                <h3 className="text-2xl font-bold text-[#333333]">Fast Execution</h3>
               </div>
-              <MotionH2
-                className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent"
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-              >
-                $2.5B+
-              </MotionH2>
-              <p className="text-gray-700 font-medium">Trading Volume</p>
-              <p className="text-sm text-gray-500 mt-1">Processed monthly</p>
+              <p className="text-[#333333] mb-6">
+                Our algorithms execute trades at lightning speed, ensuring you never miss a profitable opportunity.
+              </p>
+              <div className="mt-4 pt-4 border-t border-[#F5F5F5]">
+                <p className="text-[#FF6B00] font-medium text-lg">
+                  &lt; 0.01s
+                </p>
+                <p className="text-sm text-[#333333]">Average execution time</p>
+              </div>
             </MotionDiv>
 
+            {/* Stat 2 */}
             <MotionDiv
-              className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center"
+              className="bg-[#F5F5F5] rounded-2xl p-8 shadow-lg border border-[#F5F5F5] backdrop-blur-sm bg-opacity-80 hover:transform hover:-translate-y-2 transition-all duration-300"
               variants={itemFadeIn}
-              whileHover={{ y: -5, boxShadow: "0 15px 30px -5px rgba(0, 0, 0, 0.1)" }}
-              transition={{ duration: 0.3 }}
+              whileHover={{ y: -5, boxShadow: "0 25px 50px -12px rgba(211, 84, 0, 0.3)" }}
             >
-              <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
+              <div className="flex items-center mb-6">
+                <div className="w-14 h-14 rounded-lg bg-[#FF6B00] flex items-center justify-center mr-5 shadow-md">
+                  <BarChart2 className="text-white" size={24} />
+                </div>
+                <h3 className="text-2xl font-bold text-[#333333]">99.9% Uptime</h3>
               </div>
-              <MotionH2
-                className="text-4xl font-bold mb-2 bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent"
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                viewport={{ once: true }}
-              >
-                50K+
-              </MotionH2>
-              <p className="text-gray-700 font-medium">Active Traders</p>
-              <p className="text-sm text-gray-500 mt-1">From 30+ countries</p>
+              <p className="text-[#333333] mb-6">
+                Our robust infrastructure ensures your algorithms run without interruption, 24/7/365.
+              </p>
+              <div className="mt-4 pt-4 border-t border-[#F5F5F5]">
+                <p className="text-[#FF6B00] font-medium text-lg">
+                  99.9%
+                </p>
+                <p className="text-sm text-[#333333]">Guaranteed uptime</p>
+              </div>
             </MotionDiv>
 
+            {/* Stat 3 */}
             <MotionDiv
-              className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center"
+              className="bg-[#F5F5F5] rounded-2xl p-8 shadow-lg border border-[#F5F5F5] backdrop-blur-sm bg-opacity-80 hover:transform hover:-translate-y-2 transition-all duration-300"
               variants={itemFadeIn}
-              whileHover={{ y: -5, boxShadow: "0 15px 30px -5px rgba(0, 0, 0, 0.1)" }}
-              transition={{ duration: 0.3 }}
+              whileHover={{ y: -5, boxShadow: "0 25px 50px -12px rgba(211, 84, 0, 0.3)" }}
             >
-              <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                </svg>
+              <div className="flex items-center mb-6">
+                <div className="w-14 h-14 rounded-lg bg-[#FF6B00] flex items-center justify-center mr-5 shadow-md">
+                  <MousePointer className="text-white" size={24} />
+                </div>
+                <h3 className="text-2xl font-bold text-[#333333]">One-Click Deploy</h3>
               </div>
-              <MotionH2
-                className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent"
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                viewport={{ once: true }}
-              >
-                99.9%
-              </MotionH2>
-              <p className="text-gray-700 font-medium">Platform Uptime</p>
-              <p className="text-sm text-gray-500 mt-1">Enterprise-grade reliability</p>
-            </MotionDiv>
-          </div>
-
-          <MotionDiv
-            className="text-center mt-16"
-            variants={itemFadeIn}
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <MotionDiv
-              className="inline-flex items-center text-gray-700 hover:text-gray-900 transition-colors duration-300 group"
-              whileHover={{ x: 5 }}
-            >
-              <span className="mr-2 font-medium">View our performance metrics</span>
-              <span className="transform group-hover:translate-x-1 transition-transform duration-300">→</span>
+              <p className="text-[#333333] mb-6">
+                Deploy your strategies with a single click, no complex setup or technical knowledge required.
+              </p>
+              <div className="mt-4 pt-4 border-t border-[#F5F5F5]">
+                <p className="text-[#FF6B00] font-medium text-lg">
+                  3 minutes
+                </p>
+                <p className="text-sm text-[#333333]">Average setup time</p>
+              </div>
             </MotionDiv>
           </MotionDiv>
         </div>
@@ -314,67 +259,67 @@ export default function Home() {
 
       {/* Features Section */}
       <MotionSection
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="relative py-20 overflow-hidden"
+        className="py-24 relative overflow-hidden"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={fadeIn}
       >
         {/* Background Elements */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-          <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-1/4 right-1/3 w-72 h-72 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
-        </div>
+        <div className="absolute inset-0 bg-white z-0"></div>
+        
+        <div className="absolute top-20 right-0 w-96 h-96 bg-[#FFA559] rounded-full mix-blend-multiply filter blur-3xl opacity-60 z-0"></div>
+        <div className="absolute bottom-20 left-0 w-96 h-96 bg-[#FFA559] rounded-full mix-blend-multiply filter blur-3xl opacity-60 z-0"></div>
 
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1 rounded-full bg-black bg-opacity-5 text-sm font-medium text-gray-800 mb-3">
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="text-center mb-20">
+            <span className="inline-block px-5 py-2 rounded-full bg-white shadow-sm text-sm font-medium text-[#333333] mb-4">
               PLATFORM FEATURES
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-[#FF6B00] to-[#D35400] bg-clip-text text-transparent">
               Powerful Tools for Modern Traders
             </h2>
-            <p className="max-w-2xl mx-auto text-gray-600 dark:text-gray-400">
+            <p className="max-w-2xl mx-auto text-[#333333]">
               Our platform combines cutting-edge technology with intuitive design to give you everything you need for successful algorithmic trading.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {/* Feature 1 */}
             <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
-              whileHover={{ y: -5, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)" }}
+              className="bg-[#F5F5F5] rounded-xl p-8 shadow-lg border border-[#F5F5F5] backdrop-blur-sm hover:shadow-xl transition-all"
+              whileHover={{ y: -5, boxShadow: "0 10px 30px rgba(211, 84, 0, 0.2)" }}
             >
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-14 h-14 bg-[#FFA559] rounded-lg flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#FF6B00]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Advanced Backtesting</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <h3 className="text-xl font-semibold mb-2 text-[#333333]">Advanced Backtesting</h3>
+              <p className="text-[#333333] mb-6">
                 Test your strategies against historical data with precision. Our backtesting engine processes years of market data in seconds.
               </p>
               <ul className="space-y-2">
                 <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mr-2 text-[#FF6B00]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-sm">Multi-timeframe analysis</span>
+                  <span className="text-sm text-[#333333]">Custom date ranges</span>
                 </li>
                 <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mr-2 text-[#FF6B00]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-sm">Detailed performance metrics</span>
+                  <span className="text-sm text-[#333333]">Detailed performance metrics</span>
                 </li>
                 <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mr-2 text-[#FF6B00]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-sm">Risk analysis tools</span>
+                  <span className="text-sm text-[#333333]">Risk analysis tools</span>
                 </li>
               </ul>
             </MotionDiv>
@@ -384,37 +329,37 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
-              whileHover={{ y: -5, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)" }}
+              className="bg-[#F5F5F5] rounded-xl p-8 shadow-lg border border-[#F5F5F5] backdrop-blur-sm hover:shadow-xl transition-all"
+              whileHover={{ y: -5, boxShadow: "0 10px 30px rgba(211, 84, 0, 0.2)" }}
             >
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-14 h-14 bg-[#FFA559] rounded-lg flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#FF6B00]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">AI-Powered Insights</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <h3 className="text-xl font-semibold mb-2 text-[#333333]">AI-Powered Insights</h3>
+              <p className="text-[#333333] mb-6">
                 Leverage machine learning algorithms to identify patterns and opportunities that human traders might miss.
               </p>
               <ul className="space-y-2">
                 <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mr-2 text-[#FF6B00]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-sm">Sentiment analysis</span>
+                  <span className="text-sm text-[#333333]">Sentiment analysis</span>
                 </li>
                 <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mr-2 text-[#FF6B00]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-sm">Predictive analytics</span>
+                  <span className="text-sm text-[#333333]">Predictive analytics</span>
                 </li>
                 <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mr-2 text-[#FF6B00]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-sm">Anomaly detection</span>
+                  <span className="text-sm text-[#333333]">Anomaly detection</span>
                 </li>
               </ul>
             </MotionDiv>
@@ -424,48 +369,48 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
-              whileHover={{ y: -5, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)" }}
+              className="bg-[#F5F5F5] rounded-xl p-8 shadow-lg border border-[#F5F5F5] backdrop-blur-sm hover:shadow-xl transition-all"
+              whileHover={{ y: -5, boxShadow: "0 10px 30px rgba(211, 84, 0, 0.2)" }}
             >
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              <div className="w-14 h-14 bg-[#FFA559] rounded-lg flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#FF6B00]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Enterprise Security</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Your data and algorithms are protected with bank-level security measures and encryption protocols.
+              <h3 className="text-xl font-semibold mb-2 text-[#333333]">Real-time Monitoring</h3>
+              <p className="text-[#333333] mb-6">
+                Keep track of your trading performance in real-time with comprehensive dashboards and alerts.
               </p>
               <ul className="space-y-2">
                 <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mr-2 text-[#FF6B00]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-sm">End-to-end encryption</span>
+                  <span className="text-sm text-[#333333]">Custom alerts</span>
                 </li>
                 <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mr-2 text-[#FF6B00]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-sm">Two-factor authentication</span>
+                  <span className="text-sm text-[#333333]">Mobile notifications</span>
                 </li>
                 <li className="flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mr-2 text-[#FF6B00]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-sm">Regular security audits</span>
+                  <span className="text-sm text-[#333333]">Performance analytics</span>
                 </li>
               </ul>
             </MotionDiv>
           </div>
 
-          <div className="mt-16 text-center">
+          <div className="mt-20 text-center">
             <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <button className="px-8 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium hover:shadow-lg transition-all transform hover:-translate-y-1">
+              <button className="px-10 py-4 rounded-lg bg-[#FF6B00] hover:bg-[#D35400] text-white font-medium hover:shadow-xl transition-all transform hover:-translate-y-1">
                 Explore All Features
               </button>
             </MotionDiv>
@@ -473,237 +418,181 @@ export default function Home() {
         </div>
       </MotionSection>
 
-      {/* Trading Solutions Section */}
+      {/* How It Works Section */}
       <MotionSection
-        className="py-20 bg-white relative overflow-hidden"
+        className="py-24 bg-white relative overflow-hidden"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={fadeIn}
+      >
+        <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-white to-white z-10"></div>
+        
+        <div className="container mx-auto px-6 relative z-20">
+          <div className="text-center mb-20">
+            <span className="inline-block px-5 py-2 rounded-full bg-white shadow-sm text-sm font-medium text-[#333333] mb-4">
+              SIMPLE PROCESS
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-[#FF6B00] to-[#D35400] bg-clip-text text-transparent">
+              How It Works
+            </h2>
+            <p className="max-w-2xl mx-auto text-[#333333]">
+              Get started with algorithmic trading in just a few simple steps
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
+            {/* Step 1 */}
+            <MotionDiv
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-center"
+            >
+              <div className="w-16 h-16 rounded-full bg-[#FFA559] flex items-center justify-center mb-4 shadow-md">
+                <span className="text-[#FF6B00] font-bold text-xl">1</span>
+              </div>
+              <div className="bg-[#F5F5F5] rounded-xl p-6 shadow-lg border border-[#F5F5F5] text-center w-full backdrop-blur-sm">
+                <h3 className="text-xl font-semibold mb-2 text-[#333333]">Create Account</h3>
+                <p className="text-[#333333]">
+                  Sign up for an account in minutes. All you need is an email address to get started.
+                </p>
+              </div>
+            </MotionDiv>
+
+            {/* Step 2 */}
+            <MotionDiv
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-center"
+            >
+              <div className="w-16 h-16 rounded-full bg-[#FFA559] flex items-center justify-center mb-4 shadow-md">
+                <span className="text-[#FF6B00] font-bold text-xl">2</span>
+              </div>
+              <div className="bg-[#F5F5F5] rounded-xl p-6 shadow-lg border border-[#F5F5F5] text-center w-full backdrop-blur-sm">
+                <h3 className="text-xl font-semibold mb-2 text-[#333333]">Choose Strategy</h3>
+                <p className="text-[#333333]">
+                  Select from our marketplace of proven trading strategies or create your own.
+                </p>
+              </div>
+            </MotionDiv>
+
+            {/* Step 3 */}
+            <MotionDiv
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-center"
+            >
+              <div className="w-16 h-16 rounded-full bg-[#FFA559] flex items-center justify-center mb-4 shadow-md">
+                <span className="text-[#FF6B00] font-bold text-xl">3</span>
+              </div>
+              <div className="bg-[#F5F5F5] rounded-xl p-6 shadow-lg border border-[#F5F5F5] text-center w-full backdrop-blur-sm">
+                <h3 className="text-xl font-semibold mb-2 text-[#333333]">Start Trading</h3>
+                <p className="text-[#333333]">
+                  Connect your brokerage account and let the algorithm handle your trades automatically.
+                </p>
+              </div>
+            </MotionDiv>
+          </div>
+
+          <div className="mt-20 text-center">
+            <MotionDiv
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              viewport={{ once: true }}
+            >
+              <button className="px-10 py-4 rounded-lg bg-[#FF6B00] hover:bg-[#D35400] text-white font-medium hover:shadow-xl transition-all transform hover:-translate-y-1">
+                Start Your Journey
+              </button>
+            </MotionDiv>
+          </div>
+        </div>
+      </MotionSection>
+
+      {/* Testimonials Section */}
+      <MotionSection
+        className="py-24 relative overflow-hidden"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.1 }}
         variants={fadeIn}
       >
         {/* Background Elements */}
-        <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-blue-50 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
-        <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-purple-50 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+        <div className="absolute inset-0 bg-white z-0"></div>
+        
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="text-center mb-20">
+            <span className="inline-block px-5 py-2 rounded-full bg-white shadow-sm text-sm font-medium text-[#333333] mb-4">
+              TESTIMONIALS
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-[#FF6B00] to-[#D35400] bg-clip-text text-transparent">
+              What Our Users Say
+            </h2>
+            <p className="max-w-2xl mx-auto text-[#333333] mb-10">
+              Don't just take our word for it. Here's what traders like you have to say about our platform.
+            </p>
+          </div>
 
-        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-6xl mx-auto">
+            <MarqueeDemo />
+          </div>
+        </div>
+      </MotionSection>
+
+      {/* CTA Section */}
+      <MotionSection
+        className="py-24 relative overflow-hidden"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={fadeIn}
+      >
+        {/* Glass morphism card */}
+        <div className="container mx-auto px-6">
           <MotionDiv
-            className="text-center max-w-3xl mx-auto mb-16"
-            variants={itemFadeIn}
+            className="max-w-5xl mx-auto rounded-2xl p-12 relative overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
           >
-            <div className="inline-block mb-3 px-4 py-1 rounded-full bg-black bg-opacity-5 border border-gray-200">
-              <span className="text-sm font-medium text-gray-800">PRICING PLANS</span>
+            {/* Background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#D35400] z-0 opacity-90 rounded-2xl"></div>
+            
+            {/* Glass overlay */}
+            <div className="absolute inset-0 bg-white opacity-10 z-10 backdrop-blur-md rounded-2xl"></div>
+            
+            {/* Content */}
+            <div className="relative z-20 text-center">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                Ready to Transform Your Trading?
+              </h2>
+              <p className="text-white text-opacity-90 max-w-2xl mx-auto mb-10">
+                Join thousands of traders who are already leveraging our platform to achieve better returns with less effort.
+              </p>
+              <div className="flex flex-wrap justify-center gap-6">
+                <Button
+                  className="bg-white text-[#FF6B00] font-medium px-10 py-5 rounded-xl shadow-lg hover:shadow-xl transform transition-all hover:-translate-y-1"
+                  endContent={<ArrowRight size={18} />}
+                >
+                  Get Started for Free
+                </Button>
+                <Button
+                  className="bg-transparent text-white border border-white font-medium px-10 py-5 rounded-xl shadow-md hover:shadow-lg transform transition-all hover:-translate-y-1"
+                >
+                  Schedule a Demo
+                </Button>
+              </div>
             </div>
-            <MotionH2
-              className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent"
-              variants={itemFadeIn}
-            >
-              Our Trading Solutions
-            </MotionH2>
-            <MotionP
-              className="text-gray-600 text-lg"
-              variants={itemFadeIn}
-            >
-              Choose from our range of professional trading tools and services
-            </MotionP>
-          </MotionDiv>
-
-          <MotionDiv
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-          >
-            {/* TradingView Integration */}
-            <MotionDiv
-              className="bg-white rounded-xl p-8 shadow-md border border-gray-100 flex flex-col"
-              variants={itemFadeIn}
-              whileHover={{ y: -10, boxShadow: "0 20px 40px -5px rgba(0, 0, 0, 0.1)" }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="mb-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-2">Basic</h3>
-                <p className="text-gray-600 mb-4">
-                   You can use this coin to purchase our services.
-                </p>
-              </div>
-
-              <div className="text-3xl font-bold mb-6 text-blue-600">
-              1000 Credits<span className="text- font-normal text-gray-500">/₹999</span>
-              </div>
-
-              
-
-              <MotionDiv
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="mt-auto"
-              >
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-6 h-12">
-                  Get Started
-                </Button>
-              </MotionDiv>
-            </MotionDiv>
-
-            {/* Pine Script Strategies */}
-            <MotionDiv
-              className="bg-white rounded-xl p-8 shadow-md border border-gray-100 flex flex-col relative"
-              variants={itemFadeIn}
-              whileHover={{ y: -10, boxShadow: "0 20px 40px -5px rgba(0, 0, 0, 0.1)" }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="absolute top-0 right-0 mt-8 mr-8">
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">Popular</span>
-              </div>
-
-              <div className="mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-2">Pro</h3>
-                <p className="text-gray-600 mb-4">
-                  You can use this coin to purchase our services.
-                </p>
-              </div>
-
-              <div className="text-3xl font-bold mb-6 text-green-600">
-                2500 Credits<span className="text- font-normal text-gray-500">/₹2249</span>
-              </div>
-
-              
-
-              <MotionDiv
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="mt-auto"
-              >
-                <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-6 h-12">
-                  Get Started
-                </Button>
-              </MotionDiv>
-            </MotionDiv>
-
-            {/* MQL Solutions */}
-            <MotionDiv
-              className="bg-white rounded-xl p-8 shadow-md border border-gray-100 flex flex-col"
-              variants={itemFadeIn}
-              whileHover={{ y: -10, boxShadow: "0 20px 40px -5px rgba(0, 0, 0, 0.1)" }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="mb-6">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">  
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-2">Primium</h3>
-                <p className="text-gray-600 mb-4">
-                  You can use this coin to purchase our services.
-                </p>
-              </div>
-
-              <div className="text-3xl font-bold mb-6 text-purple-600">
-                5000 Credits<span className="text- font-normal text-gray-500">/₹4499</span>
-              </div>
-
-              
-
-              <MotionDiv
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="mt-auto"
-              >
-                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-6 h-12">
-                  Get Started
-                </Button>
-              </MotionDiv>
-            </MotionDiv>
           </MotionDiv>
         </div>
       </MotionSection>
-
-      {/* Trusted Section */}
-      <MotionSection
-        className="py-24 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.1 }}
-        variants={fadeIn}
-      >
-        {/* Background Elements */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23000000\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-            backgroundSize: '20px 20px'
-          }}></div>
-        </div>
-
-        {/* Decorative Elements */}
-        <MotionDiv
-          className="absolute top-10 left-10 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20"
-          animate={{
-            x: [0, 30, 0],
-            y: [0, 20, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            repeatType: "reverse"
-          }}
-        />
-
-        <MotionDiv
-          className="absolute bottom-10 right-10 w-64 h-64 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20"
-          animate={{
-            x: [0, -30, 0],
-            y: [0, -20, 0],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            repeatType: "reverse"
-          }}
-        />
-
-        <div className="container mx-auto px-4 relative z-10">
-          
-
-
-          <MarqueeDemo />
-
-
-
-        </div>
-      </MotionSection>
-
-      {/* Add a floating animation element for visual interest */}
-      <MotionDiv
-        className="fixed bottom-10 right-10 w-16 h-16 bg-black rounded-full flex items-center justify-center z-50 cursor-pointer"
-        animate={{
-          y: [0, -10, 0],
-          boxShadow: [
-            "0 0 0 rgba(0, 0, 0, 0.2)",
-            "0 10px 20px rgba(0, 0, 0, 0.2)",
-            "0 0 0 rgba(0, 0, 0, 0.2)"
-          ]
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          repeatType: "reverse"
-        }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <Zap className="h-8 w-8 text-white" />
-      </MotionDiv>
     </main>
   )
 }
