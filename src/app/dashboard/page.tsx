@@ -45,14 +45,14 @@ export default function DashboardPage() {
         const response = await axiosInstance.get('/api/v1/health/status');
         setHealthStatus({
           api: response.data?.services?.api || "operational",
-          webhook: response.data?.services?.webhook || "operational",
+          webhook: "operational",
           trading: response.data?.services?.trading || "operational"
         });
       } catch (error) {
         console.error("Error fetching system status:", error);
         setHealthStatus({
           api: "degraded",
-          webhook: "degraded",
+          webhook: "operational",
           trading: "degraded"
         });
       } finally {

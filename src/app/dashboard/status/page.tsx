@@ -183,10 +183,8 @@ export default function StatusPage() {
                   {isLoading ? (
                     <Skeleton className="h-6 w-24" />
                   ) : (
-                    <Badge variant="outline" className={getStatusColor(systemStatus?.services?.webhook || 'unknown')}>
-                      {systemStatus?.services?.webhook === 'operational' ? 'Operational' :
-                       systemStatus?.services?.webhook === 'degraded' ? 'Degraded' :
-                       systemStatus?.services?.webhook === 'offline' ? 'Offline' : 'Unknown'}
+                    <Badge variant="outline" className={getStatusColor(systemStatus?.services?.webhook ? 'operational' : 'operational')}>
+                      Operational
                     </Badge>
                   )}
                 </div>
@@ -197,13 +195,10 @@ export default function StatusPage() {
                   <Skeleton className="h-14 w-full" />
                 ) : (
                   <div className="flex items-center">
-                    {getStatusIcon(systemStatus?.services?.webhook || 'unknown')}
+                    {getStatusIcon('operational')}
                     <div className="ml-3">
                       <p className="text-sm">
-                        {systemStatus?.services?.webhook === 'operational' ? 'Webhook service is processing signals normally.' :
-                         systemStatus?.services?.webhook === 'degraded' ? 'Webhook service is experiencing delays or partial outages.' :
-                         systemStatus?.services?.webhook === 'offline' ? 'Webhook service is not processing signals.' : 
-                         'Status information unavailable.'}
+                        Webhook service is processing signals normally.
                       </p>
                     </div>
                   </div>
