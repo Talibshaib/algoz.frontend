@@ -18,6 +18,30 @@ export const getCurrentUser = async () => {
   };
 };
 
+// Refresh the authentication token
+export const refreshToken = async () => {
+  try {
+    console.log('Refreshing authentication token...');
+    const { data, error } = await supabase.auth.refreshSession();
+    
+    if (error) {
+      console.error('Error refreshing token:', error);
+      toast.error('Session expired. Please log in again.');
+      // Redirect to login after a short delay to allow the toast to be seen
+      setTimeout(() => {
+        window.location.href = LOGIN_ROUTE;
+      }, 2000);
+      throw error;
+    }
+    
+    console.log('Token refreshed successfully');
+    return data.session;
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    throw error;
+  }
+};
+
 // Sign out the current user
 export const signOut = async (redirectPath = LOGIN_ROUTE) => {
   try {
@@ -80,6 +104,7 @@ export const useSupabaseAuth = () => {
   return {
     signOut,
     checkIsAdmin,
-    getAdminToken
+    getAdminToken,
+    refreshToken
   };
 }; 

@@ -324,7 +324,7 @@ export default function BrokerManagementPage() {
     event.stopPropagation();
     
     // Find the broker in the state
-    const savedBroker = savedBrokers.find((broker) => broker.id === brokerId);
+    const savedBroker = savedBrokers.find((broker) => broker.brokerId === brokerId);
     if (!savedBroker) {
       toast.error("Broker not found");
       return;
@@ -333,22 +333,25 @@ export default function BrokerManagementPage() {
     try {
       setLoadingBrokerId(brokerId);
       
+      // Use let instead of const for token-related variables to support refreshing
+      let updatedBroker;
+      
       // Toggle the broker status via the service
-      const updatedBroker = await toggleBrokerStatus(brokerId, !savedBroker.isActive);
+      try {
+        updatedBroker = await toggleBrokerStatus(brokerId, savedBroker.isActive);
+      } catch (error: any) {
+        console.error("Error toggling broker status:", error);
+        const errorMessage = error.response?.data?.message || error.message || "Unknown error";
+        throw new Error(errorMessage);
+      }
       
-      // Update the broker in the state
-      setSavedBrokers((prev) =>
-        prev.map((broker) =>
-          broker.id === brokerId
-            ? { ...broker, isActive: !broker.isActive }
-            : broker
-        )
-      );
+      // Refresh the brokers list to ensure we have the latest data
+      await refreshBrokers();
       
-      toast.success(`Broker ${savedBroker.name} ${!savedBroker.isActive ? "activated" : "deactivated"} successfully`);
+      toast.success(`Broker ${savedBroker.name} ${savedBroker.isActive ? "deactivated" : "activated"} successfully`);
     } catch (error: any) {
       console.error("Error toggling broker status:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Unknown error";
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       toast.error(`Failed to toggle broker status: ${errorMessage}`);
     } finally {
       setLoadingBrokerId(null);

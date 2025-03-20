@@ -272,21 +272,53 @@ export const toggleBrokerStatus = async (
   try {
     console.log('Toggling broker status for:', id, 'to:', !isActive);
     
-    // Send request to API
-    const response = await axios.patch(`/api/v1/brokers/${id}/toggle`);
+    // Import the broker authentication services
+    const { authenticateBroker, deactivateBroker } = await import('@/features/brokers/services/brokerAuthService');
     
-    console.log('Toggle broker status response:', response.status, response.statusText);
+    // Use let instead of const for token-related variables to support refreshing
+    let response;
     
-    // Get updated broker from response
-    const updatedBroker = response.data.data;
-    
-    return updatedBroker;
+    if (isActive) {
+      // Deactivate broker
+      await deactivateBroker(id);
+      
+      // Get updated broker status via the saved broker API
+      response = await axios.get('/api/v1/brokers/saved');
+      
+      // Find the broker in the response
+      const savedBrokers = response.data.data;
+      const updatedBroker = savedBrokers.find((broker: SavedBroker) => broker.brokerId === id);
+      
+      if (!updatedBroker) {
+        throw new Error('Broker not found after deactivation');
+      }
+      
+      return updatedBroker;
+    } else {
+      // Authenticate broker
+      await authenticateBroker(id);
+      
+      // Get updated broker status via the saved broker API
+      response = await axios.get('/api/v1/brokers/saved');
+      
+      // Find the broker in the response
+      const savedBrokers = response.data.data;
+      const updatedBroker = savedBrokers.find((broker: SavedBroker) => broker.brokerId === id);
+      
+      if (!updatedBroker) {
+        throw new Error('Broker not found after authentication');
+      }
+      
+      return updatedBroker;
+    }
   } catch (error) {
     console.error('Error toggling broker status:', error);
     
     // Re-throw error to be handled by caller
     if (error instanceof AxiosError && error.response) {
       throw new Error(error.response.data.message || 'Failed to toggle broker status');
+    } else if (error instanceof Error) {
+      throw error;
     } else {
       throw new Error('Failed to toggle broker status');
     }
