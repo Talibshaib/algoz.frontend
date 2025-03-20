@@ -40,7 +40,7 @@ export default function WebhookPage() {
       }
       
       // Call our backend API to get the webhook URL
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://algoz-backend-68rt.onrender.com";
       console.log("API URL:", apiBaseUrl);
       const token = session.access_token;
       console.log("Using token (first 10 chars):", token.substring(0, 10) + "...");
