@@ -12,6 +12,7 @@ export default function WebhookPage() {
   const [webhookUrl, setWebhookUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const fetchWebhookUrl = async () => {
     try {
@@ -28,6 +29,9 @@ export default function WebhookPage() {
         return;
       }
       
+      // Store the user ID for display
+      setUserId(user.id);
+      
       // Get a fresh session to ensure we have the latest token
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -41,19 +45,29 @@ export default function WebhookPage() {
       
       // Call our backend API to get the webhook URL
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://algoz-backend-68rt.onrender.com";
-      console.log("API URL:", apiBaseUrl);
-      const token = session.access_token;
-      console.log("Using token (first 10 chars):", token.substring(0, 10) + "...");
+      let token = session.access_token;
       
       // Verify token format - should be a JWT with 3 parts separated by dots
       if (!token || token.split('.').length !== 3) {
         console.error("Invalid token format:", token ? "Token doesn't have 3 parts" : "Token is empty");
-        toast.error("Authentication error", {
-          description: "Invalid authentication token format. Please sign in again.",
-        });
-        setLoading(false);
-        return;
+        
+        // Try to refresh the session instead of just showing an error
+        const { data: refreshResult, error: refreshErr } = await supabase.auth.refreshSession();
+        
+        if (refreshErr || !refreshResult.session) {
+          toast.error("Authentication error", {
+            description: "Invalid authentication token. Please sign in again.",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // Use the refreshed token
+        token = refreshResult.session.access_token;
       }
+      
+      // Log only minimal information for security
+      console.log("Making webhook request to:", apiBaseUrl);
       
       const response = await fetch(`${apiBaseUrl}/api/v1/users/generate-webhook`, {
         method: 'POST',
@@ -64,7 +78,16 @@ export default function WebhookPage() {
       });
       
       if (!response.ok) {
-        const errorData = await response.text();
+        const errorText = await response.text();
+        let errorData;
+        
+        try {
+          // Try to parse as JSON for better error messages
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          errorData = { message: errorText };
+        }
+        
         console.error("Error response:", response.status, errorData);
         
         // If unauthorized, try to refresh the session
@@ -83,22 +106,22 @@ export default function WebhookPage() {
           }
         }
         
-        throw new Error(`Status: ${response.status}, Error: ${errorData}`);
+        throw new Error(`Status: ${response.status}, Error: ${errorData.message || 'Unknown error'}`);
       }
       
       const data = await response.json();
-      console.log("Webhook response:", data);
       
       if (data.data?.webhookUrl) {
         setWebhookUrl(data.data.webhookUrl);
       } else {
-        setWebhookUrl(null);
+        throw new Error("No webhook URL found in response");
       }
     } catch (error) {
       console.error("Error fetching webhook URL:", error);
       toast.error("Something went wrong", {
         description: error instanceof Error ? error.message : "Unable to fetch your webhook URL.",
       });
+      setWebhookUrl(null);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -149,19 +172,27 @@ export default function WebhookPage() {
           {loading ? (
             <Skeleton className="h-12 w-full" />
           ) : webhookUrl ? (
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="bg-muted p-3 rounded-md flex-1 overflow-x-auto font-mono text-sm">
-                {webhookUrl}
+            <>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="bg-muted p-3 rounded-md flex-1 overflow-x-auto font-mono text-sm">
+                  {webhookUrl}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleCopyClick} 
+                  className="shrink-0"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
               </div>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={handleCopyClick} 
-                className="shrink-0"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
+              
+              {userId && (
+                <div className="mt-4 text-sm text-muted-foreground">
+                  <p>Your unique ID: <span className="font-mono">{userId}</span></p>
+                </div>
+              )}
+            </>
           ) : (
             <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-4 rounded-md">
               <p className="text-amber-800 dark:text-amber-200">
