@@ -1,45 +1,33 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { useSidebar } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { signOut } from "@/features/auth/utils";
 import {
-  Home,
+  ChevronDown,
+  ChevronRight,
   LayoutDashboard,
   LineChart,
-  Zap,
-  Copy,
-  HeadphonesIcon,
-  HelpCircle,
-  CreditCard,
-  ChevronLeft,
-  Menu,
   KeyIcon,
   Bot,
+  CreditCard,
+  LifeBuoy,
   LogOut,
   Shield,
-  ChevronDown
+  Users,
+  FileCode,
+  Copy,
+  Code,
+  PanelLeft,
+  Binary,
+  Globe,
+  DollarSign
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { useSidebar } from "@/components/ui/sidebar";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDownIcon } from "@radix-ui/react-icons";
-import { useRouter, usePathname } from "next/navigation";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { signOut } from "@/features/auth/utils";
 
 interface SidebarProps {
   className?: string;
@@ -47,30 +35,52 @@ interface SidebarProps {
 
 export default function Sidebar({ className }: SidebarProps) {
   // Context and hooks
-  const { open, toggleSidebar, isMobile, openMobile, setOpenMobile } = useSidebar();
+  const { open, isMobile, openMobile, setOpenMobile } = useSidebar();
   const router = useRouter();
   const pathname = usePathname();
   
   // Local state
   const [activeItem, setActiveItem] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedBroker, setSelectedBroker] = useState<string | null>(null);
-  const [isApiCredentialsOpen, setIsApiCredentialsOpen] = useState(false);
-  const [userId, setUserId] = useState("");
-  const [password, setPassword] = useState("");
-  const [server, setServer] = useState("");
-  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [openSection, setOpenSection] = useState<string | null>("tradingview");
 
   // Set active item based on current pathname
   useEffect(() => {
     if (pathname === "/dashboard") {
       setActiveItem("dashboard");
+      setOpenSection(null); 
     } else if (pathname === "/dashboard/webhook") {
-      setActiveItem("tradingview");
+      setActiveItem("webhook");
+      setOpenSection("tradingview");
     } else if (pathname.includes("/dashboard/pricing")) {
       setActiveItem("pricing");
+      setOpenSection(null);
     } else if (pathname.includes("/dashboard/support")) {
       setActiveItem("support");
+      setOpenSection(null);
+    } else if (pathname.includes("/dashboard/broker-management")) {
+      setActiveItem("broker-management");
+      setOpenSection(null);
+    } else if (pathname.includes("/dashboard/api-credentials")) {
+      setActiveItem("api-credentials");
+      setOpenSection(null);
+    } else if (pathname.includes("/dashboard/symbol-json")) {
+      setActiveItem("symbol-json");
+      setOpenSection("tradingview");
+    } else if (pathname.includes("/dashboard/trade-logs")) {
+      setActiveItem("trade-logs");
+      setOpenSection("tradingview");
+    } else if (pathname.includes("/dashboard/scalping-tool")) {
+      setActiveItem("scalping-tool");
+      setOpenSection("scalping-tool");
+    } else if (pathname.includes("/dashboard/copy-trading")) {
+      setActiveItem("copy-trading");
+      setOpenSection("copy-trading");
+    } else if (pathname.includes("/dashboard/strategy")) {
+      setActiveItem("strategy");
+      setOpenSection("strategy");
+    } else if (pathname.includes("/dashboard/bots")) {
+      setActiveItem("bots");
+      setOpenSection("bots");
     } else {
       // For other routes, check if they match any known section
       const pathSegments = pathname.split("/");
@@ -78,7 +88,16 @@ export default function Sidebar({ className }: SidebarProps) {
         const section = pathSegments[2];
         if (["brokerauth", "tradingview", "pricing", "support", "help"].includes(section)) {
           setActiveItem(section);
+          if (section === "tradingview") {
+            setOpenSection("tradingview");
+          }
+        } else {
+          // Don't automatically open any section for unknown routes
+          setOpenSection(null);
         }
+      } else {
+        // Default - don't open any section
+        setOpenSection(null);
       }
     }
   }, [pathname]);
@@ -97,539 +116,420 @@ export default function Sidebar({ className }: SidebarProps) {
     router.push(path);
   };
 
+  // Handle section toggle
+  const toggleSection = (section: string) => {
+    setOpenSection(openSection === section ? null : section);
+  };
+
   // Handle logout
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
     await signOut();
   };
 
-  // Handle input focus
-  const handleInputFocus = () => {
-    setIsInputFocused(true);
-  };
-
-  // Handle input blur
-  const handleInputBlur = () => {
-    setIsInputFocused(false);
-  };
-
-  // Custom AccordionTrigger to show the chevron on the right
-  const CustomAccordionTrigger = ({ className, children, ...props }: any) => (
-    <AccordionTrigger {...props} className={className}>
-      <div className="flex items-center justify-between w-full">
-        {children}
-        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-      </div>
-    </AccordionTrigger>
+  // NavItem component for consistent styling
+  const NavItem = ({ 
+    icon: Icon, 
+    label, 
+    path, 
+    itemName,
+    isActive,
+    hasChildren = false,
+    isOpen = false,
+    onClick 
+  }: { 
+    icon: React.ElementType; 
+    label: string; 
+    path: string; 
+    itemName: string;
+    isActive: boolean;
+    hasChildren?: boolean;
+    isOpen?: boolean;
+    onClick?: (e: React.MouseEvent) => void;
+  }) => (
+    <a
+      href={path}
+      className={cn(
+        "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+        isActive 
+          ? "bg-primary text-primary-foreground" 
+          : "hover:bg-accent text-foreground hover:text-foreground",
+        !open && "justify-center"
+      )}
+      onClick={(e) => {
+        if (onClick) {
+          onClick(e);
+        } else {
+          handleNavigation(e, path, itemName);
+        }
+      }}
+    >
+      <Icon className="h-5 w-5 min-w-5" />
+      {open && (
+        <div className="flex justify-between items-center w-full">
+          <span className="ml-3 font-medium">{label}</span>
+          {hasChildren && (
+            isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
+          )}
+        </div>
+      )}
+    </a>
   );
 
   return (
     <div
       className={cn(
-        "bg-card border-r border-border h-full transition-all duration-300 flex flex-col",
-        open ? "w-64" : "w-[70px] min-w-[70px]",
+        "bg-card border-r border-border h-full transition-all duration-300 flex flex-col overflow-hidden",
+        open ? "w-60" : "w-[64px]",
         isMobile && "w-full",
         className
       )}
+      data-state={open ? "open" : "closed"}
     >
+      {/* Sidebar header - removed toggle button */}
+      {open && !isMobile && (
+        <div className="border-b border-border p-4">
+          <h2 className="font-semibold text-lg">Navigation</h2>
+        </div>
+      )}
+      
       {/* Scrollable navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-        <a
-          href="/dashboard"
-          className={cn(
-            "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
-            activeItem === "dashboard" ? "bg-black text-white" : ""
-          )}
-          onClick={(e) => handleNavigation(e, "/dashboard", "dashboard")}
-        >
-          <LayoutDashboard className="h-5 w-5 min-w-5" />
-          {open && <span className="ml-3 text-sm font-medium">Dashboard</span>}
-        </a>
-
-        {open && (
-          <div className="py-2">
-            <div className="h-[1px] bg-border" />
+      <ScrollArea className="flex-1">
+        <div className="px-3 py-4 space-y-6">
+          {/* Main navigation */}
+          <div className="space-y-1">
+            <NavItem 
+              icon={LayoutDashboard} 
+              label="Dashboard" 
+              path="/dashboard" 
+              itemName="dashboard"
+              isActive={activeItem === "dashboard"}
+            />
           </div>
-        )}
 
-        {/* FEATURES SECTION */}
-        <div className="mb-4">
-          {open && <p className="text-xs text-muted-foreground mb-2 px-3">FEATURES</p>}
-          
-          <a
-            href="/dashboard/broker-management"
-            className={cn(
-              "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
-              activeItem === "broker-management" ? "bg-black text-white" : "",
-              !open && "justify-center",
-              open && "justify-between"
-            )}
-            onClick={(e) => handleNavigation(e, "/dashboard/broker-management", "broker-management")}
-          >
-            <div className="flex items-center space-x-3">
-              <KeyIcon className="h-5 w-5 min-w-5" />
-              {open && <span className="text-sm font-medium">Api Credentials</span>}
-            </div>
-          </a>
-
-          <Accordion type="single" collapsible className="w-full space-y-2">
-            <AccordionItem value="tradingview" className="border-none">
-              <div
-                className={cn(
-                  "flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors",
-                  activeItem === "tradingview" ? "bg-black text-white" : ""
-                )}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveItem(activeItem === "tradingview" ? null : "tradingview");
-                }}
-              >
-                <div className="flex items-center space-x-3">
-                  <LineChart className="h-5 w-5 min-w-5" />
-                  {open && <span className="text-sm font-medium">TradingView</span>}
-                </div>
-                {open && (
-                  <ChevronDown 
-                    className={cn(
-                      "h-4 w-4 shrink-0 transition-transform duration-200",
-                      activeItem === "tradingview" ? "text-white" : ""
-                    )}
-                    data-state={activeItem === "tradingview" ? "open" : "closed"}
-                    style={{
-                      transform: activeItem === "tradingview" ? "rotate(180deg)" : "rotate(0deg)"
-                    }}
-                  />
-                )}
+          {/* Features section */}
+          <div className="space-y-1">
+            {open && (
+              <div className="px-3 mb-2">
+                <p className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">
+                  Features
+                </p>
               </div>
-              {open && activeItem === "tradingview" && (
-                <div className="mt-1 space-y-1">
-                  <a
-                    href="/dashboard/webhook"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => handleNavigation(e, "/dashboard/webhook", "tradingview")}
+            )}
+            <Separator className={open ? "mb-2" : "hidden"} />
+            
+            <NavItem 
+              icon={KeyIcon} 
+              label="API Credentials" 
+              path="/dashboard/broker-management" 
+              itemName="broker-management"
+              isActive={activeItem === "broker-management"}
+            />
+            
+            {/* TradingView Section with children */}
+            <div>
+              <NavItem 
+                icon={LineChart} 
+                label="TradingView" 
+                path="#" 
+                itemName="tradingview"
+                isActive={openSection === "tradingview"}
+                hasChildren={true}
+                isOpen={openSection === "tradingview"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleSection("tradingview");
+                }}
+              />
+              
+              {/* Submenu for TradingView */}
+              {open && openSection === "tradingview" && (
+                <div className="ml-7 mt-1 space-y-1 border-l border-border pl-2">
+                  <a 
+                    href="/dashboard/webhook" 
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      activeItem === "webhook" ? "bg-accent/80 text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    )}
+                    onClick={(e) => handleNavigation(e, "/dashboard/webhook", "webhook")}
                   >
-                    Webhook URL
+                    Webhook
                   </a>
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
+                  <a 
+                    href="/dashboard/symbol-json" 
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      activeItem === "symbol-json" ? "bg-accent/80 text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    )}
+                    onClick={(e) => handleNavigation(e, "/dashboard/symbol-json", "symbol-json")}
                   >
-                    Symbol
+                    Symbol JSON
                   </a>
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    JSON
-                  </a>
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
+                  <a 
+                    href="/dashboard/trade-logs" 
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      activeItem === "trade-logs" ? "bg-accent/80 text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    )}
+                    onClick={(e) => handleNavigation(e, "/dashboard/trade-logs", "trade-logs")}
                   >
                     Trade Logs
                   </a>
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Manage
-                  </a>
                 </div>
               )}
-            </AccordionItem>
-
-            <AccordionItem value="scalping" className="border-none">
-              <div
-                className={cn(
-                  "flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors",
-                  activeItem === "scalping" ? "bg-black text-white" : ""
-                )}
+            </div>
+            
+            {/* Scalping Tool Section */}
+            <div>
+              <NavItem 
+                icon={PanelLeft} 
+                label="Scalping Tool" 
+                path="#" 
+                itemName="scalping-tool"
+                isActive={openSection === "scalping-tool"}
+                hasChildren={true}
+                isOpen={openSection === "scalping-tool"}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
-                  setActiveItem(activeItem === "scalping" ? null : "scalping");
+                  toggleSection("scalping-tool");
                 }}
-              >
-                <div className="flex items-center space-x-3">
-                  <Zap className="h-5 w-5 min-w-5" />
-                  {open && <span className="text-sm font-medium">Scalping Tool</span>}
-                </div>
-                {open && (
-                  <ChevronDown 
+              />
+              
+              {/* Submenu for Scalping Tool */}
+              {open && openSection === "scalping-tool" && (
+                <div className="ml-7 mt-1 space-y-1 border-l border-border pl-2">
+                  <a 
+                    href="/dashboard/trade-panel" 
                     className={cn(
-                      "h-4 w-4 shrink-0 transition-transform duration-200",
-                      activeItem === "scalping" ? "text-white" : ""
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      activeItem === "trade-panel" ? "bg-accent/80 text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     )}
-                    data-state={activeItem === "scalping" ? "open" : "closed"}
-                    style={{
-                      transform: activeItem === "scalping" ? "rotate(180deg)" : "rotate(0deg)"
-                    }}
-                  />
-                )}
-              </div>
-              {open && activeItem === "scalping" && (
-                <div className="mt-1 space-y-1">
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => handleNavigation(e, "/dashboard/trade-panel", "trade-panel")}
                   >
                     Trade Panel
                   </a>
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Manage
-                  </a>
                 </div>
               )}
-            </AccordionItem>
-
-            <AccordionItem value="copytrading" className="border-none">
-              <div
-                className={cn(
-                  "flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors",
-                  activeItem === "copytrading" ? "bg-black text-white" : ""
-                )}
+            </div>
+            
+            {/* Copy Trading Section */}
+            <div>
+              <NavItem 
+                icon={Copy} 
+                label="Copy Trading" 
+                path="#" 
+                itemName="copy-trading"
+                isActive={openSection === "copy-trading"}
+                hasChildren={true}
+                isOpen={openSection === "copy-trading"}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
-                  setActiveItem(activeItem === "copytrading" ? null : "copytrading");
+                  toggleSection("copy-trading");
                 }}
-              >
-                <div className="flex items-center space-x-3">
-                  <Copy className="h-5 w-5 min-w-5" />
-                  {open && <span className="text-sm font-medium">Copy Trading</span>}
-                </div>
-                {open && (
-                  <ChevronDown 
+              />
+              
+              {/* Submenu for Copy Trading */}
+              {open && openSection === "copy-trading" && (
+                <div className="ml-7 mt-1 space-y-1 border-l border-border pl-2">
+                  <a 
+                    href="/dashboard/copy-strategy" 
                     className={cn(
-                      "h-4 w-4 shrink-0 transition-transform duration-200",
-                      activeItem === "copytrading" ? "text-white" : ""
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      activeItem === "copy-strategy" ? "bg-accent/80 text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     )}
-                    data-state={activeItem === "copytrading" ? "open" : "closed"}
-                    style={{
-                      transform: activeItem === "copytrading" ? "rotate(180deg)" : "rotate(0deg)"
-                    }}
-                  />
-                )}
-              </div>
-              {open && activeItem === "copytrading" && (
-                <div className="mt-1 space-y-1">
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => handleNavigation(e, "/dashboard/copy-strategy", "copy-strategy")}
                   >
                     Strategy
                   </a>
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Manage
-                  </a>
                 </div>
               )}
-            </AccordionItem>
-
-            <AccordionItem value="strategy" className="border-none">
-              <div
-                className={cn(
-                  "flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors",
-                  activeItem === "strategy" ? "bg-black text-white" : ""
-                )}
+            </div>
+            
+            {/* Strategy Section */}
+            <div>
+              <NavItem 
+                icon={Code} 
+                label="Strategy" 
+                path="#" 
+                itemName="strategy"
+                isActive={openSection === "strategy"}
+                hasChildren={true}
+                isOpen={openSection === "strategy"}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
-                  setActiveItem(activeItem === "strategy" ? null : "strategy");
+                  toggleSection("strategy");
                 }}
-              >
-                <div className="flex items-center space-x-3">
-                  <LineChart className="h-5 w-5 min-w-5" />
-                  {open && <span className="text-sm font-medium">Strategy</span>}
-                </div>
-                {open && (
-                  <ChevronDown 
+              />
+              
+              {/* Submenu for Strategy */}
+              {open && openSection === "strategy" && (
+                <div className="ml-7 mt-1 space-y-1 border-l border-border pl-2">
+                  <a 
+                    href="/dashboard/pine-script" 
                     className={cn(
-                      "h-4 w-4 shrink-0 transition-transform duration-200",
-                      activeItem === "strategy" ? "text-white" : ""
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      activeItem === "pine-script" ? "bg-accent/80 text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     )}
-                    data-state={activeItem === "strategy" ? "open" : "closed"}
-                    style={{
-                      transform: activeItem === "strategy" ? "rotate(180deg)" : "rotate(0deg)"
-                    }}
-                  />
-                )}
-              </div>
-              {open && activeItem === "strategy" && (
-                <div className="mt-1 space-y-1">
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => handleNavigation(e, "/dashboard/pine-script", "pine-script")}
                   >
                     Pine Script
                   </a>
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
+                  <a 
+                    href="/dashboard/mql" 
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      activeItem === "mql" ? "bg-accent/80 text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    )}
+                    onClick={(e) => handleNavigation(e, "/dashboard/mql", "mql")}
                   >
                     MQL
                   </a>
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
+                  <a 
+                    href="/dashboard/afl" 
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      activeItem === "afl" ? "bg-accent/80 text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    )}
+                    onClick={(e) => handleNavigation(e, "/dashboard/afl", "afl")}
                   >
                     AFL
                   </a>
                 </div>
               )}
-            </AccordionItem>
-          </Accordion>
-
-          <Accordion type="single" collapsible className="w-full space-y-2">
-            <AccordionItem value="bots" className="border-none">
-              <div
-                className={cn(
-                  "flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors",
-                  activeItem === "bots" ? "bg-black text-white" : ""
-                )}
+            </div>
+            
+            {/* Bots Section */}
+            <div>
+              <NavItem 
+                icon={Bot} 
+                label="Bots" 
+                path="#" 
+                itemName="bots"
+                isActive={openSection === "bots"}
+                hasChildren={true}
+                isOpen={openSection === "bots"}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
-                  setActiveItem(activeItem === "bots" ? null : "bots");
+                  toggleSection("bots");
                 }}
-              >
-                <div className="flex items-center space-x-3">
-                  <Bot className="h-5 w-5 min-w-5" />
-                  {open && <span className="text-sm font-medium">Bots</span>}
-                </div>
-                {open && (
-                  <ChevronDown 
+              />
+              
+              {/* Submenu for Bots */}
+              {open && openSection === "bots" && (
+                <div className="ml-7 mt-1 space-y-1 border-l border-border pl-2">
+                  <a 
+                    href="/dashboard/bots/nse-bse" 
                     className={cn(
-                      "h-4 w-4 shrink-0 transition-transform duration-200",
-                      activeItem === "bots" ? "text-white" : ""
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      activeItem === "nse-bse" ? "bg-accent/80 text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     )}
-                    data-state={activeItem === "bots" ? "open" : "closed"}
-                    style={{
-                      transform: activeItem === "bots" ? "rotate(180deg)" : "rotate(0deg)"
-                    }}
-                  />
-                )}
-              </div>
-              {open && activeItem === "bots" && (
-                <div className="mt-1 space-y-1">
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => handleNavigation(e, "/dashboard/bots/nse-bse", "nse-bse")}
                   >
                     NSE/BSE
                   </a>
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
+                  <a 
+                    href="/dashboard/bots/forex" 
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      activeItem === "forex" ? "bg-accent/80 text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    )}
+                    onClick={(e) => handleNavigation(e, "/dashboard/bots/forex", "forex")}
                   >
                     Forex
                   </a>
-                  <a
-                    href="#"
-                    className="block pl-10 py-1.5 text-sm hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
+                  <a 
+                    href="/dashboard/bots/crypto" 
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                      activeItem === "crypto" ? "bg-accent/80 text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    )}
+                    onClick={(e) => handleNavigation(e, "/dashboard/bots/crypto", "crypto")}
                   >
                     Crypto
                   </a>
                 </div>
               )}
-            </AccordionItem>
-          </Accordion>
-
-          <a
-            href="/dashboard/pricing"
-            className={cn(
-              "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
-              activeItem === "pricing" ? "bg-black text-white" : "",
-              !open && "justify-center",
-              open && "justify-between"
-            )}
-            onClick={(e) => handleNavigation(e, "/dashboard/pricing", "pricing")}
-          >
-            <div className="flex items-center space-x-3">
-              <CreditCard className="h-5 w-5 min-w-5" />
-              {open && <span className="text-sm font-medium">Pricing</span>}
             </div>
-          </a>
-        </div>
-
-        {open && (
-          <div className="py-2">
-            <div className="h-[1px] bg-border" />
           </div>
-        )}
-
-        {/* SUPPORT SECTION */}
-        <div className="mb-4">
-          {open && <p className="text-xs text-muted-foreground mb-2 px-3">SUPPORT</p>}
           
-          <a
-            href="#"
-            className={cn(
-              "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
-              activeItem === "contact" ? "bg-black text-white" : "",
-              !open && "justify-center",
-              open && "justify-between"
+          {/* Tools section */}
+          <div className="space-y-1">
+            {open && (
+              <div className="px-3 mb-2">
+                <p className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">
+                  Tools
+                </p>
+              </div>
             )}
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveItem("contact");
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <HeadphonesIcon className="h-5 w-5 min-w-5" />
-              {open && <span className="text-sm font-medium">Contact Us</span>}
-            </div>
-          </a>
-
-          <a
-            href="#"
-            className={cn(
-              "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
-              activeItem === "faq" ? "bg-black text-white" : "",
-              !open && "justify-center",
-              open && "justify-between"
-            )}
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveItem("faq");
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <HelpCircle className="h-5 w-5 min-w-5" />
-              {open && <span className="text-sm font-medium">FAQ</span>}
-            </div>
-          </a>
-        </div>
-
-        {/* SECURITY SECTION */}
-        <div className="mb-4">
-          {open && <p className="text-xs text-muted-foreground mb-2 px-3">SECURITY</p>}
+            <Separator className={open ? "mb-2" : "hidden"} />
+            
+            <NavItem 
+              icon={CreditCard} 
+              label="Pricing" 
+              path="/dashboard/pricing" 
+              itemName="pricing"
+              isActive={activeItem === "pricing"}
+            />
+          </div>
           
-          <a
-            href="/dashboard/security"
-            className={cn(
-              "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
-              activeItem === "security" ? "bg-black text-white" : "",
-              !open && "justify-center",
-              open && "justify-between"
+          {/* Support section */}
+          <div className="space-y-1">
+            {open && (
+              <div className="px-3 mb-2">
+                <p className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">
+                  Support
+                </p>
+              </div>
             )}
-            onClick={(e) => handleNavigation(e, "/dashboard/security", "security")}
-          >
-            <div className="flex items-center space-x-3">
-              <Shield className="h-5 w-5 min-w-5" />
-              {open && <span className="text-sm font-medium">Security</span>}
-            </div>
-          </a>
+            <Separator className={open ? "mb-2" : "hidden"} />
+            
+            <NavItem 
+              icon={LifeBuoy} 
+              label="Help & Support" 
+              path="/dashboard/support" 
+              itemName="support"
+              isActive={activeItem === "support"}
+            />
+            
+            <NavItem 
+              icon={Shield} 
+              label="Security" 
+              path="/dashboard/security" 
+              itemName="security"
+              isActive={activeItem === "security"}
+            />
+            
+            <NavItem 
+              icon={Users} 
+              label="Community" 
+              path="/dashboard/community" 
+              itemName="community"
+              isActive={activeItem === "community"}
+            />
+          </div>
         </div>
-      </nav>
+      </ScrollArea>
       
-      {/* Logout button at the bottom */}
-      <div className="p-4 border-t border-border mt-auto">
+      {/* Footer with logout button */}
+      <div className="border-t border-border p-3 mt-auto">
         <a
           href="#"
           className={cn(
-            "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors",
-            !open && "justify-center",
-            open && "justify-between"
+            "flex items-center px-3 py-2 rounded-md hover:bg-accent transition-colors text-red-600",
+            !open && "justify-center"
           )}
           onClick={handleLogout}
         >
-          <div className="flex items-center space-x-3">
-            <LogOut className="h-5 w-5 min-w-5" />
-            {open && <span className="text-sm font-medium">Logout</span>}
-          </div>
+          <LogOut className="h-5 w-5 min-w-5" />
+          {open && <span className="ml-3 text-sm font-medium">Logout</span>}
         </a>
       </div>
-      
-      {/* API Credentials Sheet */}
-      <Sheet open={isApiCredentialsOpen} onOpenChange={setIsApiCredentialsOpen}>
-        <SheetContent 
-          className={cn("sm:max-w-md", open ? "w-[17.6rem]" : "w-[5.975rem]")}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <SheetHeader>
-            <SheetTitle>
-              API Credentials{selectedBroker ? `: ${selectedBroker}` : ""}
-            </SheetTitle>
-          </SheetHeader>
-          <SheetDescription>
-            {selectedBroker === "Metatrader 4" || selectedBroker === "Metatrader 5" ? (
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <label htmlFor="userId" className="text-right inline-block">
-                    User ID
-                  </label>
-                  <Input
-                    id="userId"
-                    value={userId}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      setUserId(e.target.value);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onFocus={handleInputFocus}
-                    onBlur={handleInputBlur}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label htmlFor="password" className="text-right inline-block">
-                    Password
-                  </label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      setPassword(e.target.value);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onFocus={handleInputFocus}
-                    onBlur={handleInputBlur}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label htmlFor="server" className="text-right inline-block">
-                    Server
-                  </label>
-                  <Input
-                    id="server"
-                    value={server}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      setServer(e.target.value);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onFocus={handleInputFocus}
-                    onBlur={handleInputBlur}
-                  />
-                </div>
-                <Button onClick={(e) => e.stopPropagation()}>
-                  Save
-                </Button>
-              </div>
-            ) : null}
-          </SheetDescription>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

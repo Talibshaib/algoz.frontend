@@ -4,10 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { DashboardHeader, Sidebar } from "@/features/dashboard";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { Loader2, Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 import supabase from "@/lib/supabase";
 import { LOGIN_ROUTE } from "@/constants/routes";
 
@@ -21,7 +18,6 @@ export default function DashboardLayout({
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // For client-side only rendering
   useEffect(() => {
@@ -67,18 +63,13 @@ export default function DashboardLayout({
     };
   }, [router]);
 
-  // Close mobile sidebar when navigating
-  useEffect(() => {
-    setIsMobileSidebarOpen(false);
-  }, [pathname]);
-
   // Show loading state while checking authentication
   if (isLoading || !isMounted) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
+      <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading your dashboard...</p>
+          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground font-medium">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -92,35 +83,15 @@ export default function DashboardLayout({
   // Render children with dashboard layout when authenticated
   return (
     <SidebarProvider defaultOpen>
-      <div className="flex flex-col h-screen w-full overflow-hidden">
-        <DashboardHeader>
-          <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle Menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-64">
-              <div className="flex h-16 items-center border-b px-4">
-                <div className="font-semibold">AlgoZ</div>
-                <Button variant="ghost" size="icon" className="ml-auto" onClick={() => setIsMobileSidebarOpen(false)}>
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              <div className="py-2">
-                <Sidebar className="border-0" />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </DashboardHeader>
+      <div className="flex flex-col h-screen w-full overflow-hidden bg-background">
+        <DashboardHeader />
         
         <div className="flex flex-1 overflow-hidden">
-          <div className={cn("hidden md:block border-r")}>
-            <Sidebar />
-          </div>
-          <main className="flex-1 overflow-y-auto bg-background" suppressHydrationWarning>
-            {children}
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto bg-background p-6">
+            <div className="mx-auto max-w-7xl">
+              {children}
+            </div>
           </main>
         </div>
       </div>

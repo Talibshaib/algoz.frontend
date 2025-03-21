@@ -2,12 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import supabase from "@/lib/supabase";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Activity, AlertCircle, ArrowRight, Bell, Clock, FileText, Link, RefreshCw, Settings } from "lucide-react";
+import { Activity, AlertCircle, ArrowRight, Bell, Clock, FileText, Link, RefreshCw, Settings, Zap, ChevronRight, BarChart3 } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 import { useRouter } from "next/navigation";
+import { DashboardCard, DashboardCardGroup, DashboardSection } from "@/features/dashboard";
+import { Separator } from "@/components/ui/separator";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -86,73 +87,151 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start mb-8">
+    <>
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Welcome, {user?.user_metadata?.name || user?.email || 'Trader'}</h1>
+          <h1 className="text-3xl font-bold text-foreground">Welcome, {user?.user_metadata?.name || user?.email?.split('@')[0] || 'Trader'}</h1>
           <p className="text-muted-foreground mt-1">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
         </div>
         
-        <div className="flex items-center space-x-4 mt-4 md:mt-0">
+        <div className="flex items-center space-x-4 mt-4 sm:mt-0">
           <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/settings')}>
             <Settings className="h-4 w-4 mr-2" />
             <span>Settings</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/broker-management')}>
+          <Button variant="default" size="sm" onClick={() => router.push('/dashboard/broker-management')}>
             <Link className="h-4 w-4 mr-2" />
             <span>Connect Broker</span>
           </Button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>
-              Access common tasks and features
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
+      {/* Status overview */}
+      <DashboardSection>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <DashboardCard 
+            title={
+              <div className="flex items-center">
+                <Activity className="h-5 w-5 mr-2 text-primary" />
+                <span>API Status</span>
+              </div>
+            }
+          >
+            <div className="mt-2">
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="h-3 w-3 rounded-full bg-gray-200 animate-pulse"></div>
+                  <span className="text-muted-foreground">Checking status...</span>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <div className={`h-3 w-3 rounded-full ${healthStatus.api === "operational" ? "bg-green-500" : healthStatus.api === "degraded" ? "bg-amber-500" : "bg-red-500"}`}></div>
+                  <span className={getStatusColor(healthStatus.api)}>
+                    {healthStatus.api === "operational" ? "All systems operational" : 
+                    healthStatus.api === "degraded" ? "Some services degraded" : "System offline"}
+                  </span>
+                </div>
+              )}
+            </div>
+          </DashboardCard>
+          
+          <DashboardCard 
+            title={
+              <div className="flex items-center">
+                <Zap className="h-5 w-5 mr-2 text-primary" />
+                <span>Webhook Status</span>
+              </div>
+            }
+          >
+            <div className="mt-2">
+              <div className="flex items-center space-x-2">
+                <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                <span className="text-green-500">Ready to receive signals</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-3 text-xs w-full justify-between items-center"
+                onClick={() => router.push('/dashboard/webhook')}
+              >
+                <span>Configure Webhook</span>
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+          </DashboardCard>
+          
+          <DashboardCard 
+            title={
+              <div className="flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2 text-primary" />
+                <span>Trading Activity</span>
+              </div>
+            }
+          >
+            <div className="mt-2">
+              <div className="flex items-center space-x-2">
+                <div className="h-3 w-3 rounded-full bg-amber-500"></div>
+                <span className="text-amber-500">No broker connected</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-3 text-xs w-full justify-between items-center"
+                onClick={() => router.push('/dashboard/broker-management')}
+              >
+                <span>Connect Your Broker</span>
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+          </DashboardCard>
+        </div>
+      </DashboardSection>
+      
+      <Separator className="my-8" />
+
+      {/* Main dashboard content */}
+      <DashboardSection title="Your Dashboard" description="Manage your activity and access key features">
+        <DashboardCardGroup>
+          <DashboardCard
+            title="Quick Actions"
+            description="Access common tasks and features"
+          >
             <div className="space-y-1">
               <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/dashboard/webhook')}>
-                <Link className="h-4 w-4 mr-2" />
+                <Link className="h-4 w-4 mr-3" />
                 <span>Configure Webhook URL</span>
               </Button>
-              <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/dashboard/api-credentials')}>
-                <FileText className="h-4 w-4 mr-2" />
+              <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/dashboard/broker-management')}>
+                <FileText className="h-4 w-4 mr-3" />
                 <span>Manage API Credentials</span>
               </Button>
               <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/dashboard/broker-management')}>
-                <ArrowRight className="h-4 w-4 mr-2" />
+                <ArrowRight className="h-4 w-4 mr-3" />
                 <span>Broker Management</span>
               </Button>
               <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/dashboard/settings')}>
-                <Settings className="h-4 w-4 mr-2" />
+                <Settings className="h-4 w-4 mr-3" />
                 <span>Account Settings</span>
               </Button>
             </div>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" className="w-full">
-              <span>View All Features</span>
-            </Button>
-          </CardFooter>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>
-              Your latest trading signals and events
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            
+            <div className="mt-4">
+              <Button variant="outline" size="sm" className="w-full">
+                <span>View All Features</span>
+              </Button>
+            </div>
+          </DashboardCard>
+          
+          <DashboardCard
+            title="Recent Activity"
+            description="Your latest trading signals and events"
+          >
             <div className="space-y-4">
-              <div className="border-l-2 border-blue-500 pl-4 py-1 relative">
-                <div className="absolute w-2 h-2 bg-blue-500 rounded-full -left-[5px] top-[14px]"></div>
+              <div className="border-l-2 border-primary pl-4 py-1 relative">
+                <div className="absolute w-2 h-2 bg-primary rounded-full -left-[5px] top-[14px]"></div>
                 <p className="font-medium">Webhook URL Generated</p>
                 <p className="text-sm text-muted-foreground">{formatDate(new Date())}</p>
               </div>
@@ -161,117 +240,58 @@ export default function DashboardPage() {
                 <p className="font-medium">Account Created</p>
                 <p className="text-sm text-muted-foreground">{formatDate(new Date(Date.now() - 86400000))}</p>
               </div>
-              <div className="border-l-2 border-gray-200 pl-4 py-1 relative">
-                <div className="absolute w-2 h-2 bg-gray-200 rounded-full -left-[5px] top-[14px]"></div>
+              <div className="border-l-2 border-border pl-4 py-1 relative">
+                <div className="absolute w-2 h-2 bg-border rounded-full -left-[5px] top-[14px]"></div>
                 <p className="text-sm text-muted-foreground italic">Connect a broker to see trading signals</p>
               </div>
             </div>
-          </CardContent>
-          <CardFooter>
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
-              <Clock className="h-4 w-4 mr-2" />
-              <span>View Activity History</span>
-            </Button>
-          </CardFooter>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>System Status</CardTitle>
-            <CardDescription>
-              Platform performance and uptime
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="flex items-center">
-                  <Activity className="h-4 w-4 mr-2" />
-                  API Status
-                </span>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <Badge variant="outline" className="px-3">Loading</Badge>
-                  </div>
-                ) : (
-                  <span className={getStatusColor(healthStatus.api)}>
-                    {healthStatus.api === "operational" ? "Operational" : 
-                     healthStatus.api === "degraded" ? "Degraded" : "Offline"}
-                  </span>
-                )}
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="flex items-center">
-                  <Link className="h-4 w-4 mr-2" />
-                  Webhook Service
-                </span>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <Badge variant="outline" className="px-3">Loading</Badge>
-                  </div>
-                ) : (
-                  <span className={getStatusColor(healthStatus.webhook)}>
-                    {healthStatus.webhook === "operational" ? "Operational" : 
-                     healthStatus.webhook === "degraded" ? "Degraded" : "Offline"}
-                  </span>
-                )}
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="flex items-center">
-                  <Bell className="h-4 w-4 mr-2" />
-                  Trading Engine
-                </span>
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <Badge variant="outline" className="px-3">Loading</Badge>
-                  </div>
-                ) : (
-                  <span className={getStatusColor(healthStatus.trading)}>
-                    {healthStatus.trading === "operational" ? "Operational" : 
-                     healthStatus.trading === "degraded" ? "Degraded" : "Offline"}
-                  </span>
-                )}
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" className="w-full" onClick={() => router.push('/dashboard/status')}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              <span>Refresh Status</span>
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-      
-      {/* Usage Statistics */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold mb-4">Your Usage</h2>
-        <div className="bg-card border border-border rounded-lg p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <p className="text-muted-foreground text-sm">Current Plan</p>
-              <h3 className="text-3xl font-bold">
-                {user?.user_metadata?.plan || 'Free'}
-              </h3>
-              <Button variant="outline" size="sm" className="mt-2" onClick={() => router.push('/dashboard/pricing')}>
-                <span>Upgrade</span>
+            
+            <div className="mt-4">
+              <Button variant="ghost" size="sm" className="text-muted-foreground">
+                <Clock className="h-4 w-4 mr-2" />
+                <span>View Activity History</span>
               </Button>
             </div>
-            <div className="text-center">
-              <p className="text-muted-foreground text-sm">API Requests</p>
-              <h3 className="text-3xl font-bold">0 / 100</h3>
-              <p className="text-xs text-muted-foreground mt-1">Daily Limit</p>
+          </DashboardCard>
+          
+          <DashboardCard
+            title="Getting Started"
+            description="Setup your account for trading"
+          >
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3">
+                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium">1</div>
+                <div>
+                  <h4 className="font-medium">Connect Your Broker</h4>
+                  <p className="text-sm text-muted-foreground">Link your trading account to automate signals</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground text-xs font-medium">2</div>
+                <div>
+                  <h4 className="font-medium">Configure Webhook</h4>
+                  <p className="text-sm text-muted-foreground">Set up your TradingView webhook URL</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground text-xs font-medium">3</div>
+                <div>
+                  <h4 className="font-medium">Deploy Your Strategy</h4>
+                  <p className="text-sm text-muted-foreground">Configure and start your trading bot</p>
+                </div>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-muted-foreground text-sm">Connected Brokers</p>
-              <h3 className="text-3xl font-bold">0 / 3</h3>
-              <Button variant="ghost" size="sm" className="mt-2" onClick={() => router.push('/dashboard/broker-management')}>
-                <span>Manage</span>
+            
+            <div className="mt-4">
+              <Button variant="default" size="sm" className="w-full">
+                <span>Start Trading</span>
               </Button>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          </DashboardCard>
+        </DashboardCardGroup>
+      </DashboardSection>
+    </>
   );
 }

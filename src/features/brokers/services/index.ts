@@ -1,2 +1,2 @@
 // Export broker authentication services
-export { authenticateDhan, authenticateMetaTrader5 } from './brokerAuthService'; 
+export { authenticateDhan, generateDhanConsentUrl, completeDhanAuth, getDhanStatus } from './brokerAuthService'; 
