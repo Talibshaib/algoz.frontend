@@ -1,14 +1,21 @@
 "use client";
 
 import React, { useState, useEffect, ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
-import { Input, Button, Chip, Tooltip, Select, SelectItem, Textarea } from "@nextui-org/react";
+import { Input, Textarea } from "@nextui-org/react";
 import { 
-  Code, PlayCircle, RefreshCw, Plus, 
-  ExternalLink, RefreshCw as RefreshIcon, 
+  Code, PlayCircle, RefreshCw, 
   CheckCircle, Settings, Trash2, Zap, 
-  AlertTriangle, XCircle, ToggleRight, ToggleLeft, Search
+  AlertTriangle, ToggleRight, ToggleLeft, Search,
+  ChevronRight
 } from "lucide-react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Button} from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -171,7 +178,7 @@ export default function BrokerManagementPage() {
   const handleTemplateChange = (templateId: string) => {
     setSelectedTemplate(templateId);
     
-    if (templateId) {
+    if (templateId && templateId !== "custom") {
       const template = API_TEMPLATES.find(t => t.id === templateId);
       if (template) {
         setApiEndpoint(template.endpoint);
@@ -341,8 +348,8 @@ export default function BrokerManagementPage() {
                               <div className="flex gap-2">
                                 <Button
                                   variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 hover:bg-gray-700"
+                                  size="sm"
+                                  className="hover:bg-gray-700 p-0 h-8 w-8"
                                   title={savedBroker.isActive ? "Deactivate broker" : "Activate broker"}
                                   onClick={() => handleToggleBrokerStatus(savedBroker.id, savedBroker.isActive)}
                                   disabled={loadingBrokerId === savedBroker.id}
@@ -357,9 +364,9 @@ export default function BrokerManagementPage() {
                                 </Button>
                                 
                                 <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-red-500 hover:text-red-400 hover:bg-gray-700"
+                                  variant="destructive"
+                                  size="sm"
+                                  className="hover:bg-gray-700 p-0 h-8 w-8"
                                   title="Delete broker connection"
                                   onClick={() => handleDeleteBroker(savedBroker.id)}
                                   disabled={loadingBrokerId === savedBroker.id}
@@ -375,7 +382,7 @@ export default function BrokerManagementPage() {
                             
                             <Button
                               className="w-full mt-2 bg-gray-700 hover:bg-gray-600 text-gray-100"
-                              variant="bordered"
+                              variant="default"
                               onClick={() => setIsDhanModalOpen(true)}
                             >
                               Update Connection
@@ -461,14 +468,14 @@ export default function BrokerManagementPage() {
                     <div className="flex flex-col gap-2 pt-2 pb-4">
                       <div className="flex w-full gap-2">
                         <Button
-                          variant="bordered"
+                          variant="default"
                           className="flex-1 bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-100"
                           onClick={() => setIsDhanModalOpen(true)}
                         >
                           Edit
                         </Button>
                         <Button
-                          variant="bordered"
+                          variant="default"
                           className="flex-1 bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-100"
                           onClick={() => handleToggleBrokerStatus(broker.id, broker.isActive)}
                           disabled={loadingBrokerId === broker.id}
@@ -480,7 +487,7 @@ export default function BrokerManagementPage() {
                         </Button>
                       </div>
                       <Button
-                        variant="bordered" 
+                        variant="default" 
                         className="w-full bg-red-900/30 hover:bg-red-900/50 text-red-400"
                         onClick={() => handleDeleteBroker(broker.id)}
                         disabled={loadingBrokerId === broker.id}
@@ -516,23 +523,18 @@ export default function BrokerManagementPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm text-gray-400">Template</label>
-                    <Select 
-                      value={selectedTemplate}
-                      onChange={(value) => handleTemplateChange(value as string)}
-                      placeholder="Select a template"
-                      classNames={{
-                        base: "w-full",
-                        trigger: "bg-gray-750 border-gray-700 text-gray-200",
-                        listboxWrapper: "bg-gray-800 border-gray-700",
-                        listbox: "bg-gray-800 text-gray-200",
-                      }}
-                    >
-                      <SelectItem key="custom" value="" className="text-gray-200">Custom Request</SelectItem>
-                      {API_TEMPLATES.map(template => (
-                        <SelectItem key={template.id} value={template.id} className="text-gray-200">
-                          {template.name}
-                        </SelectItem>
-                      ))}
+                    <Select value={selectedTemplate} onValueChange={(value: string) => handleTemplateChange(value)}>
+                      <SelectTrigger className="bg-gray-750 border-gray-700 text-gray-200">
+                        <SelectValue placeholder="Select a template" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-700 text-gray-200">
+                        <SelectItem value="custom">Custom Request</SelectItem>
+                        {API_TEMPLATES.map(template => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </div>
                   
@@ -542,30 +544,22 @@ export default function BrokerManagementPage() {
                       placeholder="API endpoint path" 
                       value={apiEndpoint}
                       onChange={(e) => setApiEndpoint(e.target.value)}
-                      classNames={{
-                        input: "bg-gray-750 border-gray-700 text-gray-200",
-                        inputWrapper: "bg-gray-750 border-gray-700"
-                      }}
+                      className="bg-gray-750 border-gray-700 text-gray-200"
                     />
                   </div>
                   
                   <div className="space-y-2">
                     <label className="text-sm text-gray-400">Method</label>
-                    <Select 
-                      value={apiMethod}
-                      onChange={(value) => setApiMethod(value as string)}
-                      placeholder="Select API method"
-                      classNames={{
-                        base: "w-full",
-                        trigger: "bg-gray-750 border-gray-700 text-gray-200",
-                        listboxWrapper: "bg-gray-800 border-gray-700",
-                        listbox: "bg-gray-800 text-gray-200",
-                      }}
-                    >
-                      <SelectItem key="get" value="GET" className="text-gray-200">GET</SelectItem>
-                      <SelectItem key="post" value="POST" className="text-gray-200">POST</SelectItem>
-                      <SelectItem key="put" value="PUT" className="text-gray-200">PUT</SelectItem>
-                      <SelectItem key="delete" value="DELETE" className="text-gray-200">DELETE</SelectItem>
+                    <Select value={apiMethod} onValueChange={(value: string) => setApiMethod(value)}>
+                      <SelectTrigger className="bg-gray-750 border-gray-700 text-gray-200">
+                        <SelectValue placeholder="Select API method" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-700 text-gray-200">
+                        <SelectItem value="GET">GET</SelectItem>
+                        <SelectItem value="POST">POST</SelectItem>
+                        <SelectItem value="PUT">PUT</SelectItem>
+                        <SelectItem value="DELETE">DELETE</SelectItem>
+                      </SelectContent>
                     </Select>
                   </div>
                   
@@ -621,7 +615,7 @@ export default function BrokerManagementPage() {
                 </div>
                 <div className="flex justify-between pt-2 pb-4">
                   <Button
-                    variant="bordered"
+                    variant="outline"
                     className="bg-gray-750 border-gray-700 hover:bg-gray-700 text-gray-300"
                     onClick={() => setApiResponse("")}
                     disabled={!apiResponse}
@@ -629,7 +623,7 @@ export default function BrokerManagementPage() {
                     Clear Results
                   </Button>
                   <Button
-                    variant="bordered"
+                    variant="outline"
                     className="bg-gray-750 border-gray-700 hover:bg-gray-700 text-gray-300"
                     disabled={!apiResponse}
                     onClick={() => {
