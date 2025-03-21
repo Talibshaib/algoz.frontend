@@ -26,7 +26,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm border-b border-gray-100">
+    <header className="bg-gray-900/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm border-b border-gray-800">
       <div className="container mx-auto px-4">
         <div className="flex h-16 sm:h-20 items-center justify-between">
           {/* Left section - Logo */}
@@ -49,16 +49,16 @@ export default function Navbar() {
             <NavigationMenu>
               <NavigationMenuList className="gap-4">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-all duration-200 bg-transparent hover:bg-gray-50">Products</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="text-sm font-medium text-gray-300 hover:text-white transition-all duration-200 bg-transparent hover:bg-gray-800">Products</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <div className="grid gap-3 p-4 w-[400px] bg-white rounded-xl shadow-lg border border-gray-100">
+                    <div className="grid gap-3 p-4 w-[400px] bg-gray-900 rounded-xl shadow-lg border border-gray-800">
                       <NavigationMenuLink asChild>
                         <Link
                           href="/"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-50 hover:text-black"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-800 hover:text-white"
                         >
-                          <div className="text-sm font-medium leading-none">TradingView Integration</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-gray-500 mt-1">
+                          <div className="text-sm font-medium leading-none text-white">TradingView Integration</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-gray-400 mt-1">
                             Seamlessly connect your TradingView charts and execute trades directly from the platform.
                           </p>
                         </Link>
@@ -66,10 +66,10 @@ export default function Navbar() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-50 hover:text-black"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-800 hover:text-white"
                         >
-                          <div className="text-sm font-medium leading-none">Pine Script Strategies</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-gray-500 mt-1">
+                          <div className="text-sm font-medium leading-none text-white">Pine Script Strategies</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-gray-400 mt-1">
                             Access a library of pre-built trading strategies or create your own using Pine Script.
                           </p>
                         </Link>
@@ -77,10 +77,10 @@ export default function Navbar() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-50 hover:text-black"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-800 hover:text-white"
                         >
-                          <div className="text-sm font-medium leading-none">MQL Solutions</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-gray-500 mt-1">
+                          <div className="text-sm font-medium leading-none text-white">MQL Solutions</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-gray-400 mt-1">
                             Professional MetaTrader integration with custom MQL4/5 expert advisors and indicators.
                           </p>
                         </Link>
@@ -89,16 +89,16 @@ export default function Navbar() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-all duration-200 bg-transparent hover:bg-gray-50">Resources</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="text-sm font-medium text-gray-300 hover:text-white transition-all duration-200 bg-transparent hover:bg-gray-800">Resources</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <div className="grid gap-3 p-4 w-[400px] bg-white rounded-xl shadow-lg border border-gray-100">
+                    <div className="grid gap-3 p-4 w-[400px] bg-gray-900 rounded-xl shadow-lg border border-gray-800">
                       <NavigationMenuLink asChild>
                         <Link
                           href="/"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-50 hover:text-black"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-800 hover:text-white"
                         >
-                          <div className="text-sm font-medium leading-none">Documentation</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-gray-500 mt-1">
+                          <div className="text-sm font-medium leading-none text-white">Documentation</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-gray-400 mt-1">
                             Comprehensive guides and API documentation for developers.
                           </p>
                         </Link>
@@ -106,10 +106,10 @@ export default function Navbar() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-50 hover:text-black"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-800 hover:text-white"
                         >
-                          <div className="text-sm font-medium leading-none">Blog</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-gray-500 mt-1">
+                          <div className="text-sm font-medium leading-none text-white">Blog</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-gray-400 mt-1">
                             Latest news, updates, and trading insights from our experts.
                           </p>
                         </Link>
@@ -117,10 +117,10 @@ export default function Navbar() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-50 hover:text-black"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-800 hover:text-white"
                         >
-                          <div className="text-sm font-medium leading-none">Community</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-gray-500 mt-1">
+                          <div className="text-sm font-medium leading-none text-white">Community</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-gray-400 mt-1">
                             Join our community of traders and developers.
                           </p>
                         </Link>
@@ -129,16 +129,16 @@ export default function Navbar() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-all duration-200 bg-transparent hover:bg-gray-50">Company</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="text-sm font-medium text-gray-300 hover:text-white transition-all duration-200 bg-transparent hover:bg-gray-800">Company</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <div className="grid gap-3 p-4 w-[400px] bg-white rounded-xl shadow-lg border border-gray-100">
+                    <div className="grid gap-3 p-4 w-[400px] bg-gray-900 rounded-xl shadow-lg border border-gray-800">
                       <NavigationMenuLink asChild>
                         <Link
                           href="/about"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-50 hover:text-black"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-800 hover:text-white"
                         >
-                          <div className="text-sm font-medium leading-none">About Us</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-gray-500 mt-1">
+                          <div className="text-sm font-medium leading-none text-white">About Us</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-gray-400 mt-1">
                             Learn about our mission and team.
                           </p>
                         </Link>
@@ -146,10 +146,10 @@ export default function Navbar() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/careers"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-50 hover:text-black"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-800 hover:text-white"
                         >
-                          <div className="text-sm font-medium leading-none">Careers</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-gray-500 mt-1">
+                          <div className="text-sm font-medium leading-none text-white">Careers</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-gray-400 mt-1">
                             Join our team and help shape the future of algorithmic trading.
                           </p>
                         </Link>
@@ -157,10 +157,10 @@ export default function Navbar() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/contact"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-50 hover:text-black"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-800 hover:text-white"
                         >
-                          <div className="text-sm font-medium leading-none">Contact</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-gray-500 mt-1">
+                          <div className="text-sm font-medium leading-none text-white">Contact</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-gray-400 mt-1">
                             Get in touch with our support team.
                           </p>
                         </Link>
@@ -176,11 +176,11 @@ export default function Navbar() {
           <div className="flex items-center justify-end">
             {/* Mobile menu button */}
             <button 
-              className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+              className="md:hidden p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
               onClick={toggleMobileNav}
               aria-label="Toggle mobile menu"
             >
-              <Menu size={22} className="text-gray-700" />
+              <Menu size={22} className="text-gray-300" />
             </button>
             
             <div className="hidden md:flex items-center">
@@ -197,17 +197,17 @@ export default function Navbar() {
                       Get Started
                     </ShinyButton>  
                   </DropdownTrigger>
-                  <DropdownMenu aria-label="Get Started Options" className="bg-white rounded-lg p-2">
-                    <DropdownItem key="login" className="py-2 hover:bg-gray-50 rounded-lg transition-colors duration-200">
+                  <DropdownMenu aria-label="Get Started Options" className="bg-gray-900 rounded-lg p-2">
+                    <DropdownItem key="login" className="py-2 hover:bg-gray-800 rounded-lg transition-colors duration-200">
                       <Link href="/login" className="w-full block">
-                        <div className="text-sm font-medium">Log In</div>
-                        <p className="text-xs text-gray-500 mt-1">Access your account</p>
+                        <div className="text-sm font-medium text-white">Log In</div>
+                        <p className="text-xs text-gray-400 mt-1">Access your account</p>
                       </Link>
                     </DropdownItem>
-                    <DropdownItem key="signup" className="py-2 hover:bg-gray-50 rounded-lg transition-colors duration-200">
+                    <DropdownItem key="signup" className="py-2 hover:bg-gray-800 rounded-lg transition-colors duration-200">
                       <Link href="/signup" className="w-full block">
-                        <div className="text-sm font-medium">Sign Up</div>
-                        <p className="text-xs text-gray-500 mt-1">Create a new account</p>
+                        <div className="text-sm font-medium text-white">Sign Up</div>
+                        <p className="text-xs text-gray-400 mt-1">Create a new account</p>
                       </Link>
                     </DropdownItem>
                   </DropdownMenu>
@@ -223,4 +223,3 @@ export default function Navbar() {
     </header>
   )
 }
-

@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Marquee } from "../magicui/marquee"; 
 import { MotionDiv } from "@/components/ui/motion";
 import { Star } from "lucide-react";
+import { Card, CardBody, Avatar } from "@nextui-org/react";
 
 // More realistic and diverse testimonials
 const reviews = [
@@ -58,66 +59,49 @@ const reviews = [
 const firstRow = reviews.slice(0, reviews.length / 2);
 const secondRow = reviews.slice(reviews.length / 2);
 
-const ReviewCard = ({
-  img,
-  name,
-  username,
-  body,
-  rating,
-  position
-}: {
-  img: string;
+interface ReviewCardProps {
   name: string;
-  username: string;
-  body: string;
+  role: string;
+  content: string;
   rating: number;
-  position: string;
-}) => {
+  image: string;
+}
+
+const ReviewCard = ({ name, role, content, rating, image }: ReviewCardProps) => {
   return (
-    <MotionDiv
-      whileHover={{ y: -5, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1)" }}
-      transition={{ duration: 0.2 }}
+    <Card 
+      className="border border-gray-800 bg-gray-900/50 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+      radius="lg"
     >
-      <figure
-        className={cn(
-          "relative h-full w-72 cursor-pointer overflow-hidden rounded-xl p-6 mx-2",
-          "border border-gray-100 bg-white shadow-md hover:border-gray-200",
-          "backdrop-blur-sm bg-opacity-80"
-        )}
-      >
-        <div className="flex flex-row items-center gap-3 mb-3">
-          <div className="rounded-full border-2 border-gray-100 p-0.5 bg-gradient-to-br from-orange-100 to-amber-100">
-            <img 
-              className="rounded-full" 
-              width="48" 
-              height="48" 
-              alt={`${name}'s avatar`} 
-              src={img} 
-            />
-          </div>
-          <div className="flex flex-col">
-            <figcaption className="text-sm font-semibold text-gray-900">
-              {name}
-            </figcaption>
-            <p className="text-xs text-gray-500">{position}</p>
-          </div>
-        </div>
-        
-        <div className="flex mb-3">
-          {[...Array(5)].map((_, i) => (
-            <Star 
-              key={i} 
-              size={16} 
-              className={i < rating ? "text-amber-400 fill-amber-400" : "text-gray-200"} 
+      <CardBody className="p-6">
+        {/* Rating Stars */}
+        <div className="flex mb-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star
+              key={i}
+              size={16}
+              className={i < rating ? "text-amber-500 fill-amber-500" : "text-gray-600"}
             />
           ))}
         </div>
         
-        <blockquote className="mt-2 text-sm text-gray-700 leading-relaxed">"{body}"</blockquote>
+        {/* Review Content */}
+        <p className="text-gray-300 mb-6 text-sm">"{content}"</p>
         
-        <p className="mt-4 text-xs font-medium text-orange-600">{username}</p>
-      </figure>
-    </MotionDiv>
+        {/* Reviewer Info */}
+        <div className="flex items-center">
+          <Avatar
+            src={image}
+            className="mr-3"
+            size="sm"
+          />
+          <div>
+            <p className="text-white font-medium text-sm">{name}</p>
+            <p className="text-gray-400 text-xs">{role}</p>
+          </div>
+        </div>
+      </CardBody>
+    </Card>
   );
 };
 
@@ -135,16 +119,16 @@ export default function MarqueeDemo() {
       
       <Marquee pauseOnHover className="[--duration:30s] mb-8">
         {firstRow.map((review) => (
-          <ReviewCard key={review.username} {...review} />
+          <ReviewCard key={review.username} name={review.name} role={review.position} content={review.body} rating={review.rating} image={review.img} />
         ))}
       </Marquee>
       <Marquee reverse pauseOnHover className="[--duration:30s]">
         {secondRow.map((review) => (
-          <ReviewCard key={review.username} {...review} />
+          <ReviewCard key={review.username} name={review.name} role={review.position} content={review.body} rating={review.rating} image={review.img} />
         ))}
       </Marquee>
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-white"></div>
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-white"></div>
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-gray-950"></div>
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-gray-950"></div>
     </div>
   );
 }

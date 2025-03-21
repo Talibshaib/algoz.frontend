@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Search, CheckCircle, AlertCircle, Trash2, ToggleRight, ToggleLeft, Code, Zap, Settings, RefreshCw, PlayCircle } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { DashboardCard, DashboardCardGroup, DashboardSection } from "@/features/dashboard";
+import React, { useState, useEffect, ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
+import { Input, Button, Chip, Tooltip, Select, SelectItem, Textarea } from "@nextui-org/react";
+import { 
+  Code, PlayCircle, RefreshCw, Plus, 
+  ExternalLink, RefreshCw as RefreshIcon, 
+  CheckCircle, Settings, Trash2, Zap, 
+  AlertTriangle, XCircle, ToggleRight, ToggleLeft, Search
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { DashboardCard, DashboardCardGroup, DashboardSection } from "@/features/dashboard";
 import { 
   getAvailableBrokers, 
   getSavedBrokers,
@@ -249,7 +251,7 @@ export default function BrokerManagementPage() {
             type="text"
             placeholder="Search broker..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
             className="pl-8 bg-gray-800 border-gray-700 text-gray-100"
           />
         </div>
@@ -331,7 +333,7 @@ export default function BrokerManagementPage() {
                                   </span>
                                 ) : (
                                   <span className="flex items-center text-amber-500">
-                                    <AlertCircle size={16} className="mr-1" />
+                                    <AlertTriangle size={16} className="mr-1" />
                                     Disconnected
                                   </span>
                                 )}
@@ -373,7 +375,7 @@ export default function BrokerManagementPage() {
                             
                             <Button
                               className="w-full mt-2 bg-gray-700 hover:bg-gray-600 text-gray-100"
-                              variant="secondary"
+                              variant="bordered"
                               onClick={() => setIsDhanModalOpen(true)}
                             >
                               Update Connection
@@ -407,7 +409,7 @@ export default function BrokerManagementPage() {
               ) : savedBrokers.length === 0 ? (
                 <DashboardCard className="py-12 text-center bg-gray-800/30 rounded-lg border border-gray-700">
                   <div className="flex flex-col items-center gap-3 p-6">
-                    <AlertCircle size={40} className="text-gray-500" />
+                    <AlertTriangle size={40} className="text-gray-500" />
                     <h3 className="text-lg font-medium text-gray-300">No Connected Brokers</h3>
                     <p className="text-gray-400 text-center max-w-md">
                       You haven't connected any brokers yet. Switch to the Available Brokers tab to connect your first broker.
@@ -443,7 +445,7 @@ export default function BrokerManagementPage() {
                           </>
                         ) : (
                           <>
-                            <AlertCircle size={14} />
+                            <AlertTriangle size={14} />
                             Disconnected
                           </>
                         )}
@@ -459,14 +461,14 @@ export default function BrokerManagementPage() {
                     <div className="flex flex-col gap-2 pt-2 pb-4">
                       <div className="flex w-full gap-2">
                         <Button
-                          variant="outline"
+                          variant="bordered"
                           className="flex-1 bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-100"
                           onClick={() => setIsDhanModalOpen(true)}
                         >
                           Edit
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="bordered"
                           className="flex-1 bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-100"
                           onClick={() => handleToggleBrokerStatus(broker.id, broker.isActive)}
                           disabled={loadingBrokerId === broker.id}
@@ -478,7 +480,7 @@ export default function BrokerManagementPage() {
                         </Button>
                       </div>
                       <Button
-                        variant="destructive"
+                        variant="bordered" 
                         className="w-full bg-red-900/30 hover:bg-red-900/50 text-red-400"
                         onClick={() => handleDeleteBroker(broker.id)}
                         disabled={loadingBrokerId === broker.id}
@@ -497,7 +499,6 @@ export default function BrokerManagementPage() {
             </DashboardCardGroup>
           </DashboardSection>
         </TabsContent>
-        
         {/* API Testing Section */}
         <TabsContent value="api" className="mt-0">
           <DashboardSection>
@@ -515,18 +516,23 @@ export default function BrokerManagementPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm text-gray-400">Template</label>
-                    <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
-                      <SelectTrigger className="bg-gray-750 border-gray-700">
-                        <SelectValue placeholder="Select a template" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-700">
-                        <SelectItem value="">Custom Request</SelectItem>
-                        {API_TEMPLATES.map(template => (
-                          <SelectItem key={template.id} value={template.id}>
-                            {template.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
+                    <Select 
+                      value={selectedTemplate}
+                      onChange={(value) => handleTemplateChange(value as string)}
+                      placeholder="Select a template"
+                      classNames={{
+                        base: "w-full",
+                        trigger: "bg-gray-750 border-gray-700 text-gray-200",
+                        listboxWrapper: "bg-gray-800 border-gray-700",
+                        listbox: "bg-gray-800 text-gray-200",
+                      }}
+                    >
+                      <SelectItem key="custom" value="" className="text-gray-200">Custom Request</SelectItem>
+                      {API_TEMPLATES.map(template => (
+                        <SelectItem key={template.id} value={template.id} className="text-gray-200">
+                          {template.name}
+                        </SelectItem>
+                      ))}
                     </Select>
                   </div>
                   
@@ -536,22 +542,30 @@ export default function BrokerManagementPage() {
                       placeholder="API endpoint path" 
                       value={apiEndpoint}
                       onChange={(e) => setApiEndpoint(e.target.value)}
-                      className="bg-gray-750 border-gray-700"
+                      classNames={{
+                        input: "bg-gray-750 border-gray-700 text-gray-200",
+                        inputWrapper: "bg-gray-750 border-gray-700"
+                      }}
                     />
                   </div>
                   
                   <div className="space-y-2">
                     <label className="text-sm text-gray-400">Method</label>
-                    <Select value={apiMethod} onValueChange={setApiMethod}>
-                      <SelectTrigger className="bg-gray-750 border-gray-700">
-                        <SelectValue placeholder="Select API method" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-700">
-                        <SelectItem value="GET">GET</SelectItem>
-                        <SelectItem value="POST">POST</SelectItem>
-                        <SelectItem value="PUT">PUT</SelectItem>
-                        <SelectItem value="DELETE">DELETE</SelectItem>
-                      </SelectContent>
+                    <Select 
+                      value={apiMethod}
+                      onChange={(value) => setApiMethod(value as string)}
+                      placeholder="Select API method"
+                      classNames={{
+                        base: "w-full",
+                        trigger: "bg-gray-750 border-gray-700 text-gray-200",
+                        listboxWrapper: "bg-gray-800 border-gray-700",
+                        listbox: "bg-gray-800 text-gray-200",
+                      }}
+                    >
+                      <SelectItem key="get" value="GET" className="text-gray-200">GET</SelectItem>
+                      <SelectItem key="post" value="POST" className="text-gray-200">POST</SelectItem>
+                      <SelectItem key="put" value="PUT" className="text-gray-200">PUT</SelectItem>
+                      <SelectItem key="delete" value="DELETE" className="text-gray-200">DELETE</SelectItem>
                     </Select>
                   </div>
                   
@@ -560,14 +574,18 @@ export default function BrokerManagementPage() {
                     <Textarea 
                       placeholder="Enter request parameters as JSON" 
                       value={apiParams}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setApiParams(e.target.value)}
-                      className="min-h-[120px] bg-gray-750 border-gray-700 font-mono text-sm"
+                      onChange={(e) => setApiParams(e.target.value)}
+                      className="min-h-[120px] font-mono text-sm"
+                      classNames={{
+                        input: "bg-gray-750 border-gray-700 text-gray-200",
+                        inputWrapper: "bg-gray-750 border-gray-700"
+                      }}
                     />
                   </div>
                 </div>
                 <div className="flex justify-end pt-2 pb-4">
                   <Button 
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                     onClick={handleApiTest}
                     disabled={isApiLoading}
                   >
@@ -603,7 +621,7 @@ export default function BrokerManagementPage() {
                 </div>
                 <div className="flex justify-between pt-2 pb-4">
                   <Button
-                    variant="outline"
+                    variant="bordered"
                     className="bg-gray-750 border-gray-700 hover:bg-gray-700 text-gray-300"
                     onClick={() => setApiResponse("")}
                     disabled={!apiResponse}
@@ -611,7 +629,7 @@ export default function BrokerManagementPage() {
                     Clear Results
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="bordered"
                     className="bg-gray-750 border-gray-700 hover:bg-gray-700 text-gray-300"
                     disabled={!apiResponse}
                     onClick={() => {
