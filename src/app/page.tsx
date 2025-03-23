@@ -43,7 +43,7 @@ export default function Hero() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
+      <div className="fixed inset-0 flex items-center justify-center bg-white z-50 dark:bg-black">
         <MotionDiv
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ 
@@ -56,7 +56,7 @@ export default function Hero() {
             repeat: Infinity,
             repeatType: "loop"
           }}
-          className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-600 bg-clip-text text-transparent"
+          className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-600 bg-clip-text text-transparent dark:bg-gradient-to-r dark:from-orange-500 dark:to-amber-600 dark:bg-clip-text dark:text-transparent"
         >
           AlgoZ
         </MotionDiv>
@@ -73,10 +73,10 @@ export default function Hero() {
       {/* Scroll to top button */}
       {showScrollTop && (
         <MotionDiv
-          className="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-600 rounded-full flex items-center justify-center z-50 cursor-pointer shadow-lg"
+          className="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-600 rounded-full flex items-center justify-center z-50 cursor-pointer shadow-lg dark:bg-gradient-to-r dark:from-orange-500 dark:to-amber-600 dark:bg-clip-text dark:text-transparent"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
+          exit={{ opacity: 0, y: 20 }}  
           whileHover={{ scale: 1.1, boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)" }}
           whileTap={{ scale: 0.9 }}
           onClick={scrollToTop}

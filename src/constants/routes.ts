@@ -22,25 +22,43 @@ export const RESET_PASSWORD_ROUTE = AUTH_ROUTES.RESET_PASSWORD;
 
 // Dashboard routes
 export const DASHBOARD_ROUTES = {
-  HOME: '/dashboard',
+  ROOT: '/dashboard',
+  STRATEGY_OVERVIEW: '/dashboard/strategies',
+  STRATEGY_BUILDER: '/dashboard/strategies/builder',
+  STRATEGY_EDITOR: '/dashboard/strategies/builder/:id',
+  TRADING_SIGNALS: '/dashboard/signals',
+  WEBHOOKS: '/dashboard/webhook',
   SETTINGS: '/dashboard/settings',
-  WEBHOOK: '/dashboard/webhook',
   API_CREDENTIALS: '/dashboard/api-credentials',
-  BROKER_MANAGEMENT: '/dashboard/broker-management',
   PRICING: '/dashboard/pricing',
-  PROFILE: '/dashboard/profile',
-  STATUS: '/dashboard/status',
+  MARKET_DATA: '/dashboard/market-data',
+  SYMBOL_JSON: '/dashboard/symbol-json',
+  CHART_TRADING: '/dashboard/chart-trading',
+  NOTIFICATIONS: '/dashboard/notifications',
+  SUPPORT: '/dashboard/support',
+  DASHBOARD_HELP: '/dashboard/help',
+  TRADINGVIEW_INTEGRATION: '/dashboard/tradingview-integration',
+  PRODUCTS: '/dashboard/products'
 };
 
 // Individual dashboard route exports for convenience
-export const DASHBOARD_ROUTE = DASHBOARD_ROUTES.HOME;
+export const DASHBOARD_ROUTE = DASHBOARD_ROUTES.ROOT;
+export const STRATEGY_OVERVIEW_ROUTE = DASHBOARD_ROUTES.STRATEGY_OVERVIEW;
+export const STRATEGY_BUILDER_ROUTE = DASHBOARD_ROUTES.STRATEGY_BUILDER;
+export const STRATEGY_EDITOR_ROUTE = DASHBOARD_ROUTES.STRATEGY_EDITOR;
+export const TRADING_SIGNALS_ROUTE = DASHBOARD_ROUTES.TRADING_SIGNALS;
+export const WEBHOOK_ROUTE = DASHBOARD_ROUTES.WEBHOOKS;
 export const SETTINGS_ROUTE = DASHBOARD_ROUTES.SETTINGS;
-export const WEBHOOK_ROUTE = DASHBOARD_ROUTES.WEBHOOK;
 export const API_CREDENTIALS_ROUTE = DASHBOARD_ROUTES.API_CREDENTIALS;
-export const BROKER_MANAGEMENT_ROUTE = DASHBOARD_ROUTES.BROKER_MANAGEMENT;
 export const PRICING_ROUTE = DASHBOARD_ROUTES.PRICING;
-export const PROFILE_ROUTE = DASHBOARD_ROUTES.PROFILE;
-export const STATUS_ROUTE = DASHBOARD_ROUTES.STATUS;
+export const MARKET_DATA_ROUTE = DASHBOARD_ROUTES.MARKET_DATA;
+export const SYMBOL_JSON_ROUTE = DASHBOARD_ROUTES.SYMBOL_JSON;
+export const CHART_TRADING_ROUTE = DASHBOARD_ROUTES.CHART_TRADING;
+export const NOTIFICATIONS_ROUTE = DASHBOARD_ROUTES.NOTIFICATIONS;
+export const SUPPORT_ROUTE = DASHBOARD_ROUTES.SUPPORT;
+export const DASHBOARD_HELP_ROUTE = DASHBOARD_ROUTES.DASHBOARD_HELP;
+export const TRADINGVIEW_INTEGRATION_ROUTE = DASHBOARD_ROUTES.TRADINGVIEW_INTEGRATION;
+export const PRODUCTS_ROUTE = DASHBOARD_ROUTES.PRODUCTS;
 
 // Admin routes
 export const ADMIN_ROUTES = {
@@ -123,7 +141,7 @@ export function isAuthRoute(path: string): boolean {
 }
 
 export function isDashboardRoute(path: string): boolean {
-  return path.startsWith(DASHBOARD_ROUTES.HOME);
+  return path.startsWith(DASHBOARD_ROUTES.ROOT);
 }
 
 export function isAdminRoute(path: string): boolean {

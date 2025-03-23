@@ -14,11 +14,6 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -81,23 +76,15 @@ export function DashboardHeader({ children }: DashboardHeaderProps) {
       <div className="flex h-16 items-center justify-between w-full px-4 sm:px-6">
         <div className="flex items-center">
           {/* Mobile menu button */}
-          <Sheet open={openMobile} onOpenChange={setOpenMobile}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="md:hidden mr-2 h-9 w-9"
-              >
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle Sidebar</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-[280px]">
-              <div className="py-2">
-                {children || <div className="py-4 px-4 font-bold text-xl">AlgoZ</div>}
-              </div>
-            </SheetContent>
-          </Sheet>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden mr-2 h-9 w-9"
+            onClick={() => setOpenMobile(!openMobile)}
+          >
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle Sidebar</span>
+          </Button>
 
           {/* Desktop menu button */}
           <Button
@@ -113,16 +100,7 @@ export function DashboardHeader({ children }: DashboardHeaderProps) {
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center space-x-2 mr-6">
             <span className="font-bold text-lg sm:text-xl">AlgoZ</span>
-          </Link>
-          
-          {/* Global Search (desktop only) */}
-          <div className="hidden md:flex relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search broker..." 
-              className="pl-10 bg-muted/50 border-none focus-visible:ring-1 max-w-md"
-            />
-          </div>
+          </Link>         
         </div>
 
         <div className="flex items-center space-x-3 sm:space-x-4">
@@ -154,7 +132,7 @@ export function DashboardHeader({ children }: DashboardHeaderProps) {
               <div className="max-h-80 overflow-y-auto">
                 <div className="p-3 text-sm hover:bg-muted cursor-pointer">
                   <div className="font-medium">Account connected</div>
-                  <div className="text-muted-foreground">Your Dhan broker account was successfully connected.</div>
+                  <div className="text-muted-foreground">Your broker account was successfully connected.</div>
                   <div className="text-xs text-muted-foreground mt-1">2 hours ago</div>
                 </div>
                 <div className="p-3 text-sm hover:bg-muted cursor-pointer">
@@ -214,16 +192,7 @@ export function DashboardHeader({ children }: DashboardHeaderProps) {
         </div>
       </div>
       
-      {/* Mobile search (only visible on mobile) */}
-      <div className="md:hidden p-3 border-t border-border">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search broker..." 
-            className="pl-10 bg-muted/50 border-none focus-visible:ring-1 w-full"
-          />
-        </div>
-      </div>
+      {/* Mobile search section removed as requested */}
     </header>
   )
 }

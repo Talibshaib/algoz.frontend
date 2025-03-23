@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { updateSession } from '@/utils/supabase/middleware';
 import { 
   DASHBOARD_ROUTE, 
   LOGIN_ROUTE,
@@ -24,20 +24,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
     
-    // Create response and Supabase client
-    const res = NextResponse.next();
-    const supabase = createMiddlewareClient({ req: request, res });
-    
-    // Get session
-    let session = null;
-    try {
-      const { data } = await supabase.auth.getSession();
-      session = data?.session;
-    } catch (error) {
-      console.error("[Middleware] Session error:", error);
-      // Continue without session if there's an error
-      return NextResponse.next();
-    }
+    // Update the session using our Supabase utility
+    const res = await updateSession(request);
     
     // For public routes - always allow access
     if (isPublicRoute(pathname)) {
@@ -46,19 +34,25 @@ export async function middleware(request: NextRequest) {
     
     // For API routes that require authentication
     if (pathname.startsWith('/api/') && !pathname.startsWith('/api/public/')) {
-      if (!session) {
-        return NextResponse.json(
-          { error: 'Authentication required' },
-          { status: 401 }
-        );
-      }
+      // Authentication check will be handled by the API route handlers
+      return res;
     }
     
-    // Let client-side handle most redirections
+    // For dashboard routes (client-side auth will also handle this)
+    if (isDashboardRoute(pathname)) {
+      return res;
+    }
+    
+    // For auth routes (login, etc.)
+    if (isAuthRoute(pathname)) {
+      return res;
+    }
+    
+    // Default allow access and let client handle auth redirections
     return res;
   } catch (error) {
-    // If anything fails, log and continue
     console.error("[Middleware] Error:", error);
+    // Continue without blocking on error
     return NextResponse.next();
   }
 }
@@ -66,12 +60,12 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for:
+     * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public files (images, etc.)
+     * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-}; 
+};

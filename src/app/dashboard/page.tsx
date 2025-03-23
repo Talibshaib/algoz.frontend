@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import supabase from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Activity, AlertCircle, ArrowRight, Bell, Clock, FileText, Link, RefreshCw, Settings, Zap, ChevronRight, BarChart3 } from "lucide-react";
+import { Activity, AlertCircle, ArrowRight, Bell, Clock, FileText, Link, RefreshCw, Settings, Zap, ChevronRight, BarChart3, Key } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import { DashboardCard, DashboardCardGroup, DashboardSection } from "@/features/dashboard";
@@ -102,9 +102,9 @@ export default function DashboardPage() {
             <Settings className="h-4 w-4 mr-2" />
             <span>Settings</span>
           </Button>
-          <Button variant="default" size="sm" onClick={() => router.push('/dashboard/broker-management')}>
-            <Link className="h-4 w-4 mr-2" />
-            <span>Connect Broker</span>
+          <Button variant="default" size="sm" onClick={() => router.push('/dashboard/api-credentials')}>
+            <Key size={16} className="mr-2" />
+            <span>Manage API</span>
           </Button>
         </div>
       </div>
@@ -174,15 +174,15 @@ export default function DashboardPage() {
             <div className="mt-2">
               <div className="flex items-center space-x-2">
                 <div className="h-3 w-3 rounded-full bg-amber-500"></div>
-                <span className="text-amber-500">No broker connected</span>
+                <span className="text-amber-500">No API credentials configured</span>
               </div>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="mt-3 text-xs w-full justify-between items-center"
-                onClick={() => router.push('/dashboard/broker-management')}
+                onClick={() => router.push('/dashboard/api-credentials')}
               >
-                <span>Connect Your Broker</span>
+                <span>Configure API Credentials</span>
                 <ChevronRight className="h-3 w-3" />
               </Button>
             </div>
@@ -204,13 +204,13 @@ export default function DashboardPage() {
                 <Link className="h-4 w-4 mr-3" />
                 <span>Configure Webhook URL</span>
               </Button>
-              <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/dashboard/broker-management')}>
-                <FileText className="h-4 w-4 mr-3" />
-                <span>Manage API Credentials</span>
+              <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/dashboard/api-credentials')}>
+                <Key className="h-4 w-4 mr-2" />
+                <span>API Credentials</span>
               </Button>
-              <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/dashboard/broker-management')}>
+              <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/dashboard/market-data')}>
                 <ArrowRight className="h-4 w-4 mr-3" />
-                <span>Broker Management</span>
+                <span>Market Data</span>
               </Button>
               <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/dashboard/settings')}>
                 <Settings className="h-4 w-4 mr-3" />
@@ -242,7 +242,7 @@ export default function DashboardPage() {
               </div>
               <div className="border-l-2 border-border pl-4 py-1 relative">
                 <div className="absolute w-2 h-2 bg-border rounded-full -left-[5px] top-[14px]"></div>
-                <p className="text-sm text-muted-foreground italic">Connect a broker to see trading signals</p>
+                <p className="text-sm text-muted-foreground italic">Configure API credentials to access trading functionality</p>
               </div>
             </div>
             
@@ -262,7 +262,7 @@ export default function DashboardPage() {
               <div className="flex items-start space-x-3">
                 <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium">1</div>
                 <div>
-                  <h4 className="font-medium">Connect Your Broker</h4>
+                  <h4 className="font-medium">Configure API Credentials</h4>
                   <p className="text-sm text-muted-foreground">Link your trading account to automate signals</p>
                 </div>
               </div>
